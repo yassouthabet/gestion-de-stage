@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Soutenance en ligne | StageFlow</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<!-- PeerJS pour WebRTC simplifié -->
+<script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:      #0d1117;
+  --surface: #161b22;
+  --surface2:#1c2128;
+  --border:  #30363d;
+  --accent:  #4f7cff;
+  --accent2: #7c5cfc;
+  --green:   #10b981;
+  --orange:  #f59e0b;
+  --red:     #ef4444;
+  --text:    #e6edf3;
+  --muted:   #7d8590;
+}
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* ══ TOPBAR ══ */
+.topbar {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 0 20px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+  z-index: 10;
+}
+
+.topbar-left { display: flex; align-items: center; gap: 16px; }
+.logo { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.1rem; color: var(--text); }
+.logo span { color: var(--accent); }
+
+.room-info {
+  display: flex; align-items: center; gap: 8px;
+  padding: 5px 14px; background: var(--surface2);
+  border: 1px solid var(--border); border-radius: 20px;
+  font-size: 0.78rem; color: var(--muted);
+}
+.room-info .room-id { color: var(--text); font-weight: 600; font-family: monospace; }
+.copy-btn { cursor: pointer; color: var(--accent); }
+
+.live-badge {
+  display: flex; align-items: center; gap: 5px;
+  background: rgba(239,68,68,0.15); color: var(--red);
+  padding: 4px 10px; border-radius: 20px;
+  font-size: 0.72rem; font-weight: 700;
+}
+.live-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--red); animation: blink 1s infinite; }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+.topbar-right { display: flex; align-items: center; gap: 10px; }
+
+/* Timer */
+.timer-wrap {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 10px; padding: 6px 14px;
+}
+.timer-label { font-size: 0.7rem; color: var(--muted); }
+.timer-display {
+  font-family: 'Syne', sans-serif; font-weight: 700;
+  font-size: 1.1rem; color: var(--text);
+  min-width: 60px; text-align: center;
+}
+.timer-display.urgent { color: var(--red); animation: pulse 1s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.6} }
+
+.timer-btns { display: flex; gap: 4px; }
+.timer-btn { width: 26px; height: 26px; border-radius: 6px; border: 1px solid var(--border); background: none; color: var(--muted); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; transition: all 0.15s; }
+.timer-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+.btn-leave { background: rgba(239,68,68,0.15); color: var(--red); border: 1px solid rgba(239,68,68,0.3); border-radius: 8px; padding: 7px 14px; font-family: 'DM Sans', sans-serif; font-size: 0.78rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all 0.18s; }
+.btn-leave:hover { background: rgba(239,68,68,0.25); }
+
+/* ══ MAIN ══ */
+.workspace {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  overflow: hidden;
+}
+
+/* ══ VIDEO AREA ══ */
+.video-area {
+  display: flex;
+  flex-direction: column;
+  padding: 16px;
+  gap: 12px;
+  overflow: hidden;
+}
+
+/* Videos grid */
+.videos-grid {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 12px;
+  overflow-y: auto;
+}
+
+.video-card {
+  position: relative;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+  aspect-ratio: 16/9;
+  display: flex; align-items: center; justify-content: center;
+}
+.video-card.speaking { border-color: var(--green); box-shadow: 0 0 0 2px rgba(16,185,129,0.3); }
+.video-card.local { border-color: var(--accent); }
+
+.video-card video { width: 100%; height: 100%; object-fit: cover; }
+
+.video-overlay {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  padding: 10px 14px;
+  background: linear-gradient(transparent, rgba(0,0,0,0.7));
+  display: flex; align-items: center; justify-content: space-between;
+}
+.video-name { font-size: 0.78rem; font-weight: 600; color: #fff; }
+.video-badges { display: flex; gap: 6px; }
+.video-badge { width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.65rem; }
+.video-badge.muted { background: rgba(239,68,68,0.8); color: #fff; }
+.video-badge.cam-off { background: rgba(239,68,68,0.8); color: #fff; }
+.video-badge.ok { background: rgba(16,185,129,0.8); color: #fff; }
+
+.video-placeholder { display: flex; flex-direction: column; align-items: center; gap: 8px; color: var(--muted); }
+.video-placeholder .avatar { width: 56px; height: 56px; border-radius: 50%; background: linear-gradient(135deg,var(--accent),var(--accent2)); display: flex; align-items: center; justify-content: center; font-family: 'Syne',sans-serif; font-weight: 800; font-size: 1.2rem; color: #fff; }
+.video-placeholder p { font-size: 0.78rem; }
+
+/* Local video (petit) */
+.local-video-wrap {
+  position: relative;
+  width: 200px; height: 120px;
+  border-radius: 12px; overflow: hidden;
+  background: var(--surface2); border: 2px solid var(--accent);
+  flex-shrink: 0;
+}
+.local-video-wrap video { width: 100%; height: 100%; object-fit: cover; }
+.local-label { position: absolute; bottom: 4px; left: 8px; font-size: 0.65rem; color: #fff; font-weight: 600; background: rgba(0,0,0,0.5); padding: 2px 6px; border-radius: 6px; }
+
+/* Controls bar */
+.controls {
+  display: flex; align-items: center; justify-content: center;
+  gap: 12px; padding: 12px 0;
+  flex-shrink: 0;
+}
+
+.ctrl-btn {
+  width: 48px; height: 48px; border-radius: 50%;
+  border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1rem; transition: all 0.2s;
+}
+.ctrl-btn.on  { background: var(--surface2); border: 1px solid var(--border); color: var(--text); }
+.ctrl-btn.off { background: rgba(239,68,68,0.2); border: 1px solid rgba(239,68,68,0.4); color: var(--red); }
+.ctrl-btn:hover { transform: scale(1.08); }
+.ctrl-btn.screen { background: var(--surface2); border: 1px solid var(--border); color: var(--text); width: 42px; height: 42px; border-radius: 10px; }
+.ctrl-btn.screen.active { background: rgba(16,185,129,0.15); border-color: var(--green); color: var(--green); }
+.ctrl-btn.raise { background: var(--surface2); border: 1px solid var(--border); color: var(--text); width: 42px; height: 42px; border-radius: 10px; }
+.ctrl-btn.raise.active { background: rgba(245,158,11,0.15); border-color: var(--orange); color: var(--orange); }
+
+/* ══ SIDE PANEL ══ */
+.side-panel {
+  border-left: 1px solid var(--border);
+  display: flex; flex-direction: column;
+  overflow: hidden;
+  background: var(--surface);
+}
+
+/* tabs */
+.panel-tabs { display: flex; border-bottom: 1px solid var(--border); }
+.panel-tab { flex: 1; padding: 12px; text-align: center; font-size: 0.78rem; font-weight: 500; color: var(--muted); cursor: pointer; border: none; background: none; transition: all 0.15s; border-bottom: 2px solid transparent; }
+.panel-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+.panel-tab .badge { display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; background: var(--red); color: #fff; border-radius: 50%; font-size: 0.6rem; font-weight: 700; margin-left: 4px; }
+
+.panel-content { flex: 1; overflow: hidden; }
+.panel-section { display: none; height: 100%; flex-direction: column; }
+.panel-section.active { display: flex; }
+
+/* CHAT */
+.chat-messages { flex: 1; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+.chat-messages::-webkit-scrollbar { width: 3px; }
+.chat-messages::-webkit-scrollbar-thumb { background: var(--border); }
+.chat-msg { max-width: 85%; }
+.chat-msg.mine { align-self: flex-end; }
+.chat-msg.theirs { align-self: flex-start; }
+.chat-bubble { padding: 8px 12px; border-radius: 12px; font-size: 0.78rem; line-height: 1.5; }
+.chat-msg.mine .chat-bubble { background: var(--accent); color: #fff; border-bottom-right-radius: 4px; }
+.chat-msg.theirs .chat-bubble { background: var(--surface2); color: var(--text); border-bottom-left-radius: 4px; }
+.chat-sender { font-size: 0.65rem; color: var(--muted); margin-bottom: 2px; }
+.chat-time   { font-size: 0.62rem; opacity: 0.5; margin-top: 2px; text-align: right; }
+.chat-input-wrap { padding: 10px; border-top: 1px solid var(--border); display: flex; gap: 6px; }
+.chat-input { flex: 1; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 7px 10px; font-family: 'DM Sans', sans-serif; font-size: 0.78rem; color: var(--text); outline: none; }
+.chat-input:focus { border-color: var(--accent); }
+.chat-send { width: 32px; height: 32px; border-radius: 8px; background: var(--accent); border: none; color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.78rem; }
+
+/* NOTES */
+.notes-area { flex: 1; overflow-y: auto; padding: 12px; }
+.notes-textarea { width: 100%; height: 100%; background: transparent; border: none; outline: none; font-family: 'DM Sans', sans-serif; font-size: 0.82rem; color: var(--text); resize: none; line-height: 1.7; }
+.notes-textarea::placeholder { color: var(--muted); }
+
+/* ÉVALUATION */
+.eval-area { flex: 1; overflow-y: auto; padding: 14px; }
+.eval-critere { margin-bottom: 16px; }
+.eval-label { font-size: 0.78rem; font-weight: 600; color: var(--text); margin-bottom: 6px; display: flex; justify-content: space-between; }
+.eval-label span { color: var(--accent); font-family: 'Syne', sans-serif; }
+.eval-stars { display: flex; gap: 4px; }
+.eval-star { font-size: 1.2rem; cursor: pointer; transition: transform 0.15s; filter: grayscale(1) opacity(0.4); }
+.eval-star.on { filter: none; }
+.eval-star:hover { transform: scale(1.2); }
+.eval-note { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 7px 10px; font-family: 'DM Sans', sans-serif; font-size: 0.78rem; color: var(--text); outline: none; width: 100%; margin-top: 6px; }
+.eval-note:focus { border-color: var(--accent); }
+.eval-total { margin-top: 14px; padding: 12px; background: rgba(79,124,255,0.1); border: 1px solid rgba(79,124,255,0.2); border-radius: 10px; text-align: center; }
+.eval-total-label { font-size: 0.72rem; color: var(--muted); margin-bottom: 4px; }
+.eval-total-score { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.8rem; color: var(--accent); }
+.btn-submit-eval { width: 100%; margin-top: 12px; padding: 10px; border: none; border-radius: 9px; background: var(--green); color: #fff; font-family: 'DM Sans', sans-serif; font-size: 0.82rem; font-weight: 600; cursor: pointer; transition: opacity 0.18s; }
+.btn-submit-eval:hover { opacity: 0.85; }
+
+/* ══ LOBBY ══ */
+.lobby {
+  position: fixed; inset: 0;
+  background: var(--bg);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 100;
+}
+.lobby-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 40px;
+  max-width: 480px; width: 100%;
+  margin: 16px;
+  text-align: center;
+}
+.lobby-icon { font-size: 3rem; margin-bottom: 16px; }
+.lobby-title { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.4rem; color: var(--text); margin-bottom: 6px; }
+.lobby-sub { font-size: 0.82rem; color: var(--muted); margin-bottom: 28px; line-height: 1.6; }
+
+.lobby-form { text-align: left; }
+.lobby-label { font-size: 0.78rem; font-weight: 600; color: var(--text); margin-bottom: 6px; display: block; }
+.lobby-input { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 10px 14px; font-family: 'DM Sans', sans-serif; font-size: 0.875rem; color: var(--text); outline: none; margin-bottom: 14px; }
+.lobby-input:focus { border-color: var(--accent); }
+.lobby-select { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 10px 14px; font-family: 'DM Sans', sans-serif; font-size: 0.875rem; color: var(--text); outline: none; margin-bottom: 14px; cursor: pointer; }
+
+.btn-join { width: 100%; padding: 12px; border: none; border-radius: 12px; background: linear-gradient(135deg,var(--accent),var(--accent2)); color: #fff; font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1rem; cursor: pointer; transition: opacity 0.18s, transform 0.18s; margin-bottom: 10px; }
+.btn-join:hover { opacity: 0.88; transform: translateY(-1px); }
+
+.divider { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 0.72rem; margin: 10px 0; }
+.divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+.btn-create { width: 100%; padding: 11px; border: 1px solid var(--border); border-radius: 12px; background: none; color: var(--text); font-family: 'DM Sans', sans-serif; font-weight: 600; font-size: 0.875rem; cursor: pointer; transition: all 0.18s; }
+.btn-create:hover { border-color: var(--accent); color: var(--accent); }
+
+/* local preview */
+.preview-video { width: 100%; aspect-ratio: 16/9; background: var(--surface2); border-radius: 10px; overflow: hidden; margin-bottom: 14px; display: flex; align-items: center; justify-content: center; position: relative; }
+.preview-video video { width: 100%; height: 100%; object-fit: cover; }
+
+/* ══ SCREEN SHARE overlay ══ */
+.screen-share-wrap { position: relative; width: 100%; aspect-ratio: 16/9; background: #000; border-radius: 12px; overflow: hidden; border: 2px solid var(--green); }
+.screen-share-wrap video { width: 100%; height: 100%; object-fit: contain; }
+.screen-share-label { position: absolute; top: 8px; left: 12px; background: var(--green); color: #fff; font-size: 0.65rem; font-weight: 700; padding: 3px 8px; border-radius: 6px; }
+
+/* toast */
+.toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(60px); background: var(--surface); color: var(--text); border: 1px solid var(--border); padding: 10px 20px; border-radius: 10px; font-size: 0.82rem; font-weight: 500; box-shadow: 0 4px 20px rgba(0,0,0,0.3); opacity: 0; transition: all 0.3s ease; z-index: 999; white-space: nowrap; }
+.toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+.toast.success { border-color: var(--green); color: var(--green); }
+.toast.error   { border-color: var(--red); color: var(--red); }
+</style>
+</head>
+
+<body>
+
+<!-- ══ LOBBY ══ -->
+<div class="lobby" id="lobby">
+  <div class="lobby-card">
+    <div class="lobby-icon">🎓</div>
+    <div class="lobby-title">Soutenance en ligne</div>
+    <div class="lobby-sub">Rejoignez ou créez une salle de soutenance sécurisée.<br>Partagez le code avec votre encadrant et le jury.</div>
+
+    <!-- Preview caméra -->
+    <div class="preview-video" id="previewWrap">
+      <div style="color:var(--muted);font-size:0.82rem;text-align:center">
+        <i class="fa fa-video" style="font-size:1.5rem;display:block;margin-bottom:8px;opacity:0.3"></i>
+        Aperçu caméra
+      </div>
+      <video id="previewVideo" autoplay muted style="display:none"></video>
+    </div>
+
+    <div class="lobby-form">
+      <label class="lobby-label">Votre nom complet</label>
+      <input class="lobby-input" id="lobbyName" placeholder="Ex: Sara Ben Ahmed">
+
+      <label class="lobby-label">Rôle</label>
+      <select class="lobby-select" id="lobbyRole">
+        <option value="etudiant">🎓 Étudiant(e)</option>
+        <option value="encadrant">👨‍🏫 Encadrant</option>
+        <option value="jury">⚖️ Membre du jury</option>
+      </select>
+
+      <label class="lobby-label">Code de la salle (pour rejoindre)</label>
+      <input class="lobby-input" id="lobbyRoom" placeholder="Ex: STAGE-2025-ABC" style="font-family:monospace;letter-spacing:0.05em">
+
+      <button class="btn-join" onclick="joinRoom()">
+        <i class="fa fa-video"></i> Rejoindre la soutenance
+      </button>
+
+      <div class="divider">ou</div>
+
+      <button class="btn-create" onclick="createRoom()">
+        <i class="fa fa-plus"></i> Créer une nouvelle salle
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SOUTENANCE ══ -->
+<div class="topbar">
+  <div class="topbar-left">
+    <div class="logo">Stage<span>Flow</span></div>
+    <div class="room-info">
+      <span>Salle :</span>
+      <span class="room-id" id="displayRoomId">—</span>
+      <span class="copy-btn" onclick="copyRoomId()" title="Copier"><i class="fa fa-copy"></i></span>
+    </div>
+    <div class="live-badge" id="liveBadge" style="display:none">
+      <div class="live-dot"></div> EN DIRECT
+    </div>
+  </div>
+
+  <div class="topbar-right">
+    <!-- TIMER -->
+    <div class="timer-wrap">
+      <div class="timer-label">Exposé</div>
+      <div class="timer-display" id="timerDisplay">20:00</div>
+      <div class="timer-btns">
+        <button class="timer-btn" onclick="startTimer()" title="Démarrer"><i class="fa fa-play"></i></button>
+        <button class="timer-btn" onclick="pauseTimer()" title="Pause"><i class="fa fa-pause"></i></button>
+        <button class="timer-btn" onclick="resetTimer()" title="Réinitialiser"><i class="fa fa-rotate-left"></i></button>
+      </div>
+    </div>
+
+    <a href="etudiant.html" class="btn-leave" onclick="leaveRoom()">
+      <i class="fa fa-phone-slash"></i> Quitter
+    </a>
+  </div>
+</div>
+
+<div class="workspace">
+
+  <!-- VIDEO AREA -->
+  <div class="video-area">
+
+    <!-- Screen share zone -->
+    <div id="screenShareArea" style="display:none">
+      <div class="screen-share-wrap">
+        <video id="screenVideo" autoplay></video>
+        <span class="screen-share-label"><i class="fa fa-desktop"></i> Partage d'écran</span>
+      </div>
+    </div>
+
+    <!-- Videos grid -->
+    <div class="videos-grid" id="videosGrid">
+      <!-- local + remote -->
+      <div class="video-card local" id="localCard">
+        <video id="localVideo" autoplay muted playsinline></video>
+        <div class="video-overlay">
+          <span class="video-name" id="localName">Vous</span>
+          <div class="video-badges">
+            <div class="video-badge ok" id="micBadge"><i class="fa fa-microphone"></i></div>
+            <div class="video-badge ok" id="camBadge"><i class="fa fa-video"></i></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Controls -->
+    <div class="controls">
+      <button class="ctrl-btn on" id="btnMic" onclick="toggleMic()" title="Micro">
+        <i class="fa fa-microphone"></i>
+      </button>
+      <button class="ctrl-btn on" id="btnCam" onclick="toggleCam()" title="Caméra">
+        <i class="fa fa-video"></i>
+      </button>
+      <button class="ctrl-btn screen" id="btnScreen" onclick="toggleScreen()" title="Partage d'écran">
+        <i class="fa fa-desktop"></i>
+      </button>
+      <button class="ctrl-btn raise" id="btnRaise" onclick="toggleRaise()" title="Lever la main">
+        <i class="fa fa-hand"></i>
+      </button>
+    </div>
+
+  </div>
+
+  <!-- SIDE PANEL -->
+  <div class="side-panel">
+
+    <div class="panel-tabs">
+      <button class="panel-tab active" onclick="showPanel('chat',this)">
+        <i class="fa fa-comments"></i> Chat
+        <span class="badge" id="chatBadge" style="display:none">0</span>
+      </button>
+      <button class="panel-tab" onclick="showPanel('notes',this)">
+        <i class="fa fa-note-sticky"></i> Notes
+      </button>
+      <button class="panel-tab" onclick="showPanel('eval',this)">
+        <i class="fa fa-star"></i> Éval.
+      </button>
+    </div>
+
+    <div class="panel-content">
+
+      <!-- CHAT -->
+      <div class="panel-section active" id="panel-chat">
+        <div class="chat-messages" id="chatMessages"></div>
+        <div class="chat-input-wrap">
+          <input class="chat-input" id="chatInput" placeholder="Message..." onkeydown="if(event.key==='Enter') sendChat()">
+          <button class="chat-send" onclick="sendChat()"><i class="fa fa-paper-plane"></i></button>
+        </div>
+      </div>
+
+      <!-- NOTES PRIVÉES -->
+      <div class="panel-section" id="panel-notes">
+        <div class="notes-area">
+          <textarea class="notes-textarea" id="notesArea" placeholder="Vos notes privées pendant la soutenance...&#10;&#10;• Points forts&#10;• Points à améliorer&#10;• Questions à poser"></textarea>
+        </div>
+      </div>
+
+      <!-- ÉVALUATION -->
+      <div class="panel-section" id="panel-eval">
+        <div class="eval-area">
+          <div style="font-size:0.72rem;color:var(--muted);margin-bottom:14px">Grille d'évaluation — Jury uniquement</div>
+
+          <div class="eval-critere">
+            <div class="eval-label">Maîtrise du sujet <span id="score1">0</span>/20</div>
+            <div class="eval-stars" id="stars1"></div>
+            <textarea class="eval-note" placeholder="Commentaire..." rows="2"></textarea>
+          </div>
+
+          <div class="eval-critere">
+            <div class="eval-label">Qualité du rapport <span id="score2">0</span>/20</div>
+            <div class="eval-stars" id="stars2"></div>
+            <textarea class="eval-note" placeholder="Commentaire..." rows="2"></textarea>
+          </div>
+
+          <div class="eval-critere">
+            <div class="eval-label">Présentation orale <span id="score3">0</span>/20</div>
+            <div class="eval-stars" id="stars3"></div>
+            <textarea class="eval-note" placeholder="Commentaire..." rows="2"></textarea>
+          </div>
+
+          <div class="eval-critere">
+            <div class="eval-label">Réponses aux questions <span id="score4">0</span>/20</div>
+            <div class="eval-stars" id="stars4"></div>
+            <textarea class="eval-note" placeholder="Commentaire..." rows="2"></textarea>
+          </div>
+
+          <div class="eval-total">
+            <div class="eval-total-label">Note finale</div>
+            <div class="eval-total-score" id="totalScore">0 / 20</div>
+          </div>
+
+          <button class="btn-submit-eval" onclick="submitEval()">
+            <i class="fa fa-check"></i> Soumettre l'évaluation
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+
+/* ══ STATE ══ */
+let localStream     = null;
+let screenStream    = null;
+let peer            = null;
+let connections     = {};
+let myName          = "";
+let myRole          = "etudiant";
+let roomId          = "";
+let micOn           = true;
+let camOn           = true;
+let screenOn        = false;
+let handRaised      = false;
+let timerInterval   = null;
+let timerSeconds    = 20 * 60;
+let timerRunning    = false;
+let chatUnread      = 0;
+let scores          = [0, 0, 0, 0];
+
+/* ══ LOBBY INIT ══ */
+async function initPreview() {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+    const pv = document.getElementById("previewVideo");
+    pv.srcObject = stream;
+    pv.style.display = "block";
+    localStream = stream;
+  } catch(e) {
+    console.log("Pas de caméra/micro:", e);
+  }
+}
+
+/* ══ PREFILL NAME ══ */
+const savedName = localStorage.getItem("user_prenom") + " " + localStorage.getItem("user_nom");
+if (savedName.trim() !== "") document.getElementById("lobbyName").value = savedName.trim();
+const savedRole = localStorage.getItem("user_role");
+if (savedRole === "encadrant") document.getElementById("lobbyRole").value = "encadrant";
+
+initPreview();
+
+/* ══ CREATE ROOM ══ */
+function createRoom() {
+  const id = "STAGE-" + Math.random().toString(36).substr(2,6).toUpperCase();
+  document.getElementById("lobbyRoom").value = id;
+  showToast("Salle créée : " + id, "success");
+}
+
+/* ══ JOIN ROOM ══ */
+async function joinRoom() {
+  myName = document.getElementById("lobbyName").value.trim();
+  myRole = document.getElementById("lobbyRole").value;
+  roomId = document.getElementById("lobbyRoom").value.trim();
+
+  if (!myName) return showToast("Entrez votre nom", "error");
+  if (!roomId) return showToast("Entrez un code de salle", "error");
+
+  // get media if not already
+  if (!localStream) {
+    try {
+      localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+    } catch(e) {
+      showToast("Impossible d'accéder à la caméra/micro", "error");
+      return;
+    }
+  }
+
+  document.getElementById("lobby").style.display = "none";
+  document.getElementById("liveBadge").style.display = "flex";
+  document.getElementById("displayRoomId").innerText = roomId;
+  document.getElementById("localName").innerText = myName + (myRole === "jury" ? " ⚖️" : myRole === "encadrant" ? " 👨‍🏫" : " 🎓");
+
+  // set local video
+  const lv = document.getElementById("localVideo");
+  lv.srcObject = localStream;
+
+  // init PeerJS
+  initPeer();
+  initEvalStars();
+
+  addChatMessage("système", `Vous avez rejoint la salle ${roomId}`, true);
+}
+
+/* ══ PEERJS ══ */
+function initPeer() {
+  peer = new Peer(roomId + "_" + Math.random().toString(36).substr(2,4), {
+    host: "0.peerjs.com", port: 443, secure: true
+  });
+
+  peer.on("open", id => {
+    console.log("Peer ID:", id);
+    broadcastPresence();
+  });
+
+  peer.on("call", call => {
+    call.answer(localStream);
+    call.on("stream", remoteStream => {
+      addRemoteVideo(call.peer, remoteStream, "Participant");
+    });
+    call.on("close", () => removeRemoteVideo(call.peer));
+  });
+
+  peer.on("connection", conn => {
+    conn.on("data", data => handleData(data, conn.peer));
+    conn.on("open", () => {
+      conn.send({ type: "join", name: myName, role: myRole });
+    });
+  });
+}
+
+function broadcastPresence() {
+  // in a real app, we'd use a signaling server
+  // for demo, simulate avec les IDs dans localStorage
+}
+
+function addRemoteVideo(peerId, stream, name) {
+  const grid = document.getElementById("videosGrid");
+  const card = document.createElement("div");
+  card.className = "video-card";
+  card.id = "card_" + peerId;
+  card.innerHTML = `
+    <video autoplay playsinline></video>
+    <div class="video-overlay">
+      <span class="video-name">${name}</span>
+      <div class="video-badges">
+        <div class="video-badge ok"><i class="fa fa-microphone"></i></div>
+      </div>
+    </div>`;
+  card.querySelector("video").srcObject = stream;
+  grid.appendChild(card);
+}
+
+function removeRemoteVideo(peerId) {
+  const card = document.getElementById("card_" + peerId);
+  if (card) card.remove();
+}
+
+function handleData(data, peerId) {
+  if (data.type === "chat") {
+    addChatMessage(data.name, data.msg);
+    if (document.getElementById("panel-chat").style.display === "none") {
+      chatUnread++;
+      const badge = document.getElementById("chatBadge");
+      badge.style.display = "inline-flex";
+      badge.innerText = chatUnread;
+    }
+  }
+  if (data.type === "join") {
+    addChatMessage("système", `${data.name} a rejoint la soutenance`, true);
+    addRemoteVideo(peerId, null, data.name);
+  }
+  if (data.type === "hand") {
+    showToast(`✋ ${data.name} lève la main`, "");
+  }
+}
+
+/* ══ MIC / CAM / SCREEN ══ */
+function toggleMic() {
+  if (!localStream) return;
+  micOn = !micOn;
+  localStream.getAudioTracks().forEach(t => t.enabled = micOn);
+  const btn = document.getElementById("btnMic");
+  btn.className = `ctrl-btn ${micOn ? "on" : "off"}`;
+  btn.innerHTML = `<i class="fa fa-microphone${micOn ? "" : "-slash"}"></i>`;
+  document.getElementById("micBadge").className = `video-badge ${micOn ? "ok" : "muted"}`;
+}
+
+function toggleCam() {
+  if (!localStream) return;
+  camOn = !camOn;
+  localStream.getVideoTracks().forEach(t => t.enabled = camOn);
+  const btn = document.getElementById("btnCam");
+  btn.className = `ctrl-btn ${camOn ? "on" : "off"}`;
+  btn.innerHTML = `<i class="fa fa-video${camOn ? "" : "-slash"}"></i>`;
+  document.getElementById("camBadge").className = `video-badge ${camOn ? "ok" : "cam-off"}`;
+  // show placeholder if cam off
+  const lv = document.getElementById("localVideo");
+  lv.style.opacity = camOn ? "1" : "0";
+}
+
+async function toggleScreen() {
+  if (!screenOn) {
+    try {
+      screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
+      document.getElementById("screenVideo").srcObject = screenStream;
+      document.getElementById("screenShareArea").style.display = "block";
+      document.getElementById("btnScreen").classList.add("active");
+      screenOn = true;
+      screenStream.getVideoTracks()[0].onended = () => stopScreen();
+      showToast("Partage d'écran activé", "success");
+    } catch(e) {
+      showToast("Partage d'écran annulé", "");
+    }
+  } else {
+    stopScreen();
+  }
+}
+
+function stopScreen() {
+  if (screenStream) screenStream.getTracks().forEach(t => t.stop());
+  document.getElementById("screenShareArea").style.display = "none";
+  document.getElementById("btnScreen").classList.remove("active");
+  screenOn = false;
+}
+
+function toggleRaise() {
+  handRaised = !handRaised;
+  const btn = document.getElementById("btnRaise");
+  btn.className = `ctrl-btn raise ${handRaised ? "active" : ""}`;
+  if (handRaised) {
+    showToast("✋ Vous avez levé la main", "");
+    broadcast({ type: "hand", name: myName });
+  }
+}
+
+function broadcast(data) {
+  Object.values(connections).forEach(conn => {
+    if (conn.open) conn.send(data);
+  });
+}
+
+/* ══ TIMER ══ */
+function startTimer() {
+  if (timerRunning) return;
+  timerRunning = true;
+  timerInterval = setInterval(() => {
+    timerSeconds--;
+    updateTimerDisplay();
+    if (timerSeconds <= 0) {
+      clearInterval(timerInterval);
+      timerRunning = false;
+      showToast("⏰ Temps écoulé !", "error");
+    }
+  }, 1000);
+}
+
+function pauseTimer() {
+  clearInterval(timerInterval);
+  timerRunning = false;
+}
+
+function resetTimer() {
+  clearInterval(timerInterval);
+  timerRunning = false;
+  timerSeconds = 20 * 60;
+  updateTimerDisplay();
+}
+
+function updateTimerDisplay() {
+  const m = Math.floor(timerSeconds / 60);
+  const s = timerSeconds % 60;
+  const display = document.getElementById("timerDisplay");
+  display.innerText = `${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`;
+  display.className = `timer-display ${timerSeconds < 120 ? "urgent" : ""}`;
+}
+
+/* ══ CHAT ══ */
+function sendChat() {
+  const input = document.getElementById("chatInput");
+  const msg   = input.value.trim();
+  if (!msg) return;
+  addChatMessage(myName, msg, false, true);
+  broadcast({ type: "chat", name: myName, msg });
+  input.value = "";
+}
+
+function addChatMessage(sender, msg, isSystem=false, isMine=false) {
+  const box  = document.getElementById("chatMessages");
+  const time = new Date().toLocaleTimeString("fr-FR", { hour:"2-digit", minute:"2-digit" });
+
+  if (isSystem) {
+    const el = document.createElement("div");
+    el.style.cssText = "text-align:center;font-size:0.65rem;color:var(--muted);padding:4px 0";
+    el.innerText = msg;
+    box.appendChild(el);
+  } else {
+    const el = document.createElement("div");
+    el.className = `chat-msg ${isMine ? "mine" : "theirs"}`;
+    el.innerHTML = `
+      ${!isMine ? `<div class="chat-sender">${sender}</div>` : ""}
+      <div class="chat-bubble">${msg}</div>
+      <div class="chat-time">${time}</div>`;
+    box.appendChild(el);
+  }
+  box.scrollTop = box.scrollHeight;
+}
+
+/* ══ PANEL TABS ══ */
+function showPanel(name, btn) {
+  document.querySelectorAll(".panel-section").forEach(s => s.classList.remove("active"));
+  document.querySelectorAll(".panel-tab").forEach(b => b.classList.remove("active"));
+  document.getElementById("panel-" + name).classList.add("active");
+  btn.classList.add("active");
+  if (name === "chat") {
+    chatUnread = 0;
+    document.getElementById("chatBadge").style.display = "none";
+  }
+}
+
+/* ══ ÉVALUATION ══ */
+function initEvalStars() {
+  [1,2,3,4].forEach(i => {
+    const container = document.getElementById("stars" + i);
+    for(let s=1; s<=5; s++) {
+      const star = document.createElement("span");
+      star.className = "eval-star";
+      star.innerText = "★";
+      star.dataset.val = s;
+      star.onclick = () => setScore(i, s);
+      container.appendChild(star);
+    }
+  });
+}
+
+function setScore(critere, val) {
+  scores[critere-1] = val * 4; // 5 stars = 20
+  const container = document.getElementById("stars" + critere);
+  container.querySelectorAll(".eval-star").forEach((s, idx) => {
+    s.className = `eval-star ${idx < val ? "on" : ""}`;
+  });
+  document.getElementById("score" + critere).innerText = val * 4;
+  const total = scores.reduce((a,b) => a+b, 0) / 4;
+  document.getElementById("totalScore").innerText = total.toFixed(1) + " / 20";
+}
+
+function submitEval() {
+  const total = scores.reduce((a,b) => a+b, 0) / 4;
+  showToast(`✅ Évaluation soumise — Note: ${total.toFixed(1)}/20`, "success");
+}
+
+/* ══ COPY ROOM ID ══ */
+function copyRoomId() {
+  navigator.clipboard.writeText(roomId).then(() => showToast("Code copié !", "success"));
+}
+
+/* ══ LEAVE ══ */
+function leaveRoom() {
+  if (localStream) localStream.getTracks().forEach(t => t.stop());
+  if (screenStream) screenStream.getTracks().forEach(t => t.stop());
+  if (peer) peer.destroy();
+}
+
+/* ══ TOAST ══ */
+function showToast(msg, type="") {
+  const t = document.getElementById("toast");
+  t.className = `toast ${type} show`;
+  t.innerText = msg;
+  setTimeout(() => t.classList.remove("show"), 3000);
+}
+
+</script>
+</body>
+</html>

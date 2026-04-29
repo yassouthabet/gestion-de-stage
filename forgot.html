@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Récupération mot de passe</title>
+<script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gradient-to-r from-purple-300 via-indigo-200 to-blue-200 flex items-center justify-center min-h-screen font-sans">
+
+<div class="bg-white rounded-xl shadow-2xl p-10 w-full max-w-md relative overflow-hidden">
+  <h2 class="text-2xl font-bold text-center text-gray-800 mb-6">Récupération mot de passe</h2>
+
+  <!-- Barre de progression -->
+  <div class="w-full bg-gray-200 rounded-full h-2 mb-8 overflow-hidden">
+    <div id="progress-bar" class="h-2 bg-indigo-400 w-0 transition-all duration-500"></div>
+  </div>
+
+  <!-- Étape 1 : Email -->
+  <div id="step1" class="transition-all duration-500">
+    <input id="email" type="email" placeholder="Email" class="w-full p-3 mb-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-300 transition" />
+    <button onclick="nextStep(1)" class="w-full bg-indigo-300 text-white p-3 rounded-lg font-semibold hover:bg-indigo-400 transition mb-6">Envoyer code</button>
+  </div>
+
+  <!-- Étape 2 : Code -->
+  <div id="step2" class="absolute top-0 left-0 w-full opacity-0 translate-x-full transition-all duration-500">
+    <input id="code" type="text" placeholder="Code reçu" class="w-full p-3 mb-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-300 transition" />
+    <button onclick="nextStep(2)" class="w-full bg-indigo-300 text-white p-3 rounded-lg font-semibold hover:bg-indigo-400 transition mb-4">Vérifier code</button>
+    <button onclick="prevStep(1)" class="w-full text-indigo-600 p-3 font-semibold hover:underline transition">Retour</button>
+  </div>
+
+  <!-- Étape 3 : Nouveau mot de passe -->
+  <div id="step3" class="absolute top-0 left-0 w-full opacity-0 translate-x-full transition-all duration-500">
+    <input id="newpass" type="password" placeholder="Nouveau mot de passe" class="w-full p-3 mb-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-300 transition" />
+    <button onclick="nextStep(3)" class="w-full bg-indigo-300 text-white p-3 rounded-lg font-semibold hover:bg-indigo-400 transition mb-4">Changer mot de passe</button>
+    <button onclick="prevStep(2)" class="w-full text-indigo-600 p-3 font-semibold hover:underline transition">Retour</button>
+  </div>
+
+  <div id="message" class="mt-4 text-center text-sm font-semibold"></div>
+</div>
+
+<script>
+async function nextStep(step){
+  const progressBar = document.getElementById("progress-bar");
+  
+  if(step===1){
+    const email=document.getElementById("email").value;
+    if(!email){ showMessage("Veuillez entrer un email","text-red-500"); return; }
+
+    await fetch("http://localhost:3000/forgot-password",{
+      method:"POST",
+      headers:{ "Content-Type":"application/json"},
+      body: JSON.stringify({email})
+    });
+
+    showMessage("Code envoyé par email","text-green-500");
+    showStep(2);
+    progressBar.style.width="50%";
+  }
+
+  else if(step===2){
+    const email=document.getElementById("email").value;
+    const code=document.getElementById("code").value;
+    if(!email || !code){ showMessage("Veuillez remplir tous les champs","text-red-500"); return; }
+
+    const res=await fetch("http://localhost:3000/verify-code",{
+      method:"POST",
+      headers:{ "Content-Type":"application/json"},
+      body: JSON.stringify({email,code})
+    });
+
+    const data=await res.json();
+
+    if(data.success){
+      showMessage("Code correct","text-green-500");
+      showStep(3);
+      progressBar.style.width="100%";
+    }else{
+      showMessage("Code incorrect","text-red-500");
+    }
+  }
+
+  else if(step===3){
+    const email=document.getElementById("email").value;
+    const password=document.getElementById("newpass").value;
+    if(!email || !password){ showMessage("Veuillez remplir tous les champs","text-red-500"); return; }
+
+    await fetch("http://localhost:3000/reset-password",{
+      method:"POST",
+      headers:{ "Content-Type":"application/json"},
+      body: JSON.stringify({email,password})
+    });
+
+    showMessage("Mot de passe changé","text-green-500");
+    progressBar.style.width="100%";
+  }
+}
+
+function prevStep(step){
+  const progressBar = document.getElementById("progress-bar");
+  showStep(step);
+  if(step===1) progressBar.style.width="0%";
+  if(step===2) progressBar.style.width="50%";
+}
+
+function showStep(step){
+  const steps = [1,2,3];
+  steps.forEach(s=>{
+    const el = document.getElementById('step'+s);
+    if(s===step){
+      el.style.opacity="1";
+      el.style.transform="translateX(0)";
+      el.style.position="relative";
+    } else {
+      el.style.opacity="0";
+      el.style.transform="translateX(100%)";
+      el.style.position="absolute";
+    }
+  });
+}
+
+function showMessage(msg, colorClass){
+  const messageDiv = document.getElementById("message");
+  messageDiv.textContent = msg;
+  messageDiv.className = `mt-4 text-center text-sm font-semibold ${colorClass} animate-pulse`;
+  setTimeout(()=>{ messageDiv.textContent=""; messageDiv.className=""; }, 3000);
+}
+
+// Initial step
+showStep(1);
+</script>
+
+</body>
+</html>

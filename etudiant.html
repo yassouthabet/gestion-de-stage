@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>StageFlow — Espace Étudiant</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#f4f6fb;--white:#ffffff;--border:#e5e9f2;--accent:#4f7cff;--accent2:#7c5cfc;--green:#10b981;--orange:#f59e0b;--red:#ef4444;--text:#1a1d2e;--muted:#8892a4;--sidebar-w:240px}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);display:flex;min-height:100vh}
+.sidebar{width:var(--sidebar-w);background:var(--white);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:24px 14px;position:fixed;top:0;left:0;bottom:0;z-index:100}
+.logo{font-family:'Syne',sans-serif;font-weight:800;font-size:1.35rem;color:var(--text);padding:0 8px 22px;border-bottom:1px solid var(--border);margin-bottom:18px}
+.logo span{color:var(--accent)}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:10px;color:var(--muted);text-decoration:none;font-size:.875rem;font-weight:500;transition:all .18s;margin-bottom:2px;cursor:pointer}
+.nav-item:hover{background:var(--bg);color:var(--text)}
+.nav-item.active{background:rgba(79,124,255,.1);color:var(--accent);font-weight:600}
+.nav-item i{width:16px;text-align:center;font-size:.85rem}
+.sidebar-bottom{margin-top:auto;border-top:1px solid var(--border);padding-top:14px}
+.user-chip{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg);border-radius:10px;margin-bottom:6px}
+.avatar-circle{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.8rem;color:#fff;flex-shrink:0;overflow:hidden}
+.user-chip-name{font-size:.82rem;font-weight:600;color:var(--text)}
+.user-chip-role{font-size:.7rem;color:var(--muted)}
+.main{margin-left:var(--sidebar-w);flex:1;display:flex;flex-direction:column}
+.topbar{background:var(--white);border-bottom:1px solid var(--border);padding:0 28px;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
+.topbar-left{font-family:'Syne',sans-serif;font-weight:700;font-size:1.1rem;color:var(--text)}
+.topbar-left span{color:var(--accent)}
+.topbar-right{display:flex;align-items:center;gap:16px}
+.msg-bell{position:relative;width:38px;height:38px;border-radius:10px;background:var(--bg);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;text-decoration:none;color:var(--muted);transition:all .18s}
+.msg-bell:hover{background:rgba(79,124,255,.08);border-color:var(--accent);color:var(--accent)}
+.msg-badge{position:absolute;top:-6px;right:-6px;background:var(--red);color:#fff;font-size:.65rem;font-weight:700;min-width:18px;height:18px;border-radius:9px;display:flex;align-items:center;justify-content:center;padding:0 4px;border:2px solid var(--white)}
+.msg-badge.hidden{display:none}
+.msg-dropdown{position:absolute;top:calc(100% + 10px);right:0;width:300px;background:var(--white);border:1px solid var(--border);border-radius:14px;box-shadow:0 8px 32px rgba(0,0,0,.12);overflow:hidden;display:none;z-index:200}
+.msg-dropdown.show{display:block;animation:fadeDown .2s ease}
+@keyframes fadeDown{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+.dd-header{padding:12px 16px;border-bottom:1px solid var(--border);font-family:'Syne',sans-serif;font-weight:700;font-size:.85rem;color:var(--text);display:flex;justify-content:space-between;align-items:center}
+.dd-item{display:flex;align-items:center;gap:12px;padding:12px 16px;text-decoration:none;color:inherit;transition:background .15s;cursor:pointer}
+.dd-item:hover{background:var(--bg)}
+.dd-avatar{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.85rem;color:#fff;flex-shrink:0;position:relative}
+.dd-online{width:9px;height:9px;background:var(--green);border:2px solid var(--white);border-radius:50%;position:absolute;bottom:0;right:0}
+.dd-info{flex:1;min-width:0}
+.dd-name{font-size:.82rem;font-weight:600;color:var(--text)}
+.dd-last{font-size:.75rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
+.dd-meta{display:flex;flex-direction:column;align-items:flex-end;gap:3px}
+.dd-time{font-size:.7rem;color:var(--muted)}
+.dd-unread{background:var(--accent);color:#fff;font-size:.65rem;font-weight:700;min-width:18px;height:18px;border-radius:9px;display:flex;align-items:center;justify-content:center;padding:0 4px}
+.dd-footer{padding:10px 16px;border-top:1px solid var(--border);text-align:center}
+.dd-footer a{font-size:.8rem;color:var(--accent);font-weight:600;text-decoration:none}
+.user-pill{display:flex;align-items:center;gap:8px;padding:5px 12px 5px 6px;background:var(--bg);border:1px solid var(--border);border-radius:20px;font-size:.82rem;font-weight:500;color:var(--text)}
+.user-pill .avatar-circle{width:26px;height:26px;font-size:.7rem}
+.content{padding:28px;flex:1}
+.stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:22px}
+.stat-card{background:var(--white);border:1px solid var(--border);border-radius:14px;padding:20px;display:flex;align-items:center;gap:16px;transition:box-shadow .2s,transform .2s;animation:fadeUp .4s ease both}
+.stat-card:hover{box-shadow:0 4px 20px rgba(0,0,0,.07);transform:translateY(-2px)}
+.stat-card:nth-child(1){animation-delay:.05s}
+.stat-card:nth-child(2){animation-delay:.1s}
+.stat-card:nth-child(3){animation-delay:.15s}
+.stat-icon{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0}
+.stat-card.blue .stat-icon{background:rgba(79,124,255,.1);color:var(--accent)}
+.stat-card.green .stat-icon{background:rgba(16,185,129,.1);color:var(--green)}
+.stat-card.orange .stat-icon{background:rgba(245,158,11,.1);color:var(--orange)}
+.stat-label{font-size:.78rem;color:var(--muted);margin-bottom:4px}
+.stat-value{font-family:'Syne',sans-serif;font-size:1.8rem;font-weight:800;color:var(--text);line-height:1}
+.card{background:var(--white);border:1px solid var(--border);border-radius:14px;padding:22px;margin-bottom:18px;animation:fadeUp .4s ease both}
+.card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.card-title{font-family:'Syne',sans-serif;font-weight:700;font-size:.95rem;color:var(--text);display:flex;align-items:center;gap:8px}
+.card-title i{color:var(--accent)}
+table{width:100%;border-collapse:collapse}
+thead tr{border-bottom:2px solid var(--border)}
+th{padding:9px 14px;text-align:left;font-size:.72rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+tbody tr{border-bottom:1px solid var(--border);transition:background .15s}
+tbody tr:last-child{border-bottom:none}
+tbody tr:hover{background:var(--bg)}
+td{padding:11px 14px;font-size:.855rem;color:var(--text)}
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:.72rem;font-weight:600}
+.badge.green{background:rgba(16,185,129,.1);color:var(--green)}
+.badge.yellow{background:rgba(245,158,11,.1);color:var(--orange)}
+.badge.blue{background:rgba(79,124,255,.1);color:var(--accent)}
+.badge.red{background:rgba(239,68,68,.1);color:var(--red)}
+.progress-bar{height:5px;background:var(--border);border-radius:10px;overflow:hidden;margin-top:4px}
+.progress-fill{height:100%;border-radius:10px;transition:width 1s ease}
+
+/* ══ PARCOURS TIMELINE ══ */
+.timeline{display:flex;align-items:center;padding:16px 32px 8px}
+.tl-step{display:flex;flex-direction:column;align-items:center;gap:8px;position:relative;z-index:1;min-width:110px}
+.tl-circle{width:52px;height:52px;border-radius:50%;border:3px solid var(--border);background:var(--white);display:flex;align-items:center;justify-content:center;font-size:1.3rem;transition:all .3s}
+.tl-step.done .tl-circle{border-color:var(--green);background:rgba(16,185,129,.1)}
+.tl-step.active .tl-circle{border-color:var(--accent);background:rgba(79,124,255,.1);box-shadow:0 0 0 5px rgba(79,124,255,.12);animation:tlPulse 2s infinite}
+.tl-step.locked .tl-circle{background:var(--bg);opacity:.6}
+@keyframes tlPulse{0%,100%{box-shadow:0 0 0 5px rgba(79,124,255,.12)}50%{box-shadow:0 0 0 10px rgba(79,124,255,.04)}}
+.tl-line{flex:1;height:3px;background:var(--border);margin:0 4px;margin-bottom:38px;transition:background .5s;border-radius:3px}
+.tl-line.done{background:var(--green)}
+.tl-line.active{background:linear-gradient(90deg,var(--green),var(--accent))}
+.tl-label{font-size:.8rem;font-weight:700;color:var(--muted);text-align:center}
+.tl-step.done .tl-label{color:var(--green)}
+.tl-step.active .tl-label{color:var(--accent)}
+.tl-sublabel{font-size:.7rem;color:var(--muted);text-align:center;white-space:nowrap}
+.tl-step.done .tl-sublabel{color:var(--green)}
+.tl-step.active .tl-sublabel{color:var(--accent)}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+</style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="logo">Stage<span>Flow</span></div>
+  <nav>
+    <a class="nav-item active" href="etudiant.html"><i class="fa fa-house"></i> Dashboard</a>
+    <a class="nav-item" href="profil.html"><i class="fa fa-user"></i> Profil</a>
+    <a class="nav-item" href="stage.html"><i class="fa fa-briefcase"></i> Mon stage</a>
+    <a class="nav-item" href="journal.html"><i class="fa fa-book-open"></i> Journal de bord</a>
+    <a class="nav-item" href="messagerie.html"><i class="fa fa-comments"></i> Messagerie</a>
+    <a class="nav-item" href="suggestion.html"><i class="fa fa-lightbulb"></i> Suggestions</a>
+    <a class="nav-item" href="notifications.html"><i class="fa fa-bell"></i> Notifications</a>
+    <a class="nav-item" href="cv.html">
+  <i class="fa fa-file-user"></i> CV Generator
+</a>
+<a class="nav-item" href="soutenance.html">
+  <i class="fa fa-graduation-cap"></i> Soutenance en ligne
+</a>
+<a class="nav-item" href="document.html">
+  <i class="fa fa-file-contract"></i> Documents officiels
+</a>
+  <a class="nav-item" href="chatbot.html">
+  <i class="fa fa-robot"></i> Assistant IA
+</a>
+<a class="nav-item" href="carte-etudiant.html">
+  <i class="fa fa-id-card"></i> Ma carte étudiant
+</a>
+<a class="nav-item" href="planning.html">
+  <i class="fa fa-calendar-days"></i> Planning de stage
+</a>
+<a class="nav-item" href="ressource.html">
+  <i class="fa fa-book-bookmark"></i> Ressources
+</a>
+<a class="nav-item" href="carte-stagiaires.html">
+  <i class="fa fa-map-location-dot"></i> Carte des stagiaires
+</a>
+<a class="nav-item" href="rendez-vous.html">
+  <i class="fa fa-calendar-check"></i> Rendez-vous
+</a>
+  </nav>
+  <div class="sidebar-bottom">
+    <div class="user-chip">
+      <div class="avatar-circle" id="sidebarAvatar">?</div>
+      <div>
+        <div class="user-chip-name" id="sidebarNom">...</div>
+        <div class="user-chip-role">Étudiant</div>
+      </div>
+    </div>
+    <a class="nav-item" href="login.html" onclick="logout()" style="color:var(--red)">
+      <i class="fa fa-right-from-bracket"></i> Déconnexion
+    </a>
+  </div>
+</aside>
+
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-left">Bonjour, <span id="prenomHeader">...</span> 👋</div>
+    <div class="topbar-right">
+      <div style="position:relative">
+        <a class="msg-bell" id="bellBtn" onclick="toggleDropdown(event)" href="#">
+          <i class="fa fa-comments"></i>
+          <span class="msg-badge hidden" id="bellBadge">0</span>
+        </a>
+        <div class="msg-dropdown" id="msgDropdown">
+          <div class="dd-header">
+            <span>Messages</span>
+            <span id="ddUnreadLabel" style="font-size:.75rem;color:var(--muted);font-weight:400"></span>
+          </div>
+          <div id="ddBody"><div style="padding:16px;color:var(--muted);font-size:.82rem;text-align:center">Chargement...</div></div>
+          <div class="dd-footer"><a href="messagerie.html" onclick="markRead()">Ouvrir la messagerie →</a></div>
+        </div>
+      </div>
+      <div class="user-pill">
+        <div class="avatar-circle" id="topAvatar">?</div>
+        <span id="topNom">...</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <div class="stats-grid">
+      <div class="stat-card blue">
+        <div class="stat-icon"><i class="fa fa-briefcase"></i></div>
+        <div><div class="stat-label">Stages postulés</div><div class="stat-value" id="statTotal">—</div></div>
+      </div>
+      <div class="stat-card green">
+        <div class="stat-icon"><i class="fa fa-circle-check"></i></div>
+        <div><div class="stat-label">Stages validés</div><div class="stat-value" id="statValides">—</div></div>
+      </div>
+      <div class="stat-card orange">
+        <div class="stat-icon"><i class="fa fa-envelope"></i></div>
+        <div><div class="stat-label">Messages non lus</div><div class="stat-value" id="statMessages">—</div></div>
+      </div>
+    </div>
+
+    <!-- PARCOURS ACADÉMIQUE -->
+    <div class="card" style="animation-delay:.18s">
+      <div class="card-header">
+        <div class="card-title"><i class="fa fa-route"></i> Parcours académique</div>
+      </div>
+      <div class="timeline" id="parcoursTimeline">
+        <div style="color:var(--muted);font-size:.85rem;padding:10px">Chargement...</div>
+      </div>
+    </div>
+
+    <!-- MES STAGES -->
+    <div class="card" style="animation-delay:.25s">
+      <div class="card-header">
+        <div class="card-title"><i class="fa fa-briefcase"></i> Mes stages</div>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Titre</th><th>Entreprise</th><th>Type</th><th>Statut</th>
+            <th>Prérequis</th><th>Accès</th><th>Progression</th>
+          </tr>
+        </thead>
+        <tbody id="stagesBody">
+          <tr><td colspan="7" style="color:var(--muted);text-align:center;padding:20px">Chargement...</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const currentUser = {
+  id:     parseInt(localStorage.getItem("user_id")),
+  nom:    localStorage.getItem("user_nom")    || "",
+  prenom: localStorage.getItem("user_prenom") || "",
+  role:   localStorage.getItem("user_role")   || "",
+  photo:  localStorage.getItem("user_photo")  || "",
+};
+if (!currentUser.id) window.location.href = "login.html";
+
+const initiales = (currentUser.prenom[0]||"") + (currentUser.nom[0]||"");
+document.getElementById("prenomHeader").innerText = currentUser.prenom;
+document.getElementById("sidebarNom").innerText   = currentUser.prenom + " " + currentUser.nom;
+document.getElementById("topNom").innerText       = currentUser.prenom + " " + currentUser.nom;
+
+if (currentUser.photo) {
+  const url = "http://localhost:3000/uploads/" + currentUser.photo;
+  document.getElementById("sidebarAvatar").innerHTML = `<img src="${url}" style="width:34px;height:34px;border-radius:50%;object-fit:cover">`;
+  document.getElementById("topAvatar").innerHTML     = `<img src="${url}" style="width:26px;height:26px;border-radius:50%;object-fit:cover">`;
+} else {
+  document.getElementById("sidebarAvatar").innerText = initiales;
+  document.getElementById("topAvatar").innerText     = initiales;
+}
+
+function toggleDropdown(e) {
+  e.preventDefault();
+  document.getElementById("msgDropdown").classList.toggle("show");
+}
+document.addEventListener("click", e => {
+  if (!e.target.closest("#bellBtn") && !e.target.closest("#msgDropdown"))
+    document.getElementById("msgDropdown").classList.remove("show");
+});
+
+let encadrantId = null;
+function markRead() {
+  if (!encadrantId) return;
+  fetch(`http://localhost:3000/mark-read/${currentUser.id}/${encadrantId}`, { method:"PUT" });
+  document.getElementById("bellBadge").classList.add("hidden");
+  document.getElementById("statMessages").innerText = "0";
+}
+
+function loadStages() {
+  fetch(`http://localhost:3000/mes-stages/${currentUser.id}`)
+    .then(r => r.json())
+    .then(data => {
+      const stages = data.success ? data.stages : [];
+      document.getElementById("statTotal").innerText   = stages.length;
+      document.getElementById("statValides").innerText = stages.filter(s => s.statut === "valide").length;
+
+      const init     = stages.find(s => s.type_stage === "initiation");
+      const perfect  = stages.find(s => s.type_stage === "perfectionnement");
+      const finEtude = stages.find(s => s.type_stage === "fin_etude");
+
+      function getStep(stage) {
+        if (!stage)                    return { cls:"locked", icon:"🔒", sub:"Non commencé" };
+        if (stage.statut === "valide") return { cls:"done",   icon:"✅", sub:"Validé ✓" };
+        if (stage.statut === "refuse") return { cls:"locked", icon:"❌", sub:"Refusé" };
+        const labels = { en_attente:"En attente", affecte:"Affecté", en_cours:"En cours", rapport_depose:"Rapport déposé" };
+        return { cls:"active", icon:"⏳", sub: labels[stage.statut] || stage.statut };
+      }
+
+      const s1 = getStep(init);
+      const s2 = getStep(perfect);
+      const s3 = getStep(finEtude);
+
+      document.getElementById("parcoursTimeline").innerHTML = `
+        <div class="tl-step ${s1.cls}">
+          <div class="tl-circle">${s1.icon}</div>
+          <div class="tl-label">Initiation</div>
+          <div class="tl-sublabel">${s1.sub}</div>
+        </div>
+        <div class="tl-line ${s1.cls==="done"?"done":s1.cls==="active"?"active":""}"></div>
+        <div class="tl-step ${s2.cls}">
+          <div class="tl-circle">${s2.icon}</div>
+          <div class="tl-label">Perfectionnement</div>
+          <div class="tl-sublabel">${s2.sub}</div>
+        </div>
+        <div class="tl-line ${s2.cls==="done"?"done":s2.cls==="active"?"active":""}"></div>
+        <div class="tl-step ${s3.cls}">
+          <div class="tl-circle">${s3.icon}</div>
+          <div class="tl-label">Fin d'études</div>
+          <div class="tl-sublabel">${s3.sub}</div>
+        </div>`;
+
+      if (!stages.length) {
+        document.getElementById("stagesBody").innerHTML =
+          `<tr><td colspan="7" style="color:var(--muted);text-align:center;padding:20px">Aucun stage trouvé</td></tr>`;
+        return;
+      }
+
+      const typeLabel = { initiation:"Initiation", perfectionnement:"Perfectionnement", fin_etude:"Fin d'études" };
+      const statutMap = {
+        en_attente:     {label:"En attente",    cls:"yellow"},
+        affecte:        {label:"Affecté",        cls:"blue"},
+        en_cours:       {label:"En cours",       cls:"blue"},
+        rapport_depose: {label:"Rapport déposé", cls:"yellow"},
+        valide:         {label:"Validé ✓",       cls:"green"},
+        refuse:         {label:"Refusé",         cls:"red"}
+      };
+
+      const initValide    = init?.statut    === "valide";
+      const perfectValide = perfect?.statut === "valide";
+
+      document.getElementById("stagesBody").innerHTML = stages.map(s => {
+        const st   = statutMap[s.statut] || {label:s.statut,cls:"blue"};
+        const prog = s.progression || 0;
+        const progColor = prog >= 75 ? "#10b981" : prog >= 40 ? "#f59e0b" : "#ef4444";
+
+        let acces = "", prerequis = "";
+        if (s.type_stage === "initiation") {
+          acces="<span style='color:var(--green);font-weight:600;font-size:.82rem'>🔓 Libre</span>";
+          prerequis="<span style='color:var(--muted);font-size:.75rem'>—</span>";
+        } else if (s.type_stage === "perfectionnement") {
+          if (initValide) {
+            acces="<span style='color:var(--green);font-weight:600;font-size:.82rem'>🔓 Libre</span>";
+            prerequis="<span style='color:var(--green);font-size:.75rem'>✅ Initiation validée</span>";
+          } else {
+            acces="<span style='color:var(--red);font-weight:600;font-size:.82rem'>🔒 Bloqué</span>";
+            prerequis="<span style='color:var(--red);font-size:.75rem'>⏳ Initiation requise</span>";
+          }
+        } else if (s.type_stage === "fin_etude") {
+          if (perfectValide) {
+            acces="<span style='color:var(--green);font-weight:600;font-size:.82rem'>🔓 Libre</span>";
+            prerequis="<span style='color:var(--green);font-size:.75rem'>✅ Perfectionnement validé</span>";
+          } else {
+            acces="<span style='color:var(--red);font-weight:600;font-size:.82rem'>🔒 Bloqué</span>";
+            prerequis="<span style='color:var(--red);font-size:.75rem'>⏳ Perfectionnement requis</span>";
+          }
+        }
+
+        let countdown = "";
+        if (s.date_fin_prevue) {
+          const diff = Math.ceil((new Date(s.date_fin_prevue) - new Date()) / (1000*60*60*24));
+          if      (diff < 0)   countdown=`<div style="color:var(--red);font-size:.7rem;margin-top:3px">⚠️ Dépassée</div>`;
+          else if (diff <= 7)  countdown=`<div style="color:var(--red);font-size:.7rem;margin-top:3px">🔴 ${diff}j restants</div>`;
+          else if (diff <= 30) countdown=`<div style="color:var(--orange);font-size:.7rem;margin-top:3px">🟠 ${diff}j restants</div>`;
+          else                 countdown=`<div style="color:var(--green);font-size:.7rem;margin-top:3px">🟢 ${diff}j restants</div>`;
+        }
+
+        return `<tr>
+          <td style="font-weight:500">${s.titre}</td>
+          <td>${s.entreprise||"—"}</td>
+          <td><span class="badge blue">${typeLabel[s.type_stage]||s.type_stage}</span></td>
+          <td><span class="badge ${st.cls}">${st.label}</span></td>
+          <td>${prerequis}</td>
+          <td>${acces}</td>
+          <td style="min-width:120px">
+            <div style="font-size:.72rem;color:var(--muted);margin-bottom:4px">${prog}%</div>
+            <div class="progress-bar"><div class="progress-fill" style="width:${prog}%;background:${progColor}"></div></div>
+            ${countdown}
+          </td>
+        </tr>`;
+      }).join("");
+    });
+}
+
+function loadMsgPreview() {
+  fetch(`http://localhost:3000/mon-encadrant/${currentUser.id}`)
+    .then(r => r.json())
+    .then(data => {
+      if (!data.success) {
+        document.getElementById("ddBody").innerHTML=`<div style="padding:16px;color:var(--muted);font-size:.82rem;text-align:center">Aucun encadrant assigné</div>`;
+        document.getElementById("statMessages").innerText=0;
+        return;
+      }
+      encadrantId=data.encadrant.id;
+      const enc=data.encadrant;
+      fetch(`http://localhost:3000/messages/${currentUser.id}/${enc.id}`)
+        .then(r=>r.json())
+        .then(msgs=>{
+          const unread=msgs.filter(m=>m.destinataire_id===currentUser.id&&m.est_lu===0).length;
+          const badge=document.getElementById("bellBadge");
+          if(unread>0){badge.innerText=unread>99?"99+":unread;badge.classList.remove("hidden")}
+          else badge.classList.add("hidden");
+          document.getElementById("statMessages").innerText=unread;
+          document.getElementById("ddUnreadLabel").innerText=unread>0?`${unread} non lu${unread>1?"s":""}`:"Tout est lu ✓";
+          const last=[...msgs].reverse().find(m=>m.expediteur_id===encadrantId);
+          const lastText=last?(last.type==="audio"?"🎙 Message vocal":last.contenu.match(/\.(pdf|jpg|png|jpeg)$/)?"📎 Fichier joint":last.contenu):"Aucun message";
+          const lastTime=last?new Date(last.date_envoi).toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"}):"";
+          const ini=(enc.prenom?.[0]||"")+(enc.nom?.[0]||"");
+          document.getElementById("ddBody").innerHTML=`
+            <a class="dd-item" href="messagerie.html" onclick="markRead()">
+              <div class="dd-avatar">${ini}<div class="dd-online"></div></div>
+              <div class="dd-info">
+                <div class="dd-name">${enc.prenom} ${enc.nom}</div>
+                <div class="dd-last">${lastText}</div>
+              </div>
+              <div class="dd-meta">
+                <div class="dd-time">${lastTime}</div>
+                ${unread>0?`<div class="dd-unread">${unread}</div>`:""}
+              </div>
+            </a>`;
+        });
+    });
+}
+
+function logout(){localStorage.clear()}
+loadStages();
+loadMsgPreview();
+setInterval(loadMsgPreview,4000);
+
+</script>
+</body>
+</html>

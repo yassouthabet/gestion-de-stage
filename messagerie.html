@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Messagerie | StageFlow</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:        #f4f6fb;
+  --white:     #ffffff;
+  --border:    #e5e9f2;
+  --accent:    #4f7cff;
+  --accent2:   #7c5cfc;
+  --green:     #10b981;
+  --orange:    #f59e0b;
+  --red:       #ef4444;
+  --text:      #1a1d2e;
+  --muted:     #8892a4;
+  --sidebar-w: 240px;
+}
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* ══ SIDEBAR ══ */
+.sidebar {
+  width: var(--sidebar-w);
+  background: var(--white);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  padding: 24px 14px;
+  flex-shrink: 0;
+}
+
+.logo {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 1.35rem;
+  color: var(--text);
+  padding: 0 8px 22px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 18px;
+}
+.logo span { color: var(--accent); }
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border-radius: 10px;
+  color: var(--muted);
+  text-decoration: none;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: all 0.18s;
+  margin-bottom: 2px;
+  cursor: pointer;
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+}
+.nav-item:hover  { background: var(--bg); color: var(--text); }
+.nav-item.active { background: rgba(79,124,255,0.1); color: var(--accent); font-weight: 600; }
+.nav-item i      { width: 16px; text-align: center; font-size: 0.85rem; }
+
+.sidebar-bottom {
+  margin-top: auto;
+  border-top: 1px solid var(--border);
+  padding-top: 14px;
+}
+
+.user-chip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: var(--bg);
+  border-radius: 10px;
+  margin-bottom: 6px;
+}
+.avatar-circle {
+  width: 34px; height: 34px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 0.8rem; color: #fff;
+  flex-shrink: 0;
+   overflow: hidden;
+}
+.user-chip-name { font-size: 0.82rem; font-weight: 600; color: var(--text); }
+.user-chip-role { font-size: 0.7rem; color: var(--muted); }
+
+/* ══ MAIN ══ */
+.main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* ══ TOPBAR ══ */
+.topbar {
+  background: var(--white);
+  border-bottom: 1px solid var(--border);
+  padding: 0 24px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+
+.topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.dest-avatar {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 0.82rem; color: #fff;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.dest-online {
+  width: 9px; height: 9px;
+  background: var(--green);
+  border: 2px solid var(--white);
+  border-radius: 50%;
+  position: absolute;
+  bottom: 0; right: 0;
+}
+
+.dest-name {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--text);
+}
+.dest-role { font-size: 0.72rem; color: var(--muted); }
+
+.user-pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 12px 5px 6px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--text);
+}
+.user-pill .avatar-circle { width: 26px; height: 26px; font-size: 0.7rem; }
+
+/* ══ MESSAGES AREA ══ */
+.messages-area {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: var(--bg);
+}
+
+/* scrollbar */
+.messages-area::-webkit-scrollbar { width: 5px; }
+.messages-area::-webkit-scrollbar-track { background: transparent; }
+.messages-area::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+
+/* ══ BUBBLE ══ */
+.msg-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  animation: fadeUp 0.2s ease both;
+}
+.msg-row.mine  { justify-content: flex-end; }
+.msg-row.their { justify-content: flex-start; }
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.msg-bubble {
+  max-width: 340px;
+  padding: 10px 14px;
+  border-radius: 18px;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  position: relative;
+  word-break: break-word;
+}
+
+.msg-row.mine .msg-bubble {
+  background: var(--accent);
+  color: #fff;
+  border-bottom-right-radius: 4px;
+}
+
+.msg-row.their .msg-bubble {
+  background: var(--white);
+  color: var(--text);
+  border-bottom-left-radius: 4px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+}
+
+.msg-time {
+  font-size: 0.68rem;
+  opacity: 0.6;
+  margin-top: 4px;
+  text-align: right;
+}
+
+.msg-actions {
+  display: none;
+  gap: 6px;
+  justify-content: flex-end;
+  margin-top: 3px;
+}
+.msg-bubble:hover .msg-actions { display: flex; }
+.msg-actions i {
+  font-size: 0.7rem;
+  cursor: pointer;
+  opacity: 0.6;
+  transition: opacity 0.15s;
+}
+.msg-actions i:hover { opacity: 1; }
+
+.msg-small-avatar {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.65rem; font-weight: 700; color: #fff;
+  flex-shrink: 0;
+}
+
+/* ══ INPUT BAR ══ */
+.input-bar {
+  background: var(--white);
+  border-top: 1px solid var(--border);
+  padding: 14px 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.input-btn {
+  width: 36px; height: 36px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--muted);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+.input-btn:hover { border-color: var(--accent); color: var(--accent); background: rgba(79,124,255,0.06); }
+.input-btn.record { color: var(--green); }
+.input-btn.stop   { color: var(--red); }
+.input-btn.send   { background: var(--accent); color: #fff; border-color: var(--accent); }
+.input-btn.send:hover { background: #3a65e0; }
+
+.msg-input {
+  flex: 1;
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  padding: 9px 18px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.875rem;
+  color: var(--text);
+  background: var(--bg);
+  outline: none;
+  transition: border-color 0.15s;
+}
+.msg-input:focus { border-color: var(--accent); background: var(--white); }
+.msg-input::placeholder { color: var(--muted); }
+
+/* recording indicator */
+.recording-dot {
+  width: 8px; height: 8px;
+  background: var(--red);
+  border-radius: 50%;
+  animation: blink 1s infinite;
+  display: none;
+}
+.recording-dot.show { display: inline-block; }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+</style>
+</head>
+
+<body>
+
+<!-- ══ SIDEBAR ══ -->
+<aside class="sidebar">
+  <div class="logo">Stage<span>Flow</span></div>
+ <nav>
+    <a class="nav-item active" href="etudiant.html"><i class="fa fa-house"></i> Dashboard</a>
+    <a class="nav-item" href="profil.html"><i class="fa fa-user"></i> Profil</a>
+    <a class="nav-item" href="stage.html"><i class="fa fa-briefcase"></i> Mon stage</a>
+    <a class="nav-item" href="journal.html"><i class="fa fa-book-open"></i> Journal de bord</a>
+    <a class="nav-item" href="messagerie.html"><i class="fa fa-comments"></i> Messagerie</a>
+    <a class="nav-item" href="suggestion.html"><i class="fa fa-lightbulb"></i> Suggestions</a>
+    <a class="nav-item" href="notifications.html"><i class="fa fa-bell"></i> Notifications</a>
+    <a class="nav-item" href="cv.html">
+  <i class="fa fa-file-user"></i> CV Generator
+</a>
+<a class="nav-item" href="soutenance.html">
+  <i class="fa fa-graduation-cap"></i> Soutenance en ligne
+</a>
+<a class="nav-item" href="document.html">
+  <i class="fa fa-file-contract"></i> Documents officiels
+</a>
+  <a class="nav-item" href="chatbot.html">
+  <i class="fa fa-robot"></i> Assistant IA
+</a>
+<a class="nav-item" href="carte-etudiant.html">
+  <i class="fa fa-id-card"></i> Ma carte étudiant
+</a>
+<a class="nav-item" href="planning.html">
+  <i class="fa fa-calendar-days"></i> Planning de stage
+</a>
+<a class="nav-item" href="ressource.html">
+  <i class="fa fa-book-bookmark"></i> Ressources
+</a>
+<a class="nav-item" href="carte-stagiaires.html">
+  <i class="fa fa-map-location-dot"></i> Carte des stagiaires
+</a>
+<a class="nav-item" href="rendez-vous.html">
+  <i class="fa fa-calendar-check"></i> Rendez-vous
+</a>
+  </nav>
+  <div class="sidebar-bottom">
+    <div class="user-chip">
+      <div class="avatar-circle" id="sidebarAvatar">?</div>
+      <div>
+        <div class="user-chip-name" id="sidebarNom">...</div>
+        <div class="user-chip-role">Étudiant</div>
+      </div>
+    </div>
+    <button class="nav-item" onclick="logout()" style="color:var(--red)">
+      <i class="fa fa-right-from-bracket"></i> Déconnexion
+    </button>
+  </div>
+</aside>
+
+<!-- ══ MAIN ══ -->
+<div class="main">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="dest-avatar" id="destAvatar">
+        ?
+        <div class="dest-online"></div>
+      </div>
+      <div>
+        <div class="dest-name" id="destNom">Chargement...</div>
+        <div class="dest-role" id="destRole"></div>
+      </div>
+    </div>
+    <div class="user-pill">
+      <div class="avatar-circle" id="topAvatar">?</div>
+      <span id="topNom">...</span>
+    </div>
+  </div>
+
+  <!-- MESSAGES -->
+  <div class="messages-area" id="messagesArea"></div>
+
+  <!-- INPUT -->
+  <div class="input-bar">
+
+    <button class="input-btn" onclick="document.getElementById('fileInput').click()" title="Fichier">
+      <i class="fa fa-paperclip"></i>
+    </button>
+    <input type="file" id="fileInput" hidden>
+
+    <div class="recording-dot" id="recDot"></div>
+
+    <input class="msg-input" id="messageInput"
+      placeholder="Écrire un message..."
+      onkeydown="if(event.key==='Enter') sendMessage()">
+
+    <button class="input-btn send" onclick="sendMessage()" title="Envoyer">
+      <i class="fa fa-paper-plane"></i>
+    </button>
+
+    <button class="input-btn record" id="btnRecord" onclick="startRecording()" title="Vocal">
+      <i class="fa fa-microphone"></i>
+    </button>
+
+    <button class="input-btn stop hidden" id="btnStop" onclick="stopRecording()" title="Stop">
+      <i class="fa fa-stop"></i>
+    </button>
+
+  </div>
+</div>
+
+<script>
+
+/* ══ LOGIN CHECK ══ */
+const currentUser = {
+  id:     parseInt(localStorage.getItem("user_id")),
+  nom:    localStorage.getItem("user_nom")    || "",
+  prenom: localStorage.getItem("user_prenom") || "",
+  role:   localStorage.getItem("user_role")   || "",
+  photo:  localStorage.getItem("user_photo")  || ""
+};
+
+if (!currentUser.id) window.location.href = "login.html";
+
+/* init noms */
+const ini = (currentUser.prenom[0]||"") + (currentUser.nom[0]||"");
+document.getElementById("sidebarNom").innerText = currentUser.prenom + " " + currentUser.nom;
+document.getElementById("topNom").innerText     = currentUser.prenom + " " + currentUser.nom;
+
+// ← هنا الإضافة
+if (currentUser.photo) {
+  const url  = "http://localhost:3000/uploads/" + currentUser.photo;
+  document.getElementById("sidebarAvatar").innerHTML =
+    `<img src="${url}" style="width:34px;height:34px;border-radius:50%;object-fit:cover">`;
+  document.getElementById("topAvatar").innerHTML =
+    `<img src="${url}" style="width:26px;height:26px;border-radius:50%;object-fit:cover">`;
+} else {
+  document.getElementById("sidebarAvatar").innerText = ini;
+  document.getElementById("topAvatar").innerText     = ini;
+}
+
+/* ══ VARIABLES ══ */
+let destinataireId = null;
+let stageId        = null;
+
+/* ══ INIT ══ */
+async function init() {
+
+  const params = new URLSearchParams(window.location.search);
+
+  if (currentUser.role === "etudiant") {
+
+    const r = await fetch(`http://localhost:3000/mon-encadrant/${currentUser.id}`);
+    const d = await r.json();
+
+    if (!d.success) {
+      document.getElementById("destNom").innerText = "Aucun encadrant assigné";
+      return;
+    }
+
+    destinataireId = d.encadrant.id;
+    stageId        = d.encadrant.stage_id;
+    afficherDest(d.encadrant);
+
+  } else if (currentUser.role === "encadrant") {
+
+    const etudiantId = params.get("etudiant_id");
+    if (!etudiantId) {
+      document.getElementById("destNom").innerText = "Aucun étudiant sélectionné";
+      return;
+    }
+
+    destinataireId = parseInt(etudiantId);
+
+    const r = await fetch(`http://localhost:3000/stage-commun/${currentUser.id}/${etudiantId}`);
+    const d = await r.json();
+    if (d.success) stageId = d.stage_id;
+
+    const r2 = await fetch(`http://localhost:3000/user-info/${etudiantId}`);
+    const d2 = await r2.json();
+    if (d2.success) afficherDest(d2.user);
+
+  } else {
+    destinataireId = parseInt(params.get("dest_id"));
+    stageId        = parseInt(params.get("stage_id"));
+    const r = await fetch(`http://localhost:3000/user-info/${destinataireId}`);
+    const d = await r.json();
+    if (d.success) afficherDest(d.user);
+  }
+
+  if (destinataireId) {
+    /* mark read كي يفتح */
+    fetch(`http://localhost:3000/mark-read/${currentUser.id}/${destinataireId}`, { method: "PUT" });
+    loadMessages();
+  }
+}
+
+function afficherDest(user) {
+  const initD = (user.prenom?.[0]||"") + (user.nom?.[0]||"");
+  document.getElementById("destNom").innerText  = user.prenom + " " + user.nom;
+  document.getElementById("destRole").innerText = user.role || "";
+  document.getElementById("destAvatar").innerHTML =
+    `${initD}<div class="dest-online"></div>`;
+}
+
+/* ══ SEND TEXT ══ */
+function sendMessage() {
+  const contenu = document.getElementById("messageInput").value.trim();
+  if (!contenu || !destinataireId) return;
+
+  fetch("http://localhost:3000/send-message", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      contenu,
+      expediteur_id:   currentUser.id,
+      destinataire_id: destinataireId,
+      stage_id:        stageId
+    })
+  }).then(() => {
+    document.getElementById("messageInput").value = "";
+    loadMessages();
+  });
+}
+
+/* ══ SEND FILE ══ */
+document.getElementById("fileInput").addEventListener("change", function() {
+  if (!destinataireId) return;
+  const file = this.files[0];
+  if (!file) return;
+  const formData = new FormData();
+  formData.append("file",            file);
+  formData.append("expediteur_id",   currentUser.id);
+  formData.append("destinataire_id", destinataireId);
+  formData.append("stage_id",        stageId);
+  fetch("http://localhost:3000/send-file", { method: "POST", body: formData })
+    .then(() => loadMessages());
+});
+
+/* ══ VOCAL ══ */
+let mediaRecorder;
+let audioChunks = [];
+
+async function startRecording() {
+  if (!destinataireId) return;
+  const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+  mediaRecorder = new MediaRecorder(stream);
+  audioChunks   = [];
+  mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+  mediaRecorder.start();
+  document.getElementById("btnRecord").classList.add("hidden");
+  document.getElementById("btnStop").classList.remove("hidden");
+  document.getElementById("recDot").classList.add("show");
+}
+
+function stopRecording() {
+  mediaRecorder.stop();
+  mediaRecorder.onstop = () => {
+    const blob     = new Blob(audioChunks, { type: "audio/webm" });
+    const formData = new FormData();
+    formData.append("audio",           blob, "voice.webm");
+    formData.append("expediteur_id",   currentUser.id);
+    formData.append("destinataire_id", destinataireId);
+    formData.append("stage_id",        stageId);
+    fetch("http://localhost:3000/send-audio", { method: "POST", body: formData })
+      .then(() => loadMessages());
+  };
+  document.getElementById("btnRecord").classList.remove("hidden");
+  document.getElementById("btnStop").classList.add("hidden");
+  document.getElementById("recDot").classList.remove("show");
+}
+
+/* ══ DELETE / EDIT ══ */
+function deleteMessage(id) {
+  if (!confirm("Supprimer ?")) return;
+  fetch("http://localhost:3000/delete-message/" + id, { method: "DELETE" })
+    .then(() => loadMessages());
+}
+
+function editMessage(id, old) {
+  const contenu = prompt("Modifier", old);
+  if (!contenu) return;
+  fetch("http://localhost:3000/update-message/" + id, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ contenu })
+  }).then(() => loadMessages());
+}
+
+/* ══ LOAD MESSAGES ══ */
+function loadMessages() {
+  if (!destinataireId) return;
+
+  fetch(`http://localhost:3000/messages/${currentUser.id}/${destinataireId}`)
+    .then(res => res.json())
+    .then(data => {
+
+      const area = document.getElementById("messagesArea");
+      const wasBottom = area.scrollHeight - area.scrollTop - area.clientHeight < 60;
+
+      let html = "";
+      let lastDate = "";
+
+      data.forEach(m => {
+        const isMine = m.expediteur_id === currentUser.id;
+
+        /* séparateur de date */
+        const d    = new Date(m.date_envoi);
+        const jour = d.toLocaleDateString("fr-FR", { day:"numeric", month:"long" });
+        if (jour !== lastDate) {
+          html += `<div style="text-align:center;margin:8px 0">
+                     <span style="background:var(--border);color:var(--muted);font-size:0.72rem;padding:3px 12px;border-radius:20px">${jour}</span>
+                   </div>`;
+          lastDate = jour;
+        }
+
+        const time = d.toLocaleTimeString("fr-FR", { hour:"2-digit", minute:"2-digit" });
+
+        let content = "";
+        if (m.type === "audio" || m.contenu.endsWith(".webm")) {
+          content = `<audio controls style="max-width:220px;height:32px">
+                       <source src="http://localhost:3000/uploads/audio/${m.contenu}">
+                     </audio>`;
+        } else if (m.contenu.match(/\.(pdf|jpg|jpeg|png)$/i)) {
+          content = `<a href="http://localhost:3000/uploads/${m.contenu}" target="_blank"
+                        style="display:flex;align-items:center;gap:6px;color:inherit;text-decoration:none;opacity:0.9">
+                       <i class="fa fa-paperclip"></i> Fichier joint
+                     </a>`;
+        } else {
+          content = m.contenu;
+        }
+
+        const actions = isMine ? `
+          <div class="msg-actions">
+            <i class="fa fa-pen" onclick="editMessage(${m.id},'${m.contenu.replace(/'/g,"\\'")}')"></i>
+            <i class="fa fa-trash" onclick="deleteMessage(${m.id})"></i>
+          </div>` : "";
+
+        const iniDest = (document.getElementById("destNom").innerText.split(" ")[0]?.[0]||"") +
+                        (document.getElementById("destNom").innerText.split(" ")[1]?.[0]||"");
+
+        if (isMine) {
+          html += `
+            <div class="msg-row mine">
+              <div class="msg-bubble">
+                ${content}
+                <div class="msg-time">${time}</div>
+                ${actions}
+              </div>
+            </div>`;
+        } else {
+          html += `
+            <div class="msg-row their">
+              <div class="msg-small-avatar">${iniDest}</div>
+              <div class="msg-bubble">
+                ${content}
+                <div class="msg-time">${time}</div>
+              </div>
+            </div>`;
+        }
+      });
+
+      area.innerHTML = html;
+      if (wasBottom) area.scrollTop = area.scrollHeight;
+
+      /* mark read */
+      fetch(`http://localhost:3000/mark-read/${currentUser.id}/${destinataireId}`, { method: "PUT" });
+    });
+}
+
+/* ══ LOGOUT ══ */
+function logout() {
+  localStorage.clear();
+  window.location.href = "login.html";
+}
+
+/* ══ START ══ */
+init();
+setInterval(loadMessages, 3000);
+
+</script>
+</body>
+</html>

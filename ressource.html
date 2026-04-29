@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ressources | StageFlow</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f4f6fb;--white:#fff;--border:#e5e9f2;
+  --accent:#4f7cff;--accent2:#7c5cfc;--green:#10b981;
+  --orange:#f59e0b;--red:#ef4444;--text:#1a1d2e;--muted:#8892a4;
+  --sidebar-w:240px;
+}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);display:flex;min-height:100vh}
+
+/* SIDEBAR */
+.sidebar{width:var(--sidebar-w);background:var(--white);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:24px 14px;position:fixed;top:0;left:0;bottom:0;z-index:100}
+.logo{font-family:'Syne',sans-serif;font-weight:800;font-size:1.35rem;color:var(--text);padding:0 8px 22px;border-bottom:1px solid var(--border);margin-bottom:18px}
+.logo span{color:var(--accent)}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:10px;color:var(--muted);text-decoration:none;font-size:.875rem;font-weight:500;transition:all .18s;margin-bottom:2px;cursor:pointer;border:none;background:none;width:100%;text-align:left}
+.nav-item:hover{background:var(--bg);color:var(--text)}
+.nav-item.active{background:rgba(79,124,255,.1);color:var(--accent);font-weight:600}
+.nav-item i{width:16px;text-align:center;font-size:.85rem}
+.sidebar-bottom{margin-top:auto;border-top:1px solid var(--border);padding-top:14px}
+.user-chip{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg);border-radius:10px;margin-bottom:6px}
+.avatar-circle{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.8rem;color:#fff;flex-shrink:0;overflow:hidden}
+.user-chip-name{font-size:.82rem;font-weight:600;color:var(--text)}
+.user-chip-role{font-size:.7rem;color:var(--muted)}
+
+/* MAIN */
+.main{margin-left:var(--sidebar-w);flex:1;display:flex;flex-direction:column}
+.topbar{background:var(--white);border-bottom:1px solid var(--border);padding:0 28px;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
+.topbar-title{font-family:'Syne',sans-serif;font-weight:700;font-size:1.05rem;color:var(--text)}
+.topbar-title span{color:var(--accent)}
+.user-pill{display:flex;align-items:center;gap:8px;padding:5px 12px 5px 6px;background:var(--bg);border:1px solid var(--border);border-radius:20px;font-size:.82rem;font-weight:500;color:var(--text)}
+.user-pill .avatar-circle{width:26px;height:26px;font-size:.7rem}
+
+/* CONTENT */
+.content{padding:28px;flex:1}
+
+/* HERO */
+.ressources-hero{
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  border-radius:16px;padding:28px 32px;
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:24px;position:relative;overflow:hidden;
+}
+.ressources-hero::before{
+  content:'';position:absolute;top:-40px;right:-40px;
+  width:160px;height:160px;border-radius:50%;
+  background:rgba(255,255,255,0.08);
+}
+.ressources-hero::after{
+  content:'';position:absolute;bottom:-30px;right:80px;
+  width:100px;height:100px;border-radius:50%;
+  background:rgba(255,255,255,0.05);
+}
+.hero-text h2{font-family:'Syne',sans-serif;font-weight:800;font-size:1.3rem;color:#fff;margin-bottom:6px}
+.hero-text p{font-size:.82rem;color:rgba(255,255,255,0.75);line-height:1.6}
+.hero-icon{font-size:3rem;opacity:.8;position:relative;z-index:1}
+
+/* FILTERS */
+.filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:22px}
+.filter-btn{padding:7px 16px;border-radius:20px;border:1px solid var(--border);background:var(--white);color:var(--muted);font-family:'DM Sans',sans-serif;font-size:.78rem;font-weight:500;cursor:pointer;transition:all .18s;display:flex;align-items:center;gap:6px}
+.filter-btn:hover{border-color:var(--accent);color:var(--accent)}
+.filter-btn.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+
+/* SEARCH */
+.search-wrap{position:relative;margin-bottom:22px;max-width:400px}
+.search-input{width:100%;padding:10px 16px 10px 38px;border:1px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:.855rem;color:var(--text);background:var(--white);outline:none;transition:border-color .15s}
+.search-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(79,124,255,.1)}
+.search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:.82rem}
+
+/* GRID */
+.ressources-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
+
+/* RESOURCE CARD */
+.res-card{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:14px;padding:20px;
+  transition:all .22s;animation:fadeUp .4s ease both;
+  display:flex;flex-direction:column;gap:14px;
+  position:relative;overflow:hidden;
+}
+.res-card:hover{border-color:rgba(79,124,255,.25);box-shadow:0 8px 28px rgba(79,124,255,.1);transform:translateY(-3px)}
+.res-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:3px;
+  transform:scaleX(0);transform-origin:left;transition:transform .3s;
+}
+.res-card.rapport::before{background:var(--accent)}
+.res-card.guide::before{background:var(--green)}
+.res-card.template::before{background:var(--orange)}
+.res-card.autre::before{background:var(--accent2)}
+.res-card:hover::before{transform:scaleX(1)}
+
+/* file icon */
+.res-icon-wrap{display:flex;align-items:center;justify-content:space-between}
+.res-icon{width:44px;height:44px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0}
+.res-card.rapport .res-icon{background:rgba(79,124,255,.1)}
+.res-card.guide   .res-icon{background:rgba(16,185,129,.1)}
+.res-card.template .res-icon{background:rgba(245,158,11,.1)}
+.res-card.autre   .res-icon{background:rgba(124,92,252,.1)}
+
+.res-type-badge{font-size:.65rem;font-weight:700;padding:3px 9px;border-radius:10px;text-transform:uppercase;letter-spacing:.06em}
+.res-card.rapport .res-type-badge{background:rgba(79,124,255,.1);color:var(--accent)}
+.res-card.guide   .res-type-badge{background:rgba(16,185,129,.1);color:var(--green)}
+.res-card.template .res-type-badge{background:rgba(245,158,11,.1);color:var(--orange)}
+.res-card.autre   .res-type-badge{background:rgba(124,92,252,.1);color:var(--accent2)}
+
+.res-title{font-family:'Syne',sans-serif;font-weight:700;font-size:.9rem;color:var(--text);line-height:1.3}
+.res-desc{font-size:.78rem;color:var(--muted);line-height:1.6;flex:1}
+
+.res-footer{display:flex;align-items:center;justify-content:space-between;padding-top:12px;border-top:1px solid var(--border)}
+.res-meta{font-size:.7rem;color:var(--muted);display:flex;flex-direction:column;gap:2px}
+.res-meta span{display:flex;align-items:center;gap:4px}
+
+.btn-download{display:flex;align-items:center;gap:6px;padding:7px 14px;border-radius:8px;border:none;background:var(--accent);color:#fff;font-family:'DM Sans',sans-serif;font-size:.75rem;font-weight:600;cursor:pointer;transition:all .18s;text-decoration:none}
+.btn-download:hover{opacity:.85;transform:translateY(-1px)}
+
+/* EMPTY */
+.empty-state{text-align:center;padding:60px 20px;color:var(--muted)}
+.empty-state i{font-size:2.5rem;opacity:.2;display:block;margin-bottom:14px}
+.empty-state h3{font-family:'Syne',sans-serif;font-weight:700;font-size:1rem;color:var(--text);margin-bottom:6px}
+.empty-state p{font-size:.82rem;line-height:1.6}
+
+/* STATS BAR */
+.stats-bar{display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap}
+.stat-mini{background:var(--white);border:1px solid var(--border);border-radius:10px;padding:12px 16px;display:flex;align-items:center;gap:10px;font-size:.78rem}
+.stat-mini i{color:var(--accent)}
+.stat-mini strong{font-family:'Syne',sans-serif;font-weight:700;color:var(--text);font-size:.9rem}
+
+/* SKELETON */
+.skeleton{background:linear-gradient(90deg,var(--border) 25%,rgba(229,233,242,.5) 50%,var(--border) 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:8px}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.skeleton-card{background:var(--white);border:1px solid var(--border);border-radius:14px;padding:20px;height:180px}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;right:24px;background:var(--text);color:#fff;padding:12px 20px;border-radius:10px;font-size:.85rem;font-weight:500;box-shadow:0 4px 20px rgba(0,0,0,.15);transform:translateY(80px);opacity:0;transition:all .3s ease;z-index:999}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.success{background:var(--green)}
+</style>
+</head>
+
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="logo">Stage<span>Flow</span></div>
+  <nav>
+    <a class="nav-item active" href="etudiant.html"><i class="fa fa-house"></i> Dashboard</a>
+    <a class="nav-item" href="profil.html"><i class="fa fa-user"></i> Profil</a>
+    <a class="nav-item" href="stage.html"><i class="fa fa-briefcase"></i> Mon stage</a>
+    <a class="nav-item" href="journal.html"><i class="fa fa-book-open"></i> Journal de bord</a>
+    <a class="nav-item" href="messagerie.html"><i class="fa fa-comments"></i> Messagerie</a>
+    <a class="nav-item" href="suggestion.html"><i class="fa fa-lightbulb"></i> Suggestions</a>
+    <a class="nav-item" href="notifications.html"><i class="fa fa-bell"></i> Notifications</a>
+    <a class="nav-item" href="cv.html">
+  <i class="fa fa-file-user"></i> CV Generator
+</a>
+<a class="nav-item" href="soutenance.html">
+  <i class="fa fa-graduation-cap"></i> Soutenance en ligne
+</a>
+<a class="nav-item" href="document.html">
+  <i class="fa fa-file-contract"></i> Documents officiels
+</a>
+  <a class="nav-item" href="chatbot.html">
+  <i class="fa fa-robot"></i> Assistant IA
+</a>
+<a class="nav-item" href="carte-etudiant.html">
+  <i class="fa fa-id-card"></i> Ma carte étudiant
+</a>
+<a class="nav-item" href="planning.html">
+  <i class="fa fa-calendar-days"></i> Planning de stage
+</a>
+<a class="nav-item" href="ressource.html">
+  <i class="fa fa-book-bookmark"></i> Ressources
+</a>
+<a class="nav-item" href="carte-stagiaires.html">
+  <i class="fa fa-map-location-dot"></i> Carte des stagiaires
+</a>
+<a class="nav-item" href="rendez-vous.html">
+  <i class="fa fa-calendar-check"></i> Rendez-vous
+</a>
+  </nav>
+  <div class="sidebar-bottom">
+    <div class="user-chip">
+      <div class="avatar-circle" id="sidebarAvatar">?</div>
+      <div>
+        <div class="user-chip-name" id="sidebarNom">...</div>
+        <div class="user-chip-role">Étudiant</div>
+      </div>
+    </div>
+    <button class="nav-item" onclick="logout()" style="color:var(--red)">
+      <i class="fa fa-right-from-bracket"></i> Déconnexion
+    </button>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-title">📚 <span>Ressources</span> du département</div>
+    <div class="user-pill">
+      <div class="avatar-circle" id="topAvatar">?</div>
+      <span id="topNom">...</span>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- HERO -->
+    <div class="ressources-hero">
+      <div class="hero-text">
+        <h2>Bibliothèque de ressources</h2>
+        <p>Rapports de référence, guides et templates mis à disposition<br>par votre chef de département pour vous aider dans votre stage.</p>
+      </div>
+      <div class="hero-icon">📚</div>
+    </div>
+
+    <!-- STATS BAR -->
+    <div class="stats-bar" id="statsBar">
+      <div class="stat-mini"><i class="fa fa-file-pdf"></i> <strong id="statTotal">0</strong> ressources disponibles</div>
+      <div class="stat-mini"><i class="fa fa-clock"></i> Dernière mise à jour : <strong id="statDate">—</strong></div>
+    </div>
+
+    <!-- SEARCH + FILTERS -->
+    <div class="search-wrap">
+      <i class="fa fa-search search-icon"></i>
+      <input class="search-input" id="searchInput" placeholder="Rechercher une ressource..." oninput="filterRessources()">
+    </div>
+
+    <div class="filters" id="filtersWrap">
+      <button class="filter-btn active" data-filter="tous" onclick="setFilter('tous',this)">
+        <i class="fa fa-border-all"></i> Tous
+      </button>
+      <button class="filter-btn" data-filter="rapport" onclick="setFilter('rapport',this)">
+        <i class="fa fa-file-pdf"></i> Rapports
+      </button>
+      <button class="filter-btn" data-filter="guide" onclick="setFilter('guide',this)">
+        <i class="fa fa-book-open"></i> Guides
+      </button>
+      <button class="filter-btn" data-filter="template" onclick="setFilter('template',this)">
+        <i class="fa fa-file-word"></i> Templates
+      </button>
+      <button class="filter-btn" data-filter="autre" onclick="setFilter('autre',this)">
+        <i class="fa fa-folder"></i> Autres
+      </button>
+    </div>
+
+    <!-- GRID -->
+    <div class="ressources-grid" id="ressourcesGrid">
+      <!-- skeleton loading -->
+      ${[1,2,3,4,5,6].map(() => `<div class="skeleton-card"><div class="skeleton" style="height:16px;width:60%;margin-bottom:10px"></div><div class="skeleton" style="height:12px;width:90%;margin-bottom:6px"></div><div class="skeleton" style="height:12px;width:75%"></div></div>`).join("")}
+    </div>
+
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+
+/* ══ LOGIN ══ */
+const currentUser = {
+  id:     parseInt(localStorage.getItem("user_id")),
+  nom:    localStorage.getItem("user_nom")    || "",
+  prenom: localStorage.getItem("user_prenom") || "",
+  photo:  localStorage.getItem("user_photo")  || "",
+};
+if (!currentUser.id) window.location.href = "login.html";
+
+const ini = (currentUser.prenom[0]||"") + (currentUser.nom[0]||"");
+document.getElementById("sidebarNom").innerText = currentUser.prenom + " " + currentUser.nom;
+document.getElementById("topNom").innerText     = currentUser.prenom + " " + currentUser.nom;
+if (currentUser.photo) {
+  const url = "http://localhost:3000/uploads/" + currentUser.photo;
+  document.getElementById("sidebarAvatar").innerHTML = `<img src="${url}" style="width:34px;height:34px;border-radius:50%;object-fit:cover">`;
+  document.getElementById("topAvatar").innerHTML     = `<img src="${url}" style="width:26px;height:26px;border-radius:50%;object-fit:cover">`;
+} else {
+  document.getElementById("sidebarAvatar").innerText = ini;
+  document.getElementById("topAvatar").innerText     = ini;
+}
+
+/* ══ STATE ══ */
+let allRessources = [];
+let currentFilter = "tous";
+
+/* ══ LOAD RESSOURCES ══ */
+async function loadRessources() {
+  try {
+    // جيب departement_id mte3 étudiant
+    const r  = await fetch(`http://localhost:3000/profil-complet/${currentUser.id}`);
+    const d  = await r.json();
+    const deptId = d.success ? d.user.departement_id : null;
+
+    if (!deptId) {
+      showEmpty("Département non trouvé. Contactez l'administration.");
+      return;
+    }
+
+    const r2 = await fetch(`http://localhost:3000/ressources/${deptId}`);
+    const d2 = await r2.json();
+
+    if (!d2.success || !d2.ressources.length) {
+      showEmpty("Aucune ressource disponible pour l'instant.<br>Votre chef de département n'a pas encore ajouté de documents.");
+      document.getElementById("statTotal").innerText = 0;
+      return;
+    }
+
+    allRessources = d2.ressources;
+    document.getElementById("statTotal").innerText = allRessources.length;
+
+    // dernière date
+    const lastDate = new Date(allRessources[0].created_at).toLocaleDateString("fr-FR", {day:"numeric",month:"short",year:"numeric"});
+    document.getElementById("statDate").innerText = lastDate;
+
+    renderRessources(allRessources);
+
+  } catch(e) {
+    console.log(e);
+    // demo data si server pas connecté
+    loadDemoData();
+  }
+}
+
+/* ══ DEMO DATA ══ */
+function loadDemoData() {
+  allRessources = [
+    { id:1, titre:"Rapport PFE — Application Web 2024", description:"Exemple de rapport de fin d'études en développement web. Bonne structure et méthodologie.", type:"rapport", filename:"rapport_pfe_web_2024.pdf", chef_nom:"Bennani", chef_prenom:"Khalid", created_at:"2024-06-15", taille:2400000 },
+    { id:2, titre:"Guide de rédaction du rapport de stage", description:"Guide officiel du département pour la rédaction des rapports. Normes et exigences à respecter.", type:"guide", filename:"guide_redaction.pdf", chef_nom:"Bennani", chef_prenom:"Khalid", created_at:"2024-03-01", taille:850000 },
+    { id:3, titre:"Template rapport Word — PFE", description:"Modèle Word officiel avec page de garde, table des matières et structure complète.", type:"template", filename:"template_pfe.docx", chef_nom:"Bennani", chef_prenom:"Khalid", created_at:"2024-01-10", taille:320000 },
+    { id:4, titre:"Rapport Initiation — Site vitrine 2023", description:"Exemple de rapport d'initiation bien rédigé. Approuvé avec mention très bien.", type:"rapport", filename:"rapport_initiation_2023.pdf", chef_nom:"Bennani", chef_prenom:"Khalid", created_at:"2023-07-20", taille:1800000 },
+    { id:5, titre:"Guide préparation soutenance", description:"Conseils pratiques pour préparer et réussir votre soutenance de stage devant le jury.", type:"guide", filename:"guide_soutenance.pdf", chef_nom:"Bennani", chef_prenom:"Khalid", created_at:"2024-02-15", taille:520000 },
+    { id:6, titre:"Template cahier des charges", description:"Modèle de cahier des charges fonctionnel pour votre projet de stage.", type:"template", filename:"template_cdc.docx", chef_nom:"Bennani", chef_prenom:"Khalid", created_at:"2024-04-01", taille:280000 },
+  ];
+
+  document.getElementById("statTotal").innerText = allRessources.length;
+  document.getElementById("statDate").innerText = "15 juin 2024";
+  renderRessources(allRessources);
+}
+
+/* ══ RENDER ══ */
+function renderRessources(list) {
+  const grid = document.getElementById("ressourcesGrid");
+
+  if (!list.length) {
+    showEmpty("Aucun résultat pour cette recherche.");
+    return;
+  }
+
+  const icons = { rapport:"📄", guide:"📖", template:"📝", autre:"📁" };
+  const fileIcons = { pdf:"fa-file-pdf", docx:"fa-file-word", doc:"fa-file-word", pptx:"fa-file-powerpoint", xlsx:"fa-file-excel" };
+
+  grid.innerHTML = list.map((r, i) => {
+    const ext = r.filename?.split(".").pop()?.toLowerCase() || "pdf";
+    const fileIcon = fileIcons[ext] || "fa-file";
+    const taille = r.taille ? formatSize(r.taille) : "";
+    const date = new Date(r.created_at).toLocaleDateString("fr-FR", { day:"numeric", month:"short", year:"numeric" });
+
+    return `
+      <div class="res-card ${r.type}" style="animation-delay:${i*0.06}s">
+        <div class="res-icon-wrap">
+          <div class="res-icon">
+            <i class="fa ${fileIcon}" style="color:${typeColor(r.type)}"></i>
+          </div>
+          <span class="res-type-badge">${typeLabel(r.type)}</span>
+        </div>
+
+        <div>
+          <div class="res-title">${r.titre}</div>
+        </div>
+
+        <div class="res-desc">${r.description || "Aucune description"}</div>
+
+        <div class="res-footer">
+          <div class="res-meta">
+            <span><i class="fa fa-user" style="color:var(--accent)"></i> ${r.chef_prenom} ${r.chef_nom}</span>
+            <span><i class="fa fa-calendar" style="color:var(--muted)"></i> ${date} ${taille ? `· ${taille}` : ""}</span>
+          </div>
+          <a href="http://localhost:3000/uploads/ressources/${r.filename}"
+             target="_blank"
+             class="btn-download"
+             onclick="trackDownload(${r.id})">
+            <i class="fa fa-download"></i> Télécharger
+          </a>
+        </div>
+      </div>`;
+  }).join("");
+}
+
+/* ══ FILTER ══ */
+function setFilter(filter, btn) {
+  currentFilter = filter;
+  document.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
+  btn.classList.add("active");
+  filterRessources();
+}
+
+function filterRessources() {
+  const search = document.getElementById("searchInput").value.toLowerCase();
+  let filtered = allRessources;
+
+  if (currentFilter !== "tous") {
+    filtered = filtered.filter(r => r.type === currentFilter);
+  }
+
+  if (search) {
+    filtered = filtered.filter(r =>
+      r.titre.toLowerCase().includes(search) ||
+      (r.description||"").toLowerCase().includes(search)
+    );
+  }
+
+  renderRessources(filtered);
+}
+
+/* ══ EMPTY ══ */
+function showEmpty(msg) {
+  document.getElementById("ressourcesGrid").innerHTML = `
+    <div class="empty-state" style="grid-column:1/-1">
+      <i class="fa fa-book-open"></i>
+      <h3>Aucune ressource</h3>
+      <p>${msg}</p>
+    </div>`;
+}
+
+/* ══ TRACK DOWNLOAD ══ */
+function trackDownload(id) {
+  showToast("📥 Téléchargement en cours...", "");
+}
+
+/* ══ HELPERS ══ */
+function typeLabel(type) {
+  return { rapport:"Rapport", guide:"Guide", template:"Template", autre:"Autre" }[type] || type;
+}
+function typeColor(type) {
+  return { rapport:"var(--accent)", guide:"var(--green)", template:"var(--orange)", autre:"var(--accent2)" }[type] || "var(--accent)";
+}
+function formatSize(bytes) {
+  if (bytes < 1024) return bytes + " B";
+  if (bytes < 1024*1024) return (bytes/1024).toFixed(0) + " KB";
+  return (bytes/1024/1024).toFixed(1) + " MB";
+}
+
+/* ══ TOAST ══ */
+function showToast(msg, type="") {
+  const t = document.getElementById("toast");
+  t.className = `toast ${type} show`;
+  t.innerText = msg;
+  setTimeout(() => t.classList.remove("show"), 3000);
+}
+
+function logout() { localStorage.clear(); window.location.href = "login.html"; }
+
+/* ══ INIT ══ */
+loadRessources();
+</script>
+</body>
+</html>

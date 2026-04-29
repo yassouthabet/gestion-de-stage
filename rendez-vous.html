@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rendez-vous | StageFlow</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f4f6fb;--white:#fff;--border:#e5e9f2;
+  --accent:#4f7cff;--accent2:#7c5cfc;--green:#10b981;
+  --orange:#f59e0b;--red:#ef4444;--text:#1a1d2e;--muted:#8892a4;
+  --sidebar-w:240px;
+}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);display:flex;min-height:100vh}
+
+.sidebar{width:var(--sidebar-w);background:var(--white);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:24px 14px;position:fixed;top:0;left:0;bottom:0;z-index:100}
+.logo{font-family:'Syne',sans-serif;font-weight:800;font-size:1.35rem;color:var(--text);padding:0 8px 22px;border-bottom:1px solid var(--border);margin-bottom:18px}
+.logo span{color:var(--accent)}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:10px;color:var(--muted);text-decoration:none;font-size:.875rem;font-weight:500;transition:all .18s;margin-bottom:2px;cursor:pointer;border:none;background:none;width:100%;text-align:left}
+.nav-item:hover{background:var(--bg);color:var(--text)}
+.nav-item.active{background:rgba(79,124,255,.1);color:var(--accent);font-weight:600}
+.nav-item i{width:16px;text-align:center;font-size:.85rem}
+.sidebar-bottom{margin-top:auto;border-top:1px solid var(--border);padding-top:14px}
+.user-chip{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg);border-radius:10px;margin-bottom:6px}
+.avatar-circle{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.8rem;color:#fff;flex-shrink:0;overflow:hidden}
+.user-chip-name{font-size:.82rem;font-weight:600;color:var(--text)}
+.user-chip-role{font-size:.7rem;color:var(--muted)}
+
+.main{margin-left:var(--sidebar-w);flex:1;display:flex;flex-direction:column}
+.topbar{background:var(--white);border-bottom:1px solid var(--border);padding:0 28px;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
+.topbar-title{font-family:'Syne',sans-serif;font-weight:700;font-size:1.05rem;color:var(--text)}
+.topbar-title span{color:var(--accent)}
+.user-pill{display:flex;align-items:center;gap:8px;padding:5px 12px 5px 6px;background:var(--bg);border:1px solid var(--border);border-radius:20px;font-size:.82rem;font-weight:500;color:var(--text)}
+.user-pill .avatar-circle{width:26px;height:26px;font-size:.7rem}
+
+.content{padding:28px;flex:1}
+
+/* GRID */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start}
+
+/* CARD */
+.card{background:var(--white);border:1px solid var(--border);border-radius:16px;padding:22px;margin-bottom:18px;animation:fadeUp .4s ease both}
+.card-title{font-family:'Syne',sans-serif;font-weight:700;font-size:.95rem;color:var(--text);display:flex;align-items:center;gap:8px;margin-bottom:18px;padding-bottom:12px;border-bottom:1px solid var(--border)}
+.card-title i{color:var(--accent)}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+
+/* ENCADRANT INFO */
+.enc-info{display:flex;align-items:center;gap:14px;padding:14px;background:var(--bg);border:1px solid var(--border);border-radius:12px;margin-bottom:18px}
+.enc-avatar{width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1.1rem;color:#fff;flex-shrink:0}
+.enc-name{font-family:'Syne',sans-serif;font-weight:700;font-size:.95rem;color:var(--text)}
+.enc-role{font-size:.72rem;color:var(--muted);margin-top:2px}
+
+/* CRENEAUX */
+.day-group{margin-bottom:16px}
+.day-label{font-family:'Syne',sans-serif;font-weight:700;font-size:.78rem;color:var(--text);margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.day-label i{color:var(--accent);font-size:.72rem}
+.creneaux-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px}
+
+.creneau-btn{
+  padding:10px 12px;border-radius:10px;
+  border:2px solid var(--border);background:var(--bg);
+  cursor:pointer;transition:all .18s;text-align:center;
+  font-family:'DM Sans',sans-serif;
+}
+.creneau-btn:hover{border-color:var(--accent);background:rgba(79,124,255,.05)}
+.creneau-btn.selected{border-color:var(--accent);background:rgba(79,124,255,.1)}
+.creneau-btn.reserve{border-color:var(--border);background:var(--border);cursor:not-allowed;opacity:.5}
+.creneau-time{font-family:'Syne',sans-serif;font-weight:700;font-size:.85rem;color:var(--text)}
+.creneau-dur{font-size:.65rem;color:var(--muted);margin-top:2px}
+.creneau-btn.selected .creneau-time{color:var(--accent)}
+
+/* FORM */
+.form-group{margin-bottom:12px}
+.form-label{font-size:.78rem;font-weight:600;color:var(--text);margin-bottom:5px;display:block}
+.form-input{border:1px solid var(--border);border-radius:9px;padding:8px 12px;font-family:'DM Sans',sans-serif;font-size:.855rem;color:var(--text);background:var(--bg);outline:none;transition:border-color .15s;width:100%}
+.form-input:focus{border-color:var(--accent);background:var(--white);box-shadow:0 0 0 3px rgba(79,124,255,.1)}
+.form-textarea{border:1px solid var(--border);border-radius:9px;padding:8px 12px;font-family:'DM Sans',sans-serif;font-size:.855rem;color:var(--text);background:var(--bg);outline:none;width:100%;resize:vertical;min-height:80px;transition:border-color .15s}
+.form-textarea:focus{border-color:var(--accent);background:var(--white)}
+.form-textarea::placeholder{color:var(--muted)}
+
+.btn-reserver{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:11px;border:none;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;font-family:'DM Sans',sans-serif;font-size:.875rem;font-weight:600;cursor:pointer;transition:all .18s;margin-top:4px}
+.btn-reserver:hover{opacity:.88;transform:translateY(-1px)}
+.btn-reserver:disabled{background:var(--border);color:var(--muted);cursor:not-allowed;transform:none}
+
+/* MES RDV */
+.rdv-item{padding:16px;border:1px solid var(--border);border-radius:12px;margin-bottom:10px;background:var(--white);transition:all .2s;animation:fadeUp .3s ease both}
+.rdv-item:hover{box-shadow:0 4px 14px rgba(0,0,0,.07)}
+.rdv-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px}
+.rdv-date{font-family:'Syne',sans-serif;font-weight:700;font-size:.88rem;color:var(--text)}
+.rdv-heure{font-size:.75rem;color:var(--muted);margin-top:2px}
+.rdv-sujet{font-size:.82rem;color:var(--text);margin-bottom:8px;line-height:1.5}
+.rdv-enc{font-size:.72rem;color:var(--muted);display:flex;align-items:center;gap:4px}
+
+/* STATUS BADGES */
+.badge{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:20px;font-size:.72rem;font-weight:600}
+.badge.disponible{background:rgba(79,124,255,.1);color:var(--accent)}
+.badge.reserve  {background:rgba(245,158,11,.1);color:var(--orange)}
+.badge.confirme {background:rgba(16,185,129,.1);color:var(--green)}
+.badge.refuse   {background:rgba(239,68,68,.1);color:var(--red)}
+.badge.annule   {background:var(--border);color:var(--muted)}
+
+.rdv-actions{display:flex;gap:6px;margin-top:10px}
+.btn-annuler{padding:6px 12px;border-radius:8px;border:1px solid rgba(239,68,68,.2);background:rgba(239,68,68,.06);color:var(--red);font-family:'DM Sans',sans-serif;font-size:.72rem;font-weight:600;cursor:pointer;transition:all .15s}
+.btn-annuler:hover{background:rgba(239,68,68,.12);border-color:var(--red)}
+
+/* EMPTY */
+.empty{text-align:center;padding:40px 20px;color:var(--muted)}
+.empty i{font-size:2rem;opacity:.2;display:block;margin-bottom:10px}
+
+/* SELECTED SUMMARY */
+.selected-summary{background:rgba(79,124,255,.06);border:1px solid rgba(79,124,255,.2);border-radius:12px;padding:14px;margin-bottom:14px;display:none}
+.selected-summary.show{display:block}
+.selected-info{font-size:.82rem;color:var(--text);font-weight:600;margin-bottom:3px}
+.selected-sub{font-size:.72rem;color:var(--muted)}
+
+/* COUNTDOWN */
+.rdv-countdown{display:flex;align-items:center;gap:5px;font-size:.7rem;font-weight:600;padding:3px 9px;border-radius:10px;margin-top:6px;display:inline-flex}
+.rdv-countdown.soon{background:rgba(245,158,11,.1);color:var(--orange)}
+.rdv-countdown.today{background:rgba(16,185,129,.1);color:var(--green)}
+.rdv-countdown.past{background:var(--border);color:var(--muted)}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;right:24px;background:var(--text);color:#fff;padding:12px 20px;border-radius:10px;font-size:.85rem;font-weight:500;box-shadow:0 4px 20px rgba(0,0,0,.15);transform:translateY(80px);opacity:0;transition:all .3s ease;z-index:999}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.success{background:var(--green)}
+.toast.error{background:var(--red)}
+</style>
+</head>
+
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="logo">Stage<span>Flow</span></div>
+  <nav>
+    <a class="nav-item active" href="etudiant.html"><i class="fa fa-house"></i> Dashboard</a>
+    <a class="nav-item" href="profil.html"><i class="fa fa-user"></i> Profil</a>
+    <a class="nav-item" href="stage.html"><i class="fa fa-briefcase"></i> Mon stage</a>
+    <a class="nav-item" href="journal.html"><i class="fa fa-book-open"></i> Journal de bord</a>
+    <a class="nav-item" href="messagerie.html"><i class="fa fa-comments"></i> Messagerie</a>
+    <a class="nav-item" href="suggestion.html"><i class="fa fa-lightbulb"></i> Suggestions</a>
+    <a class="nav-item" href="notifications.html"><i class="fa fa-bell"></i> Notifications</a>
+    <a class="nav-item" href="cv.html">
+  <i class="fa fa-file-user"></i> CV Generator
+</a>
+<a class="nav-item" href="soutenance.html">
+  <i class="fa fa-graduation-cap"></i> Soutenance en ligne
+</a>
+<a class="nav-item" href="document.html">
+  <i class="fa fa-file-contract"></i> Documents officiels
+</a>
+  <a class="nav-item" href="chatbot.html">
+  <i class="fa fa-robot"></i> Assistant IA
+</a>
+<a class="nav-item" href="carte-etudiant.html">
+  <i class="fa fa-id-card"></i> Ma carte étudiant
+</a>
+<a class="nav-item" href="planning.html">
+  <i class="fa fa-calendar-days"></i> Planning de stage
+</a>
+<a class="nav-item" href="ressource.html">
+  <i class="fa fa-book-bookmark"></i> Ressources
+</a>
+<a class="nav-item" href="carte-stagiaires.html">
+  <i class="fa fa-map-location-dot"></i> Carte des stagiaires
+</a>
+<a class="nav-item" href="rendez-vous.html">
+  <i class="fa fa-calendar-check"></i> Rendez-vous
+</a>
+  </nav>
+  <div class="sidebar-bottom">
+    <div class="user-chip">
+      <div class="avatar-circle" id="sidebarAvatar">?</div>
+      <div>
+        <div class="user-chip-name" id="sidebarNom">...</div>
+        <div class="user-chip-role">Étudiant</div>
+      </div>
+    </div>
+    <button class="nav-item" onclick="logout()" style="color:var(--red)">
+      <i class="fa fa-right-from-bracket"></i> Déconnexion
+    </button>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-title">📅 <span>Rendez-vous</span> avec l'encadrant</div>
+    <div class="user-pill">
+      <div class="avatar-circle" id="topAvatar">?</div>
+      <span id="topNom">...</span>
+    </div>
+  </div>
+
+  <div class="content">
+    <div class="grid2">
+
+      <!-- GAUCHE: PRENDRE RDV -->
+      <div>
+        <div class="card">
+          <div class="card-title"><i class="fa fa-calendar-plus"></i> Prendre un rendez-vous</div>
+
+          <!-- ENCADRANT INFO -->
+          <div class="enc-info" id="encInfo">
+            <div class="enc-avatar" id="encAvatar">?</div>
+            <div>
+              <div class="enc-name" id="encName">Chargement...</div>
+              <div class="enc-role" id="encRole">Encadrant universitaire</div>
+            </div>
+          </div>
+
+          <!-- CRENEAUX DISPONIBLES -->
+          <div id="creneauxWrap">
+            <div class="empty"><i class="fa fa-spinner fa-spin"></i><p>Chargement des disponibilités...</p></div>
+          </div>
+
+          <!-- SELECTED SUMMARY -->
+          <div class="selected-summary" id="selectedSummary">
+            <div class="selected-info" id="selectedInfo">—</div>
+            <div class="selected-sub">Créneau sélectionné</div>
+          </div>
+
+          <!-- FORM -->
+          <div id="reserveForm" style="display:none">
+            <div class="form-group">
+              <label class="form-label">Sujet du rendez-vous</label>
+              <input class="form-input" id="inputSujet" placeholder="Ex: Questions sur le rapport, revue du code...">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Message pour l'encadrant (optionnel)</label>
+              <textarea class="form-textarea" id="inputNote" placeholder="Précisez vos questions ou besoins..."></textarea>
+            </div>
+            <button class="btn-reserver" id="btnReserver" onclick="reserver()">
+              <i class="fa fa-calendar-check"></i> Confirmer la réservation
+            </button>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- DROITE: MES RDV -->
+      <div>
+        <div class="card">
+          <div class="card-title" style="justify-content:space-between">
+            <span><i class="fa fa-list-check"></i> Mes rendez-vous</span>
+            <button onclick="loadMesRdv()" style="padding:5px 10px;border-radius:7px;border:1px solid var(--border);background:var(--bg);color:var(--muted);font-size:.72rem;cursor:pointer">
+              <i class="fa fa-rotate"></i>
+            </button>
+          </div>
+          <div id="mesRdvList">
+            <div class="empty"><i class="fa fa-spinner fa-spin"></i><p>Chargement...</p></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+
+/* ══ LOGIN ══ */
+const currentUser = {
+  id:     parseInt(localStorage.getItem("user_id")),
+  nom:    localStorage.getItem("user_nom")    || "",
+  prenom: localStorage.getItem("user_prenom") || "",
+  photo:  localStorage.getItem("user_photo")  || "",
+};
+if (!currentUser.id) window.location.href = "login.html";
+
+const ini = (currentUser.prenom[0]||"") + (currentUser.nom[0]||"");
+document.getElementById("sidebarNom").innerText = currentUser.prenom + " " + currentUser.nom;
+document.getElementById("topNom").innerText     = currentUser.prenom + " " + currentUser.nom;
+if (currentUser.photo) {
+  const url = "http://localhost:3000/uploads/" + currentUser.photo;
+  document.getElementById("sidebarAvatar").innerHTML = `<img src="${url}" style="width:34px;height:34px;border-radius:50%;object-fit:cover">`;
+  document.getElementById("topAvatar").innerHTML     = `<img src="${url}" style="width:26px;height:26px;border-radius:50%;object-fit:cover">`;
+} else {
+  document.getElementById("sidebarAvatar").innerText = ini;
+  document.getElementById("topAvatar").innerText     = ini;
+}
+
+/* ══ STATE ══ */
+let encadrantId  = null;
+let selectedRdvId = null;
+let allCreneaux  = [];
+
+/* ══ LOAD ENCADRANT ══ */
+async function loadEncadrant() {
+  try {
+    const r = await fetch(`http://localhost:3000/mon-encadrant/${currentUser.id}`);
+    const d = await r.json();
+    if (!d.success) {
+      document.getElementById("creneauxWrap").innerHTML =
+        `<div class="empty"><i class="fa fa-user-slash"></i><p>Aucun encadrant assigné</p></div>`;
+      return;
+    }
+    const enc = d.encadrant;
+    encadrantId = enc.id;
+    const encIni = (enc.prenom?.[0]||"") + (enc.nom?.[0]||"");
+    document.getElementById("encAvatar").innerText = encIni;
+    document.getElementById("encName").innerText   = `${enc.prenom} ${enc.nom}`;
+    loadCreneaux();
+  } catch(e) {
+    loadDemoCreneaux();
+  }
+}
+
+/* ══ LOAD CRÉNEAUX ══ */
+async function loadCreneaux() {
+  if (!encadrantId) return;
+  try {
+    const r = await fetch(`http://localhost:3000/rdv/disponibles/${encadrantId}`);
+    const d = await r.json();
+    if (!d.success || !d.rdvs.length) {
+      document.getElementById("creneauxWrap").innerHTML =
+        `<div class="empty"><i class="fa fa-calendar-xmark"></i><p>Aucun créneau disponible pour l'instant.<br>Votre encadrant n'a pas encore ajouté de disponibilités.</p></div>`;
+      return;
+    }
+    allCreneaux = d.rdvs;
+    renderCreneaux(allCreneaux);
+  } catch(e) {
+    loadDemoCreneaux();
+  }
+}
+
+/* ══ DEMO CRÉNEAUX ══ */
+function loadDemoCreneaux() {
+  const today = new Date();
+  const demo = [];
+  let id = 1;
+  for (let d = 1; d <= 7; d++) {
+    const date = new Date(today);
+    date.setDate(today.getDate() + d);
+    if (date.getDay() === 0 || date.getDay() === 6) continue; // skip weekends
+    const dateStr = date.toISOString().split("T")[0];
+    demo.push(
+      { id: id++, date_rdv: dateStr, heure_debut: "09:00:00", heure_fin: "09:30:00", statut: "disponible" },
+      { id: id++, date_rdv: dateStr, heure_debut: "10:00:00", heure_fin: "10:30:00", statut: d === 2 ? "reserve" : "disponible" },
+      { id: id++, date_rdv: dateStr, heure_debut: "14:00:00", heure_fin: "14:30:00", statut: "disponible" },
+    );
+  }
+  allCreneaux = demo;
+  renderCreneaux(demo);
+
+  // demo encadrant
+  document.getElementById("encAvatar").innerText = "MB";
+  document.getElementById("encName").innerText   = "Dr. Mohamed Ben Ali";
+}
+
+/* ══ RENDER CRÉNEAUX ══ */
+function renderCreneaux(rdvs) {
+  // grouper par date
+  const grouped = {};
+  rdvs.forEach(r => {
+    if (!grouped[r.date_rdv]) grouped[r.date_rdv] = [];
+    grouped[r.date_rdv].push(r);
+  });
+
+  let html = "";
+  Object.entries(grouped).forEach(([date, slots]) => {
+    const d = new Date(date);
+    const dateLabel = d.toLocaleDateString("fr-FR", { weekday:"long", day:"numeric", month:"long" });
+    const isToday = date === new Date().toISOString().split("T")[0];
+
+    html += `
+      <div class="day-group">
+        <div class="day-label">
+          <i class="fa fa-calendar"></i>
+          ${dateLabel} ${isToday ? '<span style="background:var(--accent);color:#fff;padding:2px 8px;border-radius:10px;font-size:.65rem;margin-left:4px">Aujourd\'hui</span>' : ""}
+        </div>
+        <div class="creneaux-grid">
+          ${slots.map(s => {
+            const debut = s.heure_debut.substring(0,5);
+            const fin   = s.heure_fin.substring(0,5);
+            const reserved = s.statut !== "disponible";
+            const isSelected = selectedRdvId === s.id;
+            return `
+              <div class="creneau-btn ${reserved?'reserve':''} ${isSelected?'selected':''}"
+                   onclick="${reserved?'':` selectCreneau(${s.id},'${date}','${debut}','${fin}')`}">
+                <div class="creneau-time">${debut} – ${fin}</div>
+                <div class="creneau-dur">${reserved ? '🔴 Réservé' : '🟢 Libre'}</div>
+              </div>`;
+          }).join("")}
+        </div>
+      </div>`;
+  });
+
+  document.getElementById("creneauxWrap").innerHTML = html || `<div class="empty"><i class="fa fa-calendar-xmark"></i><p>Aucun créneau disponible</p></div>`;
+}
+
+/* ══ SELECT CRÉNEAU ══ */
+function selectCreneau(id, date, debut, fin) {
+  selectedRdvId = id;
+  const d = new Date(date);
+  const dateLabel = d.toLocaleDateString("fr-FR", { weekday:"long", day:"numeric", month:"long" });
+
+  document.getElementById("selectedInfo").innerText = `${dateLabel} de ${debut} à ${fin}`;
+  document.getElementById("selectedSummary").classList.add("show");
+  document.getElementById("reserveForm").style.display = "block";
+
+  // re-render pour highlight
+  renderCreneaux(allCreneaux);
+
+  // scroll to form
+  document.getElementById("reserveForm").scrollIntoView({ behavior:"smooth", block:"nearest" });
+}
+
+/* ══ RÉSERVER ══ */
+async function reserver() {
+  if (!selectedRdvId) return showToast("Sélectionnez un créneau", "error");
+
+  const sujet = document.getElementById("inputSujet").value.trim();
+  const note  = document.getElementById("inputNote").value.trim();
+
+  if (!sujet) return showToast("Précisez le sujet du rendez-vous", "error");
+
+  const btn = document.getElementById("btnReserver");
+  btn.disabled = true;
+  btn.innerHTML = `<i class="fa fa-spinner fa-spin"></i> Réservation en cours...`;
+
+  try {
+    const r = await fetch(`http://localhost:3000/rdv/reserver/${selectedRdvId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ etudiant_id: currentUser.id, sujet, note_etudiant: note })
+    });
+    const d = await r.json();
+    if (d.success) {
+      showToast("✅ Rendez-vous réservé ! En attente de confirmation.", "success");
+      selectedRdvId = null;
+      document.getElementById("selectedSummary").classList.remove("show");
+      document.getElementById("reserveForm").style.display = "none";
+      document.getElementById("inputSujet").value = "";
+      document.getElementById("inputNote").value  = "";
+      loadCreneaux();
+      loadMesRdv();
+    } else {
+      showToast(d.message || "Créneau déjà réservé", "error");
+    }
+  } catch(e) {
+    showToast("✅ Réservé ! (mode démo)", "success");
+    document.getElementById("reserveForm").style.display = "none";
+    document.getElementById("selectedSummary").classList.remove("show");
+    loadDemoMesRdv();
+  }
+
+  btn.disabled = false;
+  btn.innerHTML = `<i class="fa fa-calendar-check"></i> Confirmer la réservation`;
+}
+
+/* ══ MES RDV ══ */
+async function loadMesRdv() {
+  try {
+    const r = await fetch(`http://localhost:3000/rdv/mes/${currentUser.id}`);
+    const d = await r.json();
+    if (!d.success || !d.rdvs.length) {
+      document.getElementById("mesRdvList").innerHTML =
+        `<div class="empty"><i class="fa fa-calendar"></i><p>Aucun rendez-vous pour l'instant</p></div>`;
+      return;
+    }
+    renderMesRdv(d.rdvs);
+  } catch(e) {
+    loadDemoMesRdv();
+  }
+}
+
+function loadDemoMesRdv() {
+  const today = new Date();
+  const tomorrow = new Date(today); tomorrow.setDate(today.getDate() + 2);
+  const yesterday = new Date(today); yesterday.setDate(today.getDate() - 3);
+
+  renderMesRdv([
+    { id:1, date_rdv: tomorrow.toISOString().split("T")[0], heure_debut:"10:00:00", heure_fin:"10:30:00", sujet:"Revue du code backend", statut:"confirme", enc_prenom:"Mohamed", enc_nom:"Ben Ali" },
+    { id:2, date_rdv: yesterday.toISOString().split("T")[0], heure_debut:"14:00:00", heure_fin:"14:30:00", sujet:"Questions sur le rapport", statut:"confirme", enc_prenom:"Mohamed", enc_nom:"Ben Ali" },
+  ]);
+}
+
+function renderMesRdv(rdvs) {
+  const statusMap = {
+    disponible: { label:"Disponible",  cls:"disponible" },
+    reserve:    { label:"En attente",  cls:"reserve"    },
+    confirme:   { label:"Confirmé ✓",  cls:"confirme"   },
+    refuse:     { label:"Refusé",      cls:"refuse"     },
+    annule:     { label:"Annulé",      cls:"annule"     },
+  };
+
+  document.getElementById("mesRdvList").innerHTML = rdvs.map((r, i) => {
+    const st    = statusMap[r.statut] || { label:r.statut, cls:"disponible" };
+    const date  = new Date(r.date_rdv);
+    const dateLabel = date.toLocaleDateString("fr-FR", { weekday:"short", day:"numeric", month:"short", year:"numeric" });
+    const debut = r.heure_debut?.substring(0,5);
+    const fin   = r.heure_fin?.substring(0,5);
+
+    // countdown
+    const diff = Math.ceil((date - new Date()) / (1000*60*60*24));
+    let countdown = "";
+    if (r.statut === "confirme") {
+      if (diff === 0)      countdown = `<span class="rdv-countdown today"><i class="fa fa-bell"></i> Aujourd'hui !</span>`;
+      else if (diff > 0)   countdown = `<span class="rdv-countdown soon"><i class="fa fa-clock"></i> Dans ${diff} jour${diff>1?"s":""}</span>`;
+      else                 countdown = `<span class="rdv-countdown past"><i class="fa fa-check"></i> Passé</span>`;
+    }
+
+    const canCancel = ["reserve","confirme"].includes(r.statut) && diff >= 0;
+
+    return `
+      <div class="rdv-item" style="animation-delay:${i*0.05}s">
+        <div class="rdv-header">
+          <div>
+            <div class="rdv-date">${dateLabel}</div>
+            <div class="rdv-heure"><i class="fa fa-clock" style="margin-right:4px"></i>${debut} – ${fin}</div>
+          </div>
+          <span class="badge ${st.cls}">${st.label}</span>
+        </div>
+        ${r.sujet ? `<div class="rdv-sujet"><i class="fa fa-comment" style="color:var(--accent);margin-right:5px"></i>${r.sujet}</div>` : ""}
+        <div class="rdv-enc"><i class="fa fa-user-tie" style="color:var(--accent)"></i>${r.enc_prenom||""} ${r.enc_nom||""}</div>
+        ${countdown}
+        ${r.note_encadrant ? `<div style="margin-top:8px;padding:8px 10px;background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.2);border-radius:8px;font-size:.75rem;color:var(--text)"><i class="fa fa-comment-dots" style="color:var(--green);margin-right:4px"></i>${r.note_encadrant}</div>` : ""}
+        ${canCancel ? `
+          <div class="rdv-actions">
+            <button class="btn-annuler" onclick="annuler(${r.id})">
+              <i class="fa fa-xmark"></i> Annuler
+            </button>
+          </div>` : ""}
+      </div>`;
+  }).join("");
+}
+
+/* ══ ANNULER ══ */
+async function annuler(id) {
+  if (!confirm("Annuler ce rendez-vous ?")) return;
+  try {
+    await fetch(`http://localhost:3000/rdv/annuler/${id}`, { method:"PUT" });
+    showToast("Rendez-vous annulé", "");
+    loadCreneaux();
+    loadMesRdv();
+  } catch(e) {
+    showToast("Annulé (mode démo)", "");
+    loadDemoMesRdv();
+  }
+}
+
+/* ══ TOAST ══ */
+function showToast(msg, type="") {
+  const t = document.getElementById("toast");
+  t.className = `toast ${type} show`;
+  t.innerText = msg;
+  setTimeout(() => t.classList.remove("show"), 3000);
+}
+
+function logout() { localStorage.clear(); window.location.href = "login.html"; }
+
+/* ══ INIT ══ */
+loadEncadrant();
+loadMesRdv();
+</script>
+</body>
+</html>

@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mon Stage | StageFlow</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:        #f4f6fb;
+  --white:     #ffffff;
+  --border:    #e5e9f2;
+  --accent:    #4f7cff;
+  --accent2:   #7c5cfc;
+  --green:     #10b981;
+  --orange:    #f59e0b;
+  --red:       #ef4444;
+  --text:      #1a1d2e;
+  --muted:     #8892a4;
+  --sidebar-w: 240px;
+}
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  display: flex;
+  min-height: 100vh;
+}
+
+/* ══ SIDEBAR ══ */
+.sidebar {
+  width: var(--sidebar-w);
+  background: var(--white);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  padding: 24px 14px;
+  position: fixed;
+  top: 0; left: 0; bottom: 0;
+  z-index: 100;
+}
+.logo {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 1.35rem;
+  color: var(--text);
+  padding: 0 8px 22px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 18px;
+}
+.logo span { color: var(--accent); }
+
+.nav-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 12px; border-radius: 10px;
+  color: var(--muted); text-decoration: none;
+  font-size: 0.875rem; font-weight: 500;
+  transition: all 0.18s; margin-bottom: 2px;
+  cursor: pointer; border: none; background: none;
+  width: 100%; text-align: left;
+}
+.nav-item:hover  { background: var(--bg); color: var(--text); }
+.nav-item.active { background: rgba(79,124,255,0.1); color: var(--accent); font-weight: 600; }
+.nav-item i      { width: 16px; text-align: center; font-size: 0.85rem; }
+
+.sidebar-bottom { margin-top: auto; border-top: 1px solid var(--border); padding-top: 14px; }
+.user-chip {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px; background: var(--bg);
+  border-radius: 10px; margin-bottom: 6px;
+}
+.avatar-circle {
+  width: 34px; height: 34px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 0.8rem; color: #fff; flex-shrink: 0;
+   overflow: hidden;
+}
+.user-chip-name { font-size: 0.82rem; font-weight: 600; color: var(--text); }
+.user-chip-role { font-size: 0.7rem; color: var(--muted); }
+
+/* ══ MAIN ══ */
+.main { margin-left: var(--sidebar-w); flex: 1; display: flex; flex-direction: column; }
+
+/* ══ TOPBAR ══ */
+.topbar {
+  background: var(--white); border-bottom: 1px solid var(--border);
+  padding: 0 28px; height: 60px;
+  display: flex; align-items: center; justify-content: space-between;
+  position: sticky; top: 0; z-index: 50;
+}
+.topbar-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1.05rem; color: var(--text); }
+.topbar-title span { color: var(--accent); }
+.user-pill {
+  display: flex; align-items: center; gap: 8px;
+  padding: 5px 12px 5px 6px; background: var(--bg);
+  border: 1px solid var(--border); border-radius: 20px;
+  font-size: 0.82rem; font-weight: 500; color: var(--text);
+}
+.user-pill .avatar-circle { width: 26px; height: 26px; font-size: 0.7rem; }
+
+/* ══ CONTENT ══ */
+.content { padding: 28px; flex: 1; }
+
+/* ══ GRID 2 COL ══ */
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-bottom: 18px; }
+.grid3 { display: grid; grid-template-columns: repeat(3,1fr); gap: 18px; margin-bottom: 18px; }
+
+/* ══ CARD ══ */
+.card {
+  background: var(--white); border: 1px solid var(--border);
+  border-radius: 16px; padding: 22px;
+  animation: fadeUp 0.4s ease both;
+}
+
+.card-title {
+  font-family: 'Syne', sans-serif; font-weight: 700;
+  font-size: 0.95rem; color: var(--text);
+  display: flex; align-items: center; gap: 8px;
+  margin-bottom: 18px;
+}
+.card-title i { color: var(--accent); }
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ══ STAT MINI ══ */
+.stat-mini {
+  background: var(--white); border: 1px solid var(--border);
+  border-radius: 14px; padding: 18px 20px;
+  display: flex; align-items: center; gap: 14px;
+  animation: fadeUp 0.4s ease both;
+  transition: box-shadow 0.2s, transform 0.2s;
+}
+.stat-mini:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.07); transform: translateY(-2px); }
+.stat-mini:nth-child(1) { animation-delay:0.05s; }
+.stat-mini:nth-child(2) { animation-delay:0.1s; }
+.stat-mini:nth-child(3) { animation-delay:0.15s; }
+
+.stat-icon {
+  width: 42px; height: 42px; border-radius: 11px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1rem; flex-shrink: 0;
+}
+.stat-icon.blue   { background: rgba(79,124,255,0.1);  color: var(--accent); }
+.stat-icon.green  { background: rgba(16,185,129,0.1);  color: var(--green); }
+.stat-icon.orange { background: rgba(245,158,11,0.1);  color: var(--orange); }
+.stat-icon.red    { background: rgba(239,68,68,0.1);   color: var(--red); }
+
+.stat-label { font-size: 0.76rem; color: var(--muted); margin-bottom: 3px; }
+.stat-val   { font-family: 'Syne', sans-serif; font-size: 1.3rem; font-weight: 800; color: var(--text); }
+
+/* ══ BADGE ══ */
+.badge {
+  display: inline-flex; align-items: center; padding: 3px 10px;
+  border-radius: 20px; font-size: 0.72rem; font-weight: 600;
+}
+.badge.green  { background: rgba(16,185,129,0.1);  color: var(--green); }
+.badge.yellow { background: rgba(245,158,11,0.1);  color: var(--orange); }
+.badge.blue   { background: rgba(79,124,255,0.1);  color: var(--accent); }
+.badge.red    { background: rgba(239,68,68,0.1);   color: var(--red); }
+.badge.purple { background: rgba(124,92,252,0.1);  color: var(--accent2); }
+
+/* ══ PROGRESS ══ */
+.progress-wrap { margin-top: 6px; }
+.progress-label { display: flex; justify-content: space-between; font-size: 0.78rem; color: var(--muted); margin-bottom: 6px; }
+.progress-bar  { height: 8px; background: var(--border); border-radius: 10px; overflow: hidden; }
+.progress-fill {
+  height: 100%; border-radius: 10px;
+  background: linear-gradient(90deg, var(--accent), var(--accent2));
+  transition: width 1.2s cubic-bezier(0.4,0,0.2,1);
+}
+
+/* ══ INFO ROW ══ */
+.info-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 0; border-bottom: 1px solid var(--border);
+  font-size: 0.855rem;
+}
+.info-row:last-child { border-bottom: none; }
+.info-row i { width: 18px; text-align: center; color: var(--accent); font-size: 0.85rem; }
+.info-label { color: var(--muted); min-width: 130px; font-size: 0.8rem; }
+.info-val   { color: var(--text); font-weight: 500; }
+
+/* ══ ENCADRANT CARD ══ */
+.enc-card {
+  display: flex; align-items: center; gap: 14px;
+  padding: 14px; background: var(--bg);
+  border-radius: 12px; border: 1px solid var(--border);
+}
+.enc-avatar-lg {
+  width: 48px; height: 48px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 1rem; color: #fff; flex-shrink: 0;
+}
+.enc-name { font-weight: 700; font-size: 0.9rem; color: var(--text); }
+.enc-grade { font-size: 0.75rem; color: var(--muted); margin-top: 2px; }
+.btn-msg {
+  margin-left: auto;
+  display: flex; align-items: center; gap: 6px;
+  background: var(--accent); color: #fff;
+  border: none; border-radius: 8px;
+  padding: 7px 14px; font-family: 'DM Sans', sans-serif;
+  font-size: 0.78rem; font-weight: 600; cursor: pointer;
+  transition: opacity 0.18s;
+  text-decoration: none;
+}
+.btn-msg:hover { opacity: 0.85; }
+
+/* ══ UPLOAD ZONE ══ */
+.upload-zone {
+  border: 2px dashed var(--border);
+  border-radius: 12px; padding: 32px;
+  text-align: center; cursor: pointer;
+  transition: all 0.2s;
+  background: var(--bg);
+}
+.upload-zone:hover, .upload-zone.dragover {
+  border-color: var(--accent);
+  background: rgba(79,124,255,0.04);
+}
+.upload-zone i { font-size: 2rem; color: var(--muted); margin-bottom: 10px; display: block; }
+.upload-zone p { font-size: 0.85rem; color: var(--muted); }
+.upload-zone span { color: var(--accent); font-weight: 600; }
+
+.file-selected {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 14px; background: rgba(79,124,255,0.06);
+  border: 1px solid rgba(79,124,255,0.2);
+  border-radius: 10px; margin-top: 12px;
+  font-size: 0.82rem; color: var(--text);
+}
+.file-selected i { color: var(--accent); }
+.file-selected .remove { margin-left: auto; color: var(--red); cursor: pointer; }
+
+.btn-upload {
+  width: 100%; margin-top: 14px;
+  background: var(--accent); color: #fff;
+  border: none; border-radius: 10px;
+  padding: 11px; font-family: 'DM Sans', sans-serif;
+  font-size: 0.875rem; font-weight: 600; cursor: pointer;
+  transition: opacity 0.18s; display: flex;
+  align-items: center; justify-content: center; gap: 8px;
+}
+.btn-upload:hover    { opacity: 0.85; }
+.btn-upload:disabled { background: var(--border); color: var(--muted); cursor: not-allowed; }
+
+/* ══ FEEDBACK ══ */
+.feedback-item {
+  padding: 14px; background: var(--bg);
+  border-radius: 12px; border-left: 3px solid var(--accent);
+  margin-bottom: 10px;
+}
+.feedback-item:last-child { margin-bottom: 0; }
+.feedback-text { font-size: 0.855rem; color: var(--text); line-height: 1.6; }
+.feedback-meta { font-size: 0.72rem; color: var(--muted); margin-top: 6px; }
+
+/* ══ DEADLINE ══ */
+.deadline-item {
+  display: flex; align-items: center; gap: 14px;
+  padding: 12px 14px; border-radius: 10px;
+  border: 1px solid var(--border); margin-bottom: 8px;
+  background: var(--white);
+}
+.deadline-item:last-child { margin-bottom: 0; }
+.deadline-date {
+  font-family: 'Syne', sans-serif; font-weight: 700;
+  font-size: 0.85rem; color: var(--text); min-width: 90px;
+}
+.deadline-title { font-size: 0.82rem; color: var(--text); flex: 1; }
+.days-left {
+  font-size: 0.72rem; font-weight: 600; padding: 3px 10px;
+  border-radius: 20px; white-space: nowrap;
+}
+.days-left.ok     { background: rgba(16,185,129,0.1);  color: var(--green); }
+.days-left.soon   { background: rgba(245,158,11,0.1);  color: var(--orange); }
+.days-left.urgent { background: rgba(239,68,68,0.1);   color: var(--red); }
+.days-left.passed { background: var(--border);          color: var(--muted); }
+
+/* ══ EMPTY ══ */
+.empty-state {
+  text-align: center; padding: 30px;
+  color: var(--muted); font-size: 0.85rem;
+}
+.empty-state i { font-size: 1.8rem; opacity: 0.3; display: block; margin-bottom: 8px; }
+
+/* ══ TOAST ══ */
+.toast {
+  position: fixed; bottom: 24px; right: 24px;
+  background: var(--text); color: #fff;
+  padding: 12px 20px; border-radius: 10px;
+  font-size: 0.85rem; font-weight: 500;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+  transform: translateY(80px); opacity: 0;
+  transition: all 0.3s ease; z-index: 999;
+}
+.toast.show    { transform: translateY(0); opacity: 1; }
+.toast.success { background: var(--green); }
+.toast.error   { background: var(--red); }
+</style>
+</head>
+
+<body>
+
+<!-- ══ SIDEBAR ══ -->
+<aside class="sidebar">
+  <div class="logo">Stage<span>Flow</span></div>
+ <nav>
+    <a class="nav-item active" href="etudiant.html"><i class="fa fa-house"></i> Dashboard</a>
+    <a class="nav-item" href="profil.html"><i class="fa fa-user"></i> Profil</a>
+    <a class="nav-item" href="stage.html"><i class="fa fa-briefcase"></i> Mon stage</a>
+    <a class="nav-item" href="journal.html"><i class="fa fa-book-open"></i> Journal de bord</a>
+    <a class="nav-item" href="messagerie.html"><i class="fa fa-comments"></i> Messagerie</a>
+    <a class="nav-item" href="suggestion.html"><i class="fa fa-lightbulb"></i> Suggestions</a>
+    <a class="nav-item" href="notifications.html"><i class="fa fa-bell"></i> Notifications</a>
+    <a class="nav-item" href="cv.html">
+  <i class="fa fa-file-user"></i> CV Generator
+</a>
+<a class="nav-item" href="soutenance.html">
+  <i class="fa fa-graduation-cap"></i> Soutenance en ligne
+</a>
+<a class="nav-item" href="document.html">
+  <i class="fa fa-file-contract"></i> Documents officiels
+</a>
+  <a class="nav-item" href="chatbot.html">
+  <i class="fa fa-robot"></i> Assistant IA
+</a>
+<a class="nav-item" href="carte-etudiant.html">
+  <i class="fa fa-id-card"></i> Ma carte étudiant
+</a>
+<a class="nav-item" href="planning.html">
+  <i class="fa fa-calendar-days"></i> Planning de stage
+</a>
+<a class="nav-item" href="ressource.html">
+  <i class="fa fa-book-bookmark"></i> Ressources
+</a>
+<a class="nav-item" href="carte-stagiaires.html">
+  <i class="fa fa-map-location-dot"></i> Carte des stagiaires
+</a>
+<a class="nav-item" href="rendez-vous.html">
+  <i class="fa fa-calendar-check"></i> Rendez-vous
+</a>
+  </nav>
+  <div class="sidebar-bottom">
+    <div class="user-chip">
+      <div class="avatar-circle" id="sidebarAvatar">?</div>
+      <div>
+        <div class="user-chip-name" id="sidebarNom">...</div>
+        <div class="user-chip-role">Étudiant</div>
+      </div>
+    </div>
+    <button class="nav-item" onclick="logout()" style="color:var(--red)">
+      <i class="fa fa-right-from-bracket"></i> Déconnexion
+    </button>
+  </div>
+</aside>
+
+<!-- ══ MAIN ══ -->
+<div class="main">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="topbar-title">🎓 Mon <span>Stage</span></div>
+    <div class="user-pill">
+      <div class="avatar-circle" id="topAvatar">?</div>
+      <span id="topNom">...</span>
+    </div>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="content">
+
+    <!-- STATS -->
+    <div class="grid3">
+      <div class="stat-mini">
+        <div class="stat-icon blue"><i class="fa fa-briefcase"></i></div>
+        <div>
+          <div class="stat-label">Type de stage</div>
+          <div class="stat-val" id="statType">—</div>
+        </div>
+      </div>
+      <div class="stat-mini">
+        <div class="stat-icon green"><i class="fa fa-circle-check"></i></div>
+        <div>
+          <div class="stat-label">Statut</div>
+          <div class="stat-val" id="statStatut">—</div>
+        </div>
+      </div>
+      <div class="stat-mini">
+        <div class="stat-icon orange"><i class="fa fa-chart-line"></i></div>
+        <div>
+          <div class="stat-label">Progression</div>
+          <div class="stat-val" id="statProg">—</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ROW 1: infos stage + encadrant -->
+    <div class="grid2">
+
+      <!-- INFOS STAGE -->
+      <div class="card" style="animation-delay:0.1s">
+        <div class="card-title"><i class="fa fa-circle-info"></i> Détails du stage</div>
+        <div id="stageInfos">
+          <div class="empty-state"><i class="fa fa-spinner fa-spin"></i>Chargement...</div>
+        </div>
+      </div>
+
+      <!-- ENCADRANT + DEADLINE -->
+      <div style="display:flex;flex-direction:column;gap:18px">
+
+        <!-- ENCADRANT -->
+        <div class="card" style="animation-delay:0.15s">
+          <div class="card-title"><i class="fa fa-user-tie"></i> Encadrant</div>
+          <div id="encadrantCard">
+            <div class="empty-state"><i class="fa fa-spinner fa-spin"></i>Chargement...</div>
+          </div>
+        </div>
+
+        <!-- DEADLINE -->
+        <div class="card" style="animation-delay:0.2s">
+          <div class="card-title"><i class="fa fa-clock"></i> Deadlines</div>
+          <div id="deadlinesList">
+            <div class="empty-state"><i class="fa fa-spinner fa-spin"></i>Chargement...</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ROW 2: upload rapport + feedback -->
+    <div class="grid2">
+
+      <!-- UPLOAD RAPPORT -->
+      <div class="card" style="animation-delay:0.25s">
+        <div class="card-title"><i class="fa fa-file-arrow-up"></i> Déposer mon rapport</div>
+
+        <div class="upload-zone" id="uploadZone"
+          onclick="document.getElementById('rapportInput').click()"
+          ondragover="event.preventDefault();this.classList.add('dragover')"
+          ondragleave="this.classList.remove('dragover')"
+          ondrop="handleDrop(event)">
+          <i class="fa fa-cloud-arrow-up"></i>
+          <p>Glissez votre rapport ici ou <span>parcourir</span></p>
+          <p style="font-size:0.75rem;margin-top:4px">PDF uniquement — max 10 MB</p>
+        </div>
+
+        <input type="file" id="rapportInput" accept=".pdf" hidden>
+        <div id="filePreview"></div>
+
+        <button class="btn-upload" id="btnUpload" disabled onclick="uploadRapport()">
+          <i class="fa fa-paper-plane"></i> Envoyer le rapport
+        </button>
+
+        <div id="rapportExist" style="display:none;margin-top:12px"></div>
+      </div>
+
+      <!-- FEEDBACK -->
+      <div class="card" style="animation-delay:0.3s">
+        <div class="card-title"><i class="fa fa-comments"></i> Feedbacks de l'encadrant</div>
+        <div id="feedbacksList">
+          <div class="empty-state"><i class="fa fa-comment-slash"></i>Aucun feedback pour l'instant</div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+
+/* ══ LOGIN CHECK ══ */
+const currentUser = {
+  id:     parseInt(localStorage.getItem("user_id")),
+  nom:    localStorage.getItem("user_nom")    || "",
+  prenom: localStorage.getItem("user_prenom") || "",
+  role:   localStorage.getItem("user_role")   || "",
+   photo:  localStorage.getItem("user_photo")  || "", // ← زيد هاذا
+};
+
+if (!currentUser.id) window.location.href = "login.html";
+const ini = (currentUser.prenom[0]||"") + (currentUser.nom[0]||"");
+document.getElementById("sidebarNom").innerText = currentUser.prenom + " " + currentUser.nom;
+document.getElementById("topNom").innerText     = currentUser.prenom + " " + currentUser.nom;
+
+// ← هنا الإضافة
+if (currentUser.photo) {
+  const url  = "http://localhost:3000/uploads/" + currentUser.photo;
+  document.getElementById("sidebarAvatar").innerHTML =
+    `<img src="${url}" style="width:34px;height:34px;border-radius:50%;object-fit:cover">`;
+  document.getElementById("topAvatar").innerHTML =
+    `<img src="${url}" style="width:26px;height:26px;border-radius:50%;object-fit:cover">`;
+} else {
+  document.getElementById("sidebarAvatar").innerText = ini;
+  document.getElementById("topAvatar").innerText     = ini;
+}
+/* ══ DATA ══ */
+let stageId = null;
+
+const typeLabel = {
+  initiation: "Initiation", perfectionnement: "Perfectionnement", fin_etude: "Fin d'études"
+};
+const statutMap = {
+  en_attente:     { label:"En attente",     cls:"yellow" },
+  affecte:        { label:"Affecté",         cls:"blue"   },
+  en_cours:       { label:"En cours",        cls:"blue"   },
+  rapport_depose: { label:"Rapport déposé",  cls:"purple" },
+  valide:         { label:"Validé ✓",        cls:"green"  },
+  refuse:         { label:"Refusé",          cls:"red"    }
+};
+
+/* ══ LOAD STAGE ══ */
+function loadStage() {
+  fetch(`http://localhost:3000/mes-stages/${currentUser.id}`)
+    .then(r => r.json())
+    .then(data => {
+      if (!data.success || !data.stages.length) {
+        document.getElementById("stageInfos").innerHTML =
+          `<div class="empty-state"><i class="fa fa-folder-open"></i>Aucun stage trouvé</div>`;
+        return;
+      }
+
+      const s  = data.stages[0];
+      stageId  = s.id;
+
+      /* stats */
+      document.getElementById("statType").innerText   = typeLabel[s.type_stage] || s.type_stage;
+      document.getElementById("statProg").innerText   = (s.progression || 0) + "%";
+
+      const st = statutMap[s.statut] || { label: s.statut, cls: "blue" };
+      document.getElementById("statStatut").innerHTML =
+        `<span class="badge ${st.cls}" style="font-size:0.85rem">${st.label}</span>`;
+
+      /* infos */
+      document.getElementById("stageInfos").innerHTML = `
+        <div class="info-row">
+          <i class="fa fa-heading"></i>
+          <span class="info-label">Titre</span>
+          <span class="info-val">${s.titre}</span>
+        </div>
+        <div class="info-row">
+          <i class="fa fa-building"></i>
+          <span class="info-label">Entreprise</span>
+          <span class="info-val">${s.entreprise || "—"}</span>
+        </div>
+        <div class="info-row">
+          <i class="fa fa-location-dot"></i>
+          <span class="info-label">Ville</span>
+          <span class="info-val">${s.ville || "—"}</span>
+        </div>
+        <div class="info-row">
+          <i class="fa fa-calendar-check"></i>
+          <span class="info-label">Date début</span>
+          <span class="info-val">${s.date_debut ? new Date(s.date_debut).toLocaleDateString("fr-FR") : "—"}</span>
+        </div>
+        <div class="info-row">
+          <i class="fa fa-calendar-xmark"></i>
+          <span class="info-label">Date fin prévue</span>
+          <span class="info-val">${s.date_fin_prevue ? new Date(s.date_fin_prevue).toLocaleDateString("fr-FR") : "—"}</span>
+        </div>
+        <div class="info-row">
+          <i class="fa fa-calendar"></i>
+          <span class="info-label">Année univ.</span>
+          <span class="info-val">${s.annee_univ || "—"}</span>
+        </div>
+        <div class="progress-wrap" style="margin-top:14px">
+          <div class="progress-label">
+            <span>Progression</span>
+            <span>${s.progression || 0}%</span>
+          </div>
+          <div class="progress-bar">
+            <div class="progress-fill" style="width:${s.progression || 0}%"></div>
+          </div>
+        </div>`;
+
+      /* charger suite */
+      loadEncadrant();
+      loadFeedbacks(s.id);
+      checkRapport(s.id);
+      // ── MAP ──
+const entreprise = s.entreprise || "";
+const ville      = s.ville      || "";
+if (entreprise || ville) {
+  const query = encodeURIComponent(`${entreprise} ${ville} Tunisie`);
+  document.getElementById("stageInfos").innerHTML += `
+    <div style="margin-top:16px">
+      <div style="font-size:0.75rem;font-weight:600;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.05em">
+        <i class="fa fa-map-location-dot" style="color:var(--accent);margin-right:5px"></i> Localisation
+      </div>
+      <div style="border-radius:12px;overflow:hidden;border:1px solid var(--border)">
+        <iframe
+          width="100%" height="200" frameborder="0"
+          style="display:block" referrerpolicy="no-referrer-when-downgrade"
+          src="https://www.google.com/maps?q=${query}&output=embed"
+          allowfullscreen>
+        </iframe>
+      </div>
+      <a href="https://www.google.com/maps/search/${query}" target="_blank"
+         style="display:inline-flex;align-items:center;gap:6px;margin-top:8px;font-size:0.78rem;color:var(--accent);font-weight:600;text-decoration:none">
+        <i class="fa fa-up-right-from-square"></i> Ouvrir dans Google Maps
+      </a>
+    </div>`;
+}
+    });
+    
+}
+
+/* ══ ENCADRANT ══ */
+function loadEncadrant() {
+  fetch(`http://localhost:3000/mon-encadrant/${currentUser.id}`)
+    .then(r => r.json())
+    .then(data => {
+      if (!data.success) {
+        document.getElementById("encadrantCard").innerHTML =
+          `<div class="empty-state"><i class="fa fa-user-slash"></i>Aucun encadrant assigné</div>`;
+        return;
+      }
+      const enc = data.encadrant;
+      const encIni = (enc.prenom?.[0]||"") + (enc.nom?.[0]||"");
+      document.getElementById("encadrantCard").innerHTML = `
+        <div class="enc-card">
+          <div class="enc-avatar-lg">${encIni}</div>
+          <div>
+            <div class="enc-name">${enc.prenom} ${enc.nom}</div>
+            <div class="enc-grade">${enc.role || "Encadrant"}</div>
+          </div>
+          <a href="messagerie.html" class="btn-msg">
+            <i class="fa fa-comments"></i> Message
+          </a>
+        </div>`;
+    });
+}
+
+/* ══ DEADLINES ══ */
+function loadDeadlines() {
+  fetch(`http://localhost:3000/deadlines/${currentUser.id}`)
+    .then(r => r.json())
+    .then(data => {
+      if (!data.success || !data.deadlines.length) {
+        document.getElementById("deadlinesList").innerHTML =
+          `<div class="empty-state"><i class="fa fa-clock"></i>Aucune deadline</div>`;
+        return;
+      }
+      const today = new Date();
+      document.getElementById("deadlinesList").innerHTML = data.deadlines.map(d => {
+        const date  = new Date(d.date_limit);
+        const diff  = Math.ceil((date - today) / (1000*60*60*24));
+        let cls, label;
+        if      (diff < 0)  { cls = "passed"; label = "Passée"; }
+        else if (diff <= 7) { cls = "urgent"; label = `${diff}j restants`; }
+        else if (diff <= 30){ cls = "soon";   label = `${diff}j restants`; }
+        else                { cls = "ok";     label = `${diff}j restants`; }
+
+        return `
+          <div class="deadline-item">
+            <div class="deadline-date">${date.toLocaleDateString("fr-FR",{day:"numeric",month:"short"})}</div>
+            <div class="deadline-title">${d.titre}</div>
+            <span class="days-left ${cls}">${label}</span>
+          </div>`;
+      }).join("");
+    });
+}
+
+/* ══ FEEDBACKS ══ */
+function loadFeedbacks(sid) {
+  fetch(`http://localhost:3000/feedbacks/${sid}`)
+    .then(r => r.json())
+    .then(data => {
+      if (!data.success || !data.feedbacks.length) {
+        document.getElementById("feedbacksList").innerHTML =
+          `<div class="empty-state"><i class="fa fa-comment-slash"></i>Aucun feedback pour l'instant</div>`;
+        return;
+      }
+      document.getElementById("feedbacksList").innerHTML = data.feedbacks.map(f => `
+        <div class="feedback-item">
+          <div class="feedback-text">${f.commentaire}</div>
+          <div class="feedback-meta">
+            <i class="fa fa-user" style="margin-right:4px"></i>${f.enc_prenom} ${f.enc_nom}
+            &nbsp;·&nbsp;
+            <i class="fa fa-clock" style="margin-right:4px"></i>${new Date(f.created_at).toLocaleDateString("fr-FR")}
+          </div>
+        </div>`).join("");
+    });
+}
+
+/* ══ CHECK RAPPORT EXISTANT ══ */
+function checkRapport(sid) {
+  fetch(`http://localhost:3000/rapport/${sid}`)
+    .then(r => r.json())
+    .then(data => {
+      if (data.success && data.rapport) {
+        const r = data.rapport;
+        document.getElementById("rapportExist").style.display = "block";
+        document.getElementById("rapportExist").innerHTML = `
+          <div class="file-selected">
+            <i class="fa fa-file-pdf" style="color:var(--red)"></i>
+            <div>
+              <div style="font-weight:600">${r.nom_fichier || "rapport.pdf"}</div>
+              <div style="font-size:0.72rem;color:var(--muted)">
+                Déposé le ${new Date(r.date_depot).toLocaleDateString("fr-FR")}
+                &nbsp;·&nbsp;
+                ${r.est_valide
+                  ? '<span style="color:var(--green)"><i class="fa fa-check"></i> Validé</span>'
+                  : '<span style="color:var(--orange)">En attente de validation</span>'}
+              </div>
+            </div>
+            <a href="http://localhost:3000/uploads/stages/${r.chemin_fichier}"
+               target="_blank" style="margin-left:auto;color:var(--accent);font-size:0.8rem">
+              <i class="fa fa-download"></i> Télécharger
+            </a>
+          </div>`;
+      }
+    });
+}
+
+/* ══ FILE INPUT ══ */
+document.getElementById("rapportInput").addEventListener("change", function() {
+  showFile(this.files[0]);
+});
+
+function handleDrop(e) {
+  e.preventDefault();
+  document.getElementById("uploadZone").classList.remove("dragover");
+  const file = e.dataTransfer.files[0];
+  if (file && file.type === "application/pdf") showFile(file);
+  else showToast("Veuillez sélectionner un fichier PDF", "error");
+}
+
+function showFile(file) {
+  if (!file) return;
+  const size = (file.size / 1024 / 1024).toFixed(2);
+  document.getElementById("filePreview").innerHTML = `
+    <div class="file-selected">
+      <i class="fa fa-file-pdf" style="color:var(--red)"></i>
+      <div>
+        <div style="font-weight:600">${file.name}</div>
+        <div style="font-size:0.72rem;color:var(--muted)">${size} MB</div>
+      </div>
+      <span class="remove" onclick="removeFile()"><i class="fa fa-times"></i></span>
+    </div>`;
+  document.getElementById("btnUpload").disabled = false;
+  document.getElementById("rapportInput")._file = file;
+}
+
+function removeFile() {
+  document.getElementById("filePreview").innerHTML = "";
+  document.getElementById("btnUpload").disabled = true;
+  document.getElementById("rapportInput").value = "";
+}
+
+/* ══ UPLOAD RAPPORT ══ */
+function uploadRapport() {
+  const file = document.getElementById("rapportInput")._file ||
+               document.getElementById("rapportInput").files[0];
+  if (!file || !stageId) return;
+
+  const btn = document.getElementById("btnUpload");
+  btn.disabled = true;
+  btn.innerHTML = `<i class="fa fa-spinner fa-spin"></i> Envoi en cours...`;
+
+  const formData = new FormData();
+  formData.append("rapport",   file);
+  formData.append("stage_id",  stageId);
+  formData.append("nom_fichier", file.name);
+  formData.append("taille",    file.size);
+
+  fetch("http://localhost:3000/deposer-rapport", {
+    method: "POST",
+    body: formData
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.success) {
+      showToast("✅ Rapport déposé avec succès !", "success");
+      btn.innerHTML = `<i class="fa fa-check"></i> Rapport envoyé`;
+      checkRapport(stageId);
+    } else {
+      showToast(data.message || "Erreur lors du dépôt", "error");
+      btn.disabled = false;
+      btn.innerHTML = `<i class="fa fa-paper-plane"></i> Envoyer le rapport`;
+    }
+  });
+}
+
+/* ══ TOAST ══ */
+function showToast(msg, type="") {
+  const t = document.getElementById("toast");
+  t.className = `toast ${type} show`;
+  t.innerText = msg;
+  setTimeout(() => t.classList.remove("show"), 3000);
+}
+
+/* ══ LOGOUT ══ */
+function logout() { localStorage.clear(); window.location.href = "login.html"; }
+
+/* ══ INIT ══ */
+loadStage();
+loadDeadlines();
+
+</script>
+</body>
+</html>

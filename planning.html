@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Planning de Stage | StageFlow</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f4f6fb;--white:#fff;--border:#e5e9f2;
+  --accent:#4f7cff;--accent2:#7c5cfc;--green:#10b981;
+  --orange:#f59e0b;--red:#ef4444;--text:#1a1d2e;--muted:#8892a4;
+  --sidebar-w:240px;
+}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);display:flex;min-height:100vh}
+
+/* SIDEBAR */
+.sidebar{width:var(--sidebar-w);background:var(--white);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:24px 14px;position:fixed;top:0;left:0;bottom:0;z-index:100}
+.logo{font-family:'Syne',sans-serif;font-weight:800;font-size:1.35rem;color:var(--text);padding:0 8px 22px;border-bottom:1px solid var(--border);margin-bottom:18px}
+.logo span{color:var(--accent)}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:10px;color:var(--muted);text-decoration:none;font-size:.875rem;font-weight:500;transition:all .18s;margin-bottom:2px;cursor:pointer;border:none;background:none;width:100%;text-align:left}
+.nav-item:hover{background:var(--bg);color:var(--text)}
+.nav-item.active{background:rgba(79,124,255,.1);color:var(--accent);font-weight:600}
+.nav-item i{width:16px;text-align:center;font-size:.85rem}
+.sidebar-bottom{margin-top:auto;border-top:1px solid var(--border);padding-top:14px}
+.user-chip{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg);border-radius:10px;margin-bottom:6px}
+.avatar-circle{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.8rem;color:#fff;flex-shrink:0;overflow:hidden}
+.user-chip-name{font-size:.82rem;font-weight:600;color:var(--text)}
+.user-chip-role{font-size:.7rem;color:var(--muted)}
+
+/* MAIN */
+.main{margin-left:var(--sidebar-w);flex:1;display:flex;flex-direction:column}
+.topbar{background:var(--white);border-bottom:1px solid var(--border);padding:0 28px;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
+.topbar-title{font-family:'Syne',sans-serif;font-weight:700;font-size:1.05rem;color:var(--text)}
+.topbar-title span{color:var(--accent)}
+.topbar-right{display:flex;align-items:center;gap:10px}
+.user-pill{display:flex;align-items:center;gap:8px;padding:5px 12px 5px 6px;background:var(--bg);border:1px solid var(--border);border-radius:20px;font-size:.82rem;font-weight:500;color:var(--text)}
+.user-pill .avatar-circle{width:26px;height:26px;font-size:.7rem}
+
+.content{padding:28px;flex:1}
+
+/* FORM CARD */
+.card{background:var(--white);border:1px solid var(--border);border-radius:16px;padding:24px;margin-bottom:20px;animation:fadeUp .4s ease both}
+.card-title{font-family:'Syne',sans-serif;font-weight:700;font-size:.95rem;color:var(--text);display:flex;align-items:center;gap:8px;margin-bottom:20px;padding-bottom:14px;border-bottom:1px solid var(--border)}
+.card-title i{color:var(--accent)}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+
+.form-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:16px}
+.form-group{display:flex;flex-direction:column;gap:5px}
+.form-label{font-size:.78rem;font-weight:600;color:var(--text)}
+.form-input{border:1px solid var(--border);border-radius:9px;padding:9px 12px;font-family:'DM Sans',sans-serif;font-size:.855rem;color:var(--text);background:var(--bg);outline:none;transition:border-color .15s;width:100%}
+.form-input:focus{border-color:var(--accent);background:var(--white);box-shadow:0 0 0 3px rgba(79,124,255,.1)}
+.form-input::placeholder{color:var(--muted)}
+
+.btn-generate{display:flex;align-items:center;justify-content:center;gap:8px;padding:12px 28px;border:none;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;font-family:'DM Sans',sans-serif;font-size:.9rem;font-weight:600;cursor:pointer;transition:all .18s;box-shadow:0 4px 16px rgba(79,124,255,.25)}
+.btn-generate:hover{opacity:.88;transform:translateY(-1px);box-shadow:0 8px 24px rgba(79,124,255,.35)}
+.btn-generate:disabled{background:var(--border);color:var(--muted);cursor:not-allowed;transform:none;box-shadow:none}
+
+/* LOADING */
+.loading-wrap{text-align:center;padding:60px 20px}
+.ai-spinner{width:56px;height:56px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 20px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-text{font-family:'Syne',sans-serif;font-weight:700;font-size:1rem;color:var(--text);margin-bottom:6px}
+.loading-sub{font-size:.82rem;color:var(--muted)}
+.loading-dots::after{content:'...';animation:dots 1.5s steps(4,end) infinite}
+@keyframes dots{0%,20%{content:'.'}40%{content:'..'}60%,100%{content:'...'}}
+
+/* PLANNING OUTPUT */
+.planning-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px}
+.planning-title{font-family:'Syne',sans-serif;font-weight:800;font-size:1.1rem;color:var(--text)}
+.planning-meta{font-size:.78rem;color:var(--muted);margin-top:3px}
+.planning-actions{display:flex;gap:8px}
+.btn-action{display:flex;align-items:center;gap:6px;padding:8px 16px;border-radius:9px;font-family:'DM Sans',sans-serif;font-size:.78rem;font-weight:600;cursor:pointer;transition:all .18s}
+.btn-pdf{background:var(--accent);color:#fff;border:none;box-shadow:0 3px 10px rgba(79,124,255,.25)}
+.btn-pdf:hover{opacity:.85;transform:translateY(-1px)}
+.btn-journal{background:var(--white);color:var(--green);border:1px solid rgba(16,185,129,.3)}
+.btn-journal:hover{background:rgba(16,185,129,.05);border-color:var(--green)}
+
+/* PHASE CARDS */
+.phases{display:flex;flex-direction:column;gap:14px}
+
+.phase-card{border-radius:14px;border:1px solid var(--border);overflow:hidden;transition:box-shadow .2s}
+.phase-card:hover{box-shadow:0 6px 24px rgba(0,0,0,.07)}
+
+.phase-header{display:flex;align-items:center;gap:14px;padding:16px 20px;cursor:pointer;user-select:none}
+.phase-num{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;font-size:.9rem;color:#fff;flex-shrink:0}
+.phase-info{flex:1}
+.phase-title{font-family:'Syne',sans-serif;font-weight:700;font-size:.9rem;color:var(--text);margin-bottom:3px}
+.phase-period{font-size:.72rem;color:var(--muted)}
+.phase-toggle{color:var(--muted);font-size:.8rem;transition:transform .2s}
+.phase-card.open .phase-toggle{transform:rotate(180deg)}
+
+.phase-body{padding:0 20px;max-height:0;overflow:hidden;transition:max-height .35s ease, padding .35s ease}
+.phase-card.open .phase-body{max-height:600px;padding:0 20px 18px}
+
+.task-list{display:flex;flex-direction:column;gap:8px}
+.task-item{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border-radius:10px;background:var(--bg);border:1px solid var(--border)}
+.task-icon{font-size:.85rem;flex-shrink:0;margin-top:1px}
+.task-text{font-size:.82rem;color:var(--text);line-height:1.55;flex:1}
+.task-tag{font-size:.65rem;font-weight:700;padding:2px 8px;border-radius:10px;flex-shrink:0;margin-top:2px}
+
+/* colors per phase */
+.phase-1 .phase-header{background:rgba(79,124,255,.04)}
+.phase-1 .phase-num{background:var(--accent)}
+.phase-1 .task-tag{background:rgba(79,124,255,.1);color:var(--accent)}
+
+.phase-2 .phase-header{background:rgba(245,158,11,.04)}
+.phase-2 .phase-num{background:var(--orange)}
+.phase-2 .task-tag{background:rgba(245,158,11,.1);color:var(--orange)}
+
+.phase-3 .phase-header{background:rgba(239,68,68,.04)}
+.phase-3 .phase-num{background:var(--red)}
+.phase-3 .task-tag{background:rgba(239,68,68,.1);color:var(--red)}
+
+.phase-4 .phase-header{background:rgba(16,185,129,.04)}
+.phase-4 .phase-num{background:var(--green)}
+.phase-4 .task-tag{background:rgba(16,185,129,.1);color:var(--green)}
+
+.phase-5 .phase-header{background:rgba(124,92,252,.04)}
+.phase-5 .phase-num{background:var(--accent2)}
+.phase-5 .task-tag{background:rgba(124,92,252,.1);color:var(--accent2)}
+
+/* timeline mini */
+.timeline-mini{display:flex;align-items:center;gap:0;margin-bottom:20px;overflow-x:auto;padding-bottom:4px}
+.tl-item{display:flex;flex-direction:column;align-items:center;min-width:80px;flex:1}
+.tl-dot{width:12px;height:12px;border-radius:50%;border:2px solid var(--border);background:var(--white);position:relative;z-index:1}
+.tl-dot.done{background:var(--green);border-color:var(--green)}
+.tl-dot.active{background:var(--accent);border-color:var(--accent);box-shadow:0 0 0 4px rgba(79,124,255,.15)}
+.tl-line{flex:1;height:2px;background:var(--border);margin-bottom:16px}
+.tl-line.done{background:var(--green)}
+.tl-label-mini{font-size:.6rem;color:var(--muted);text-align:center;margin-top:5px;font-weight:500}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;right:24px;background:var(--text);color:#fff;padding:12px 20px;border-radius:10px;font-size:.85rem;font-weight:500;box-shadow:0 4px 20px rgba(0,0,0,.15);transform:translateY(80px);opacity:0;transition:all .3s ease;z-index:999}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.success{background:var(--green)}
+.toast.error{background:var(--red)}
+</style>
+</head>
+
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="logo">Stage<span>Flow</span></div>
+  <nav>
+    <a class="nav-item active" href="etudiant.html"><i class="fa fa-house"></i> Dashboard</a>
+    <a class="nav-item" href="profil.html"><i class="fa fa-user"></i> Profil</a>
+    <a class="nav-item" href="stage.html"><i class="fa fa-briefcase"></i> Mon stage</a>
+    <a class="nav-item" href="journal.html"><i class="fa fa-book-open"></i> Journal de bord</a>
+    <a class="nav-item" href="messagerie.html"><i class="fa fa-comments"></i> Messagerie</a>
+    <a class="nav-item" href="suggestion.html"><i class="fa fa-lightbulb"></i> Suggestions</a>
+    <a class="nav-item" href="notifications.html"><i class="fa fa-bell"></i> Notifications</a>
+    <a class="nav-item" href="cv.html">
+  <i class="fa fa-file-user"></i> CV Generator
+</a>
+<a class="nav-item" href="soutenance.html">
+  <i class="fa fa-graduation-cap"></i> Soutenance en ligne
+</a>
+<a class="nav-item" href="document.html">
+  <i class="fa fa-file-contract"></i> Documents officiels
+</a>
+  <a class="nav-item" href="chatbot.html">
+  <i class="fa fa-robot"></i> Assistant IA
+</a>
+<a class="nav-item" href="carte-etudiant.html">
+  <i class="fa fa-id-card"></i> Ma carte étudiant
+</a>
+<a class="nav-item" href="planning.html">
+  <i class="fa fa-calendar-days"></i> Planning de stage
+</a>
+<a class="nav-item" href="ressource.html">
+  <i class="fa fa-book-bookmark"></i> Ressources
+</a>
+<a class="nav-item" href="carte-stagiaires.html">
+  <i class="fa fa-map-location-dot"></i> Carte des stagiaires
+</a>
+<a class="nav-item" href="rendez-vous.html">
+  <i class="fa fa-calendar-check"></i> Rendez-vous
+</a>
+  </nav>
+  <div class="sidebar-bottom">
+    <div class="user-chip">
+      <div class="avatar-circle" id="sidebarAvatar">?</div>
+      <div>
+        <div class="user-chip-name" id="sidebarNom">...</div>
+        <div class="user-chip-role">Étudiant</div>
+      </div>
+    </div>
+    <button class="nav-item" onclick="logout()" style="color:var(--red)">
+      <i class="fa fa-right-from-bracket"></i> Déconnexion
+    </button>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-title">📅 Planning de <span>stage</span></div>
+    <div class="topbar-right">
+      <div class="user-pill">
+        <div class="avatar-circle" id="topAvatar">?</div>
+        <span id="topNom">...</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- FORM -->
+    <div class="card">
+      <div class="card-title"><i class="fa fa-wand-magic-sparkles"></i> Générer mon planning avec l'IA</div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">Type de stage</label>
+          <select class="form-input" id="inputType">
+            <option value="initiation">Initiation (1ère année)</option>
+            <option value="perfectionnement">Perfectionnement (2ème année)</option>
+            <option value="fin_etude">Fin d'études — PFE (3ème année)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Date de début</label>
+          <input class="form-input" type="date" id="inputDebut">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Date de fin</label>
+          <input class="form-input" type="date" id="inputFin">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Filière</label>
+          <input class="form-input" id="inputFiliere" placeholder="Ex: Informatique, Mécanique...">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Titre du stage</label>
+          <input class="form-input" id="inputTitre" placeholder="Ex: Application web de gestion">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Technologies utilisées</label>
+          <input class="form-input" id="inputTech" placeholder="Ex: React, Node.js, MySQL">
+        </div>
+      </div>
+      <button class="btn-generate" id="btnGenerate" onclick="generatePlanning()">
+        <i class="fa fa-wand-magic-sparkles"></i> Générer mon planning intelligent
+      </button>
+    </div>
+
+    <!-- OUTPUT -->
+    <div id="planningOutput" style="display:none"></div>
+
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+
+/* ══ LOGIN ══ */
+const currentUser = {
+  id:     parseInt(localStorage.getItem("user_id")),
+  nom:    localStorage.getItem("user_nom")    || "",
+  prenom: localStorage.getItem("user_prenom") || "",
+  photo:  localStorage.getItem("user_photo")  || "",
+};
+if (!currentUser.id) window.location.href = "login.html";
+
+const ini = (currentUser.prenom[0]||"") + (currentUser.nom[0]||"");
+document.getElementById("sidebarNom").innerText = currentUser.prenom + " " + currentUser.nom;
+document.getElementById("topNom").innerText     = currentUser.prenom + " " + currentUser.nom;
+if (currentUser.photo) {
+  const url = "http://localhost:3000/uploads/" + currentUser.photo;
+  document.getElementById("sidebarAvatar").innerHTML = `<img src="${url}" style="width:34px;height:34px;border-radius:50%;object-fit:cover">`;
+  document.getElementById("topAvatar").innerHTML     = `<img src="${url}" style="width:26px;height:26px;border-radius:50%;object-fit:cover">`;
+} else {
+  document.getElementById("sidebarAvatar").innerText = ini;
+  document.getElementById("topAvatar").innerText     = ini;
+}
+
+/* ══ PREFILL FROM STAGE ══ */
+async function prefill() {
+  try {
+    const r  = await fetch(`http://localhost:3000/profil-complet/${currentUser.id}`);
+    const d  = await r.json();
+    if (d.success) {
+      if (d.user.filiere) document.getElementById("inputFiliere").value = d.user.filiere;
+      if (d.user.type_stage) document.getElementById("inputType").value = d.user.type_stage;
+    }
+    const r2 = await fetch(`http://localhost:3000/mes-stages/${currentUser.id}`);
+    const d2 = await r2.json();
+    if (d2.success && d2.stages.length) {
+      const s = d2.stages[0];
+      if (s.titre)          document.getElementById("inputTitre").value = s.titre;
+      if (s.type_stage)     document.getElementById("inputType").value  = s.type_stage;
+      if (s.date_debut)     document.getElementById("inputDebut").value = s.date_debut.split("T")[0];
+      if (s.date_fin_prevue)document.getElementById("inputFin").value   = s.date_fin_prevue.split("T")[0];
+    }
+  } catch(e) {}
+}
+
+/* ══ GENERATE PLANNING ══ */
+let planningData = null;
+
+async function generatePlanning() {
+  const type    = document.getElementById("inputType").value;
+  const debut   = document.getElementById("inputDebut").value;
+  const fin     = document.getElementById("inputFin").value;
+  const filiere = document.getElementById("inputFiliere").value;
+  const titre   = document.getElementById("inputTitre").value;
+  const tech    = document.getElementById("inputTech").value;
+
+  if (!debut || !fin) return showToast("Veuillez entrer les dates de stage", "error");
+  if (new Date(fin) <= new Date(debut)) return showToast("La date de fin doit être après le début", "error");
+
+  const btn = document.getElementById("btnGenerate");
+  btn.disabled = true;
+  btn.innerHTML = `<i class="fa fa-spinner fa-spin"></i> L'IA génère votre planning...`;
+
+  // show loading
+  const output = document.getElementById("planningOutput");
+  output.style.display = "block";
+  output.innerHTML = `
+    <div class="card">
+      <div class="loading-wrap">
+        <div class="ai-spinner"></div>
+        <div class="loading-text">L'IA analyse votre stage<span class="loading-dots"></span></div>
+        <div class="loading-sub">Génération d'un planning personnalisé pour votre ${typeLabel(type)}</div>
+      </div>
+    </div>`;
+
+  // calcul durée
+  const diffWeeks = Math.ceil((new Date(fin) - new Date(debut)) / (1000*60*60*24*7));
+
+  const prompt = `Tu es un expert en gestion de stages universitaires tunisiens. Génère un planning de stage DÉTAILLÉ et PROFESSIONNEL.
+
+INFORMATIONS:
+- Type: ${typeLabel(type)}
+- Durée: ${diffWeeks} semaines (du ${formatDate(debut)} au ${formatDate(fin)})
+- Filière: ${filiere || "Informatique"}
+- Titre du stage: ${titre || "Stage universitaire"}
+- Technologies: ${tech || "Non spécifiées"}
+- Étudiant: ${currentUser.prenom} ${currentUser.nom}
+
+INSTRUCTIONS:
+Génère exactement 4 phases adaptées à la durée du stage.
+Chaque phase doit avoir 4 à 6 tâches concrètes et spécifiques.
+Adapte le contenu selon le type de stage et la filière.
+
+Réponds UNIQUEMENT en JSON valide (sans markdown, sans backticks), exactement ce format:
+{
+  "titre": "Planning de stage — [Titre]",
+  "resume": "Résumé court du planning en 1 phrase",
+  "phases": [
+    {
+      "numero": 1,
+      "titre": "Titre de la phase",
+      "emoji": "🔵",
+      "semaines": "Semaine 1-2",
+      "objectif": "Objectif principal de cette phase",
+      "taches": [
+        {"texte": "Description de la tâche", "tag": "Tag court", "icone": "📋"},
+        {"texte": "Description de la tâche", "tag": "Tag court", "icone": "💻"}
+      ]
+    }
+  ]
+}`;
+
+  try {
+    const response = await fetch("http://localhost:3000/chatbot", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        system: "Tu es un assistant expert. Réponds UNIQUEMENT en JSON valide sans aucun texte supplémentaire, sans backticks, sans markdown.",
+        messages: [{ role: "user", content: prompt }]
+      })
+    });
+
+    const data  = await response.json();
+    const raw   = data.content?.[0]?.text || "";
+    const clean = raw.replace(/```json|```/g, "").trim();
+    planningData = JSON.parse(clean);
+    planningData._meta = { debut, fin, type, filiere, titre, tech, diffWeeks };
+
+    renderPlanning(planningData);
+
+  } catch(err) {
+    console.log(err);
+    // fallback planning
+    planningData = generateFallback(type, debut, fin, diffWeeks, filiere, titre);
+    renderPlanning(planningData);
+  }
+
+  btn.disabled = false;
+  btn.innerHTML = `<i class="fa fa-wand-magic-sparkles"></i> Régénérer le planning`;
+}
+
+/* ══ RENDER PLANNING ══ */
+function renderPlanning(data) {
+  const output = document.getElementById("planningOutput");
+  const meta   = data._meta || {};
+
+  const phasesHTML = data.phases.map((p, i) => `
+    <div class="phase-card phase-${(i%5)+1}" id="phase_${i}">
+      <div class="phase-header" onclick="togglePhase(${i})">
+        <div class="phase-num">${p.numero}</div>
+        <div class="phase-info">
+          <div class="phase-title">${p.emoji} ${p.titre}</div>
+          <div class="phase-period">${p.semaines} — ${p.objectif}</div>
+        </div>
+        <div class="phase-toggle"><i class="fa fa-chevron-down"></i></div>
+      </div>
+      <div class="phase-body">
+        <div class="task-list">
+          ${p.taches.map(t => `
+            <div class="task-item">
+              <div class="task-icon">${t.icone}</div>
+              <div class="task-text">${t.texte}</div>
+              <div class="task-tag">${t.tag}</div>
+            </div>`).join("")}
+        </div>
+      </div>
+    </div>`).join("");
+
+  // timeline mini
+  const tlHTML = data.phases.map((p, i) => `
+    ${i > 0 ? `<div class="tl-line"></div>` : ""}
+    <div class="tl-item">
+      <div class="tl-dot ${i === 0 ? 'active' : ''}"></div>
+      <div class="tl-label-mini">${p.titre.split(" ")[0]}</div>
+    </div>`).join("");
+
+  output.innerHTML = `
+    <div class="card" style="animation-delay:.1s">
+      <div class="planning-header">
+        <div>
+          <div class="planning-title">📅 ${data.titre}</div>
+          <div class="planning-meta">${data.resume} · ${meta.diffWeeks} semaines · ${formatDate(meta.debut)} → ${formatDate(meta.fin)}</div>
+        </div>
+        <div class="planning-actions">
+          <button class="btn-action btn-journal" onclick="addToJournal()">
+            <i class="fa fa-book-open"></i> Ajouter au journal
+          </button>
+          <button class="btn-action btn-pdf" onclick="downloadPlanningPDF()">
+            <i class="fa fa-file-pdf"></i> Télécharger PDF
+          </button>
+        </div>
+      </div>
+
+      <!-- timeline -->
+      <div class="timeline-mini">${tlHTML}</div>
+
+      <!-- phases -->
+      <div class="phases">${phasesHTML}</div>
+    </div>`;
+
+  // open first phase
+  setTimeout(() => togglePhase(0), 100);
+  showToast("✅ Planning généré avec succès !", "success");
+}
+
+/* ══ TOGGLE PHASE ══ */
+function togglePhase(i) {
+  const card = document.getElementById("phase_" + i);
+  card.classList.toggle("open");
+}
+
+/* ══ ADD TO JOURNAL ══ */
+async function addToJournal() {
+  if (!planningData) return;
+  const meta = planningData._meta || {};
+  let added = 0;
+
+  for (const phase of planningData.phases) {
+    const contenu = phase.taches.map(t => `• ${t.texte}`).join("\n");
+    try {
+      await fetch("http://localhost:3000/journal", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          etudiant_id: currentUser.id,
+          titre: `${phase.emoji} ${phase.titre}`,
+          contenu,
+          date: meta.debut || new Date().toISOString().split("T")[0],
+          tags: phase.taches.map(t => t.tag).join(","),
+          mood: "🎯",
+          progression: 0
+        })
+      });
+      added++;
+    } catch(e) {}
+  }
+
+  showToast(`✅ ${added} phases ajoutées au journal !`, "success");
+}
+
+/* ══ DOWNLOAD PDF ══ */
+function downloadPlanningPDF() {
+  if (!planningData) return;
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation:"portrait", unit:"mm", format:"a4" });
+  const W = 210, M = 18;
+  const meta = planningData._meta || {};
+
+  // header
+  doc.setFillColor(79, 124, 255);
+  doc.rect(0, 0, W, 36, "F");
+
+  // logo
+  doc.setFillColor(255,255,255,0.2);
+  doc.setFillColor(60, 100, 220);
+  doc.roundedRect(M, 8, 10, 10, 2, 2, "F");
+  doc.setTextColor(255,255,255);
+  doc.setFontSize(7); doc.setFont("helvetica","bold");
+  doc.text("SF", M+5, 14.5, { align:"center" });
+
+  doc.setFontSize(14); doc.setFont("helvetica","bold");
+  doc.setTextColor(255,255,255);
+  doc.text(planningData.titre, M+14, 15);
+  doc.setFontSize(8); doc.setFont("helvetica","normal");
+  doc.setTextColor(180,200,255);
+  doc.text(`${currentUser.prenom} ${currentUser.nom}  ·  ${formatDate(meta.debut)} → ${formatDate(meta.fin)}  ·  ${meta.diffWeeks} semaines`, M+14, 22);
+  doc.setFontSize(7.5);
+  doc.text(planningData.resume, M+14, 28);
+
+  let y = 46;
+  const colors = [
+    [79,124,255], [245,158,11], [239,68,68], [16,185,129], [124,92,252]
+  ];
+
+  planningData.phases.forEach((phase, i) => {
+    if (y > 260) { doc.addPage(); y = 20; }
+
+    const c = colors[i % colors.length];
+
+    // phase header
+    doc.setFillColor(...c);
+    doc.roundedRect(M, y, W-M*2, 10, 2, 2, "F");
+    doc.setTextColor(255,255,255);
+    doc.setFontSize(9); doc.setFont("helvetica","bold");
+    doc.text(`${phase.emoji}  Phase ${phase.numero} — ${phase.titre}`, M+4, y+6.5);
+    doc.setFontSize(7); doc.setFont("helvetica","normal");
+    doc.setTextColor(200,220,255);
+    doc.text(phase.semaines + "  ·  " + phase.objectif, W-M-2, y+6.5, { align:"right" });
+
+    y += 13;
+
+    // taches
+    phase.taches.forEach(t => {
+      if (y > 270) { doc.addPage(); y = 20; }
+      doc.setFillColor(248,249,255);
+      doc.roundedRect(M, y, W-M*2, 8, 1, 1, "F");
+      doc.setDrawColor(...c, 0.3);
+      doc.setLineWidth(0.3);
+      doc.roundedRect(M, y, W-M*2, 8, 1, 1);
+
+      // icone
+      doc.setFontSize(7);
+      doc.setTextColor(60,60,80);
+      doc.text(t.icone, M+3, y+5.2);
+
+      // texte
+      doc.setFontSize(7.5); doc.setFont("helvetica","normal");
+      doc.setTextColor(40,40,60);
+      const lines = doc.splitTextToSize(t.texte, W-M*2-25);
+      doc.text(lines[0], M+9, y+5.2);
+
+      // tag
+      doc.setFillColor(...c);
+      doc.roundedRect(W-M-18, y+2, 16, 4, 1, 1, "F");
+      doc.setTextColor(255,255,255);
+      doc.setFontSize(5.5); doc.setFont("helvetica","bold");
+      doc.text(t.tag, W-M-10, y+4.8, { align:"center" });
+
+      y += 10;
+    });
+
+    y += 6;
+  });
+
+  // footer
+  doc.setFontSize(7); doc.setTextColor(150,155,170); doc.setFont("helvetica","italic");
+  doc.text("Généré par StageFlow — Plateforme de gestion des stages universitaires", W/2, 287, { align:"center" });
+
+  doc.save(`Planning_Stage_${currentUser.prenom}_${currentUser.nom}.pdf`);
+  showToast("✅ Planning PDF téléchargé !", "success");
+}
+
+/* ══ FALLBACK PLANNING (sans AI) ══ */
+function generateFallback(type, debut, fin, weeks, filiere, titre) {
+  const phases = {
+    initiation: [
+      { numero:1, titre:"Intégration", emoji:"🔵", semaines:`Semaine 1`, objectif:"Découverte de l'entreprise",
+        taches:[{texte:"Présentation de l'équipe et de l'environnement de travail",tag:"Intégration",icone:"👥"},{texte:"Installation et configuration de l'environnement de développement",tag:"Setup",icone:"💻"},{texte:"Prise en main des outils et logiciels utilisés",tag:"Outils",icone:"🔧"},{texte:"Réunion de cadrage avec l'encadrant",tag:"Réunion",icone:"📋"}]},
+      { numero:2, titre:"Analyse", emoji:"🟡", semaines:`Semaine 2-3`, objectif:"Étude et planification",
+        taches:[{texte:"Étude de l'existant et analyse des besoins",tag:"Analyse",icone:"🔍"},{texte:"Rédaction du cahier des charges",tag:"Cahier",icone:"📝"},{texte:"Définition des objectifs du stage",tag:"Objectifs",icone:"🎯"},{texte:"Présentation du plan de travail à l'encadrant",tag:"Validation",icone:"✅"}]},
+      { numero:3, titre:"Réalisation", emoji:"🔴", semaines:`Semaine 4-7`, objectif:"Développement et implémentation",
+        taches:[{texte:"Implémentation des fonctionnalités principales",tag:"Dev",icone:"⚡"},{texte:"Tests et corrections des bugs",tag:"Tests",icone:"🧪"},{texte:"Documentation du code",tag:"Docs",icone:"📖"},{texte:"Réunions de suivi hebdomadaires",tag:"Suivi",icone:"🔄"}]},
+      { numero:4, titre:"Finalisation", emoji:"🟢", semaines:`Semaine 8`, objectif:"Clôture et rapport",
+        taches:[{texte:"Tests finaux et validation",tag:"Validation",icone:"✅"},{texte:"Rédaction du rapport de stage",tag:"Rapport",icone:"📄"},{texte:"Préparation de la soutenance",tag:"Soutenance",icone:"🎓"},{texte:"Dépôt du rapport sur StageFlow",tag:"Dépôt",icone:"📤"}]}
+    ],
+    fin_etude: [
+      { numero:1, titre:"Intégration & Cadrage", emoji:"🔵", semaines:`Semaine 1-2`, objectif:"Installation et planification",
+        taches:[{texte:"Découverte de l'entreprise et de l'équipe",tag:"Intégration",icone:"👥"},{texte:"Installation de l'environnement de développement",tag:"Setup",icone:"💻"},{texte:"Réunion de cadrage avec l'encadrant universitaire",tag:"Cadrage",icone:"📋"},{texte:"Définition du périmètre du projet PFE",tag:"Périmètre",icone:"🎯"},{texte:"Rédaction du planning prévisionnel",tag:"Planning",icone:"📅"}]},
+      { numero:2, titre:"Analyse & Conception", emoji:"🟡", semaines:`Semaine 3-6`, objectif:"Conception complète du système",
+        taches:[{texte:"Étude de l'existant et analyse des besoins",tag:"Analyse",icone:"🔍"},{texte:"Rédaction du cahier des charges fonctionnel",tag:"CDC",icone:"📝"},{texte:"Conception de l'architecture système",tag:"Architecture",icone:"🏗️"},{texte:"Modélisation de la base de données",tag:"BDD",icone:"🗄️"},{texte:"Prototypage des interfaces utilisateur",tag:"UI/UX",icone:"🎨"},{texte:"Validation de la conception avec l'encadrant",tag:"Validation",icone:"✅"}]},
+      { numero:3, titre:"Développement", emoji:"🔴", semaines:`Semaine 7-14`, objectif:"Implémentation complète",
+        taches:[{texte:"Développement du backend et API",tag:"Backend",icone:"⚙️"},{texte:"Développement des interfaces frontend",tag:"Frontend",icone:"💻"},{texte:"Intégration et tests unitaires",tag:"Tests",icone:"🧪"},{texte:"Corrections et optimisations",tag:"Fix",icone:"🔧"},{texte:"Réunions de suivi bi-hebdomadaires",tag:"Suivi",icone:"🔄"},{texte:"Mise à jour du journal de bord",tag:"Journal",icone:"📓"}]},
+      { numero:4, titre:"Tests & Validation", emoji:"🟢", semaines:`Semaine 15-18`, objectif:"Validation complète du système",
+        taches:[{texte:"Tests d'intégration complets",tag:"Tests",icone:"🧪"},{texte:"Correction des bugs identifiés",tag:"Debug",icone:"🐛"},{texte:"Tests utilisateurs et retours",tag:"UX",icone:"👤"},{texte:"Rédaction de la documentation technique",tag:"Docs",icone:"📖"},{texte:"Déploiement et mise en production",tag:"Deploy",icone:"🚀"}]},
+      { numero:5, titre:"Rapport & Soutenance", emoji:"🟣", semaines:`Semaine 19-${weeks}`, objectif:"Finalisation et présentation",
+        taches:[{texte:"Rédaction du rapport de PFE",tag:"Rapport",icone:"📄"},{texte:"Préparation des slides de soutenance",tag:"Slides",icone:"🖥️"},{texte:"Répétition de la soutenance",tag:"Répétition",icone:"🎤"},{texte:"Dépôt du rapport sur StageFlow",tag:"Dépôt",icone:"📤"},{texte:"Soutenance finale devant le jury",tag:"Soutenance",icone:"🎓"}]}
+    ]
+  };
+
+  const selected = phases[type] || phases.fin_etude;
+  return {
+    titre: `Planning de stage — ${titre || typeLabel(type)}`,
+    resume: `Planning détaillé sur ${weeks} semaines adapté à votre ${typeLabel(type)} en ${filiere || "Informatique"}`,
+    phases: selected,
+    _meta: { debut, fin, type, filiere, titre, weeks }
+  };
+}
+
+/* ══ HELPERS ══ */
+function typeLabel(type) {
+  return { initiation:"Stage d'Initiation", perfectionnement:"Stage de Perfectionnement", fin_etude:"Projet de Fin d'Études" }[type] || type;
+}
+
+function formatDate(d) {
+  if (!d) return "—";
+  return new Date(d).toLocaleDateString("fr-FR", { day:"numeric", month:"short", year:"numeric" });
+}
+
+function showToast(msg, type="") {
+  const t = document.getElementById("toast");
+  t.className = `toast ${type} show`;
+  t.innerText = msg;
+  setTimeout(() => t.classList.remove("show"), 3000);
+}
+
+function logout() { localStorage.clear(); window.location.href = "login.html"; }
+
+/* ══ INIT ══ */
+prefill();
+
+// default dates
+const today = new Date();
+const in3months = new Date(); in3months.setMonth(in3months.getMonth() + 3);
+document.getElementById("inputDebut").value = today.toISOString().split("T")[0];
+document.getElementById("inputFin").value   = in3months.toISOString().split("T")[0];
+</script>
+</body>
+</html>

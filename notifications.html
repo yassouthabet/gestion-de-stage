@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Notifications | StageFlow</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:        #f4f6fb;
+  --white:     #ffffff;
+  --border:    #e5e9f2;
+  --accent:    #4f7cff;
+  --accent2:   #7c5cfc;
+  --green:     #10b981;
+  --orange:    #f59e0b;
+  --red:       #ef4444;
+  --text:      #1a1d2e;
+  --muted:     #8892a4;
+  --sidebar-w: 240px;
+}
+
+body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); display: flex; min-height: 100vh; }
+
+/* ══ SIDEBAR ══ */
+.sidebar { width: var(--sidebar-w); background: var(--white); border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 24px 14px; position: fixed; top: 0; left: 0; bottom: 0; z-index: 100; }
+.logo { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.35rem; color: var(--text); padding: 0 8px 22px; border-bottom: 1px solid var(--border); margin-bottom: 18px; }
+.logo span { color: var(--accent); }
+.nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 10px; color: var(--muted); text-decoration: none; font-size: 0.875rem; font-weight: 500; transition: all 0.18s; margin-bottom: 2px; cursor: pointer; border: none; background: none; width: 100%; text-align: left; }
+.nav-item:hover  { background: var(--bg); color: var(--text); }
+.nav-item.active { background: rgba(79,124,255,0.1); color: var(--accent); font-weight: 600; }
+.nav-item i { width: 16px; text-align: center; font-size: 0.85rem; }
+.nav-badge { margin-left: auto; background: var(--red); color: #fff; font-size: 0.68rem; font-weight: 700; min-width: 18px; height: 18px; border-radius: 9px; display: flex; align-items: center; justify-content: center; padding: 0 4px; }
+.nav-badge.hidden { display: none; }
+.sidebar-bottom { margin-top: auto; border-top: 1px solid var(--border); padding-top: 14px; }
+.user-chip { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: var(--bg); border-radius: 10px; margin-bottom: 6px; }
+.avatar-circle { width: 34px; height: 34px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), var(--accent2)); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.8rem; color: #fff; flex-shrink: 0; }
+.user-chip-name { font-size: 0.82rem; font-weight: 600; color: var(--text); }
+.user-chip-role { font-size: 0.7rem; color: var(--muted); }
+
+/* ══ MAIN ══ */
+.main { margin-left: var(--sidebar-w); flex: 1; display: flex; flex-direction: column; }
+
+/* ══ TOPBAR ══ */
+.topbar { background: var(--white); border-bottom: 1px solid var(--border); padding: 0 28px; height: 60px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 50; }
+.topbar-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1.05rem; color: var(--text); }
+.topbar-title span { color: var(--accent); }
+.topbar-right { display: flex; align-items: center; gap: 12px; }
+.user-pill { display: flex; align-items: center; gap: 8px; padding: 5px 12px 5px 6px; background: var(--bg); border: 1px solid var(--border); border-radius: 20px; font-size: 0.82rem; font-weight: 500; color: var(--text); }
+.user-pill .avatar-circle { width: 26px; height: 26px; font-size: 0.7rem;  overflow: hidden; }
+
+/* btn tout marquer */
+.btn-mark-all { display: flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: 8px; border: 1px solid var(--border); background: var(--white); color: var(--muted); font-family: 'DM Sans', sans-serif; font-size: 0.78rem; font-weight: 500; cursor: pointer; transition: all 0.18s; }
+.btn-mark-all:hover { border-color: var(--accent); color: var(--accent); }
+
+/* ══ CONTENT ══ */
+.content { padding: 28px; flex: 1; max-width: 720px; margin: 0 auto; width: 100%; }
+
+/* ══ FILTERS ══ */
+.filters { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+.filter-btn { padding: 6px 16px; border-radius: 20px; border: 1px solid var(--border); background: var(--white); color: var(--muted); font-family: 'DM Sans', sans-serif; font-size: 0.8rem; font-weight: 500; cursor: pointer; transition: all 0.18s; }
+.filter-btn:hover  { border-color: var(--accent); color: var(--accent); }
+.filter-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+/* ══ NOTIF ITEM ══ */
+.notif-group-label { font-size: 0.72rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin: 20px 0 10px; padding: 0 4px; }
+.notif-group-label:first-child { margin-top: 0; }
+
+.notif-item {
+  display: flex; align-items: flex-start; gap: 14px;
+  padding: 14px 16px; border-radius: 14px;
+  background: var(--white); border: 1px solid var(--border);
+  margin-bottom: 8px; cursor: pointer;
+  transition: all 0.18s; position: relative;
+  animation: fadeUp 0.3s ease both;
+}
+.notif-item:hover { border-color: rgba(79,124,255,0.3); box-shadow: 0 2px 12px rgba(79,124,255,0.08); }
+.notif-item.unread { background: rgba(79,124,255,0.03); border-color: rgba(79,124,255,0.15); }
+.notif-item.unread::before { content: ''; position: absolute; left: 0; top: 50%; transform: translateY(-50%); width: 3px; height: 60%; background: var(--accent); border-radius: 0 3px 3px 0; }
+
+@keyframes fadeUp { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+
+/* icône type */
+.notif-icon {
+  width: 40px; height: 40px; border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1rem; flex-shrink: 0;
+}
+.notif-icon.statut     { background: rgba(79,124,255,0.1);  color: var(--accent); }
+.notif-icon.message    { background: rgba(124,92,252,0.1);  color: var(--accent2); }
+.notif-icon.deadline   { background: rgba(239,68,68,0.1);   color: var(--red); }
+.notif-icon.affectation{ background: rgba(16,185,129,0.1);  color: var(--green); }
+.notif-icon.rapport    { background: rgba(245,158,11,0.1);  color: var(--orange); }
+.notif-icon.compte     { background: rgba(79,124,255,0.1);  color: var(--accent); }
+
+.notif-body { flex: 1; min-width: 0; }
+.notif-msg  { font-size: 0.875rem; color: var(--text); line-height: 1.5; font-weight: 500; }
+.notif-item.unread .notif-msg { font-weight: 600; }
+.notif-time { font-size: 0.72rem; color: var(--muted); margin-top: 4px; display: flex; align-items: center; gap: 4px; }
+
+.notif-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); flex-shrink: 0; margin-top: 6px; }
+.notif-item:not(.unread) .notif-dot { background: transparent; }
+
+/* empty */
+.empty { text-align: center; padding: 60px 20px; color: var(--muted); }
+.empty i { font-size: 2.5rem; opacity: 0.25; display: block; margin-bottom: 12px; }
+.empty p { font-size: 0.875rem; }
+</style>
+</head>
+
+<body>
+
+<!-- ══ SIDEBAR ══ -->
+<aside class="sidebar">
+  <div class="logo">Stage<span>Flow</span></div>
+ <nav>
+    <a class="nav-item active" href="etudiant.html"><i class="fa fa-house"></i> Dashboard</a>
+    <a class="nav-item" href="profil.html"><i class="fa fa-user"></i> Profil</a>
+    <a class="nav-item" href="stage.html"><i class="fa fa-briefcase"></i> Mon stage</a>
+    <a class="nav-item" href="journal.html"><i class="fa fa-book-open"></i> Journal de bord</a>
+    <a class="nav-item" href="messagerie.html"><i class="fa fa-comments"></i> Messagerie</a>
+    <a class="nav-item" href="suggestion.html"><i class="fa fa-lightbulb"></i> Suggestions</a>
+    <a class="nav-item" href="notifications.html"><i class="fa fa-bell"></i> Notifications</a>
+    <a class="nav-item" href="cv.html">
+  <i class="fa fa-file-user"></i> CV Generator
+</a>
+<a class="nav-item" href="soutenance.html">
+  <i class="fa fa-graduation-cap"></i> Soutenance en ligne
+</a>
+<a class="nav-item" href="document.html">
+  <i class="fa fa-file-contract"></i> Documents officiels
+</a>
+  <a class="nav-item" href="chatbot.html">
+  <i class="fa fa-robot"></i> Assistant IA
+</a>
+<a class="nav-item" href="carte-etudiant.html">
+  <i class="fa fa-id-card"></i> Ma carte étudiant
+</a>
+<a class="nav-item" href="planning.html">
+  <i class="fa fa-calendar-days"></i> Planning de stage
+</a>
+<a class="nav-item" href="ressource.html">
+  <i class="fa fa-book-bookmark"></i> Ressources
+</a>
+<a class="nav-item" href="carte-stagiaires.html">
+  <i class="fa fa-map-location-dot"></i> Carte des stagiaires
+</a>
+<a class="nav-item" href="rendez-vous.html">
+  <i class="fa fa-calendar-check"></i> Rendez-vous
+</a>
+  </nav>
+  <div class="sidebar-bottom">
+    <div class="user-chip">
+      <div class="avatar-circle" id="sidebarAvatar">?</div>
+      <div>
+        <div class="user-chip-name" id="sidebarNom">...</div>
+        <div class="user-chip-role">Étudiant</div>
+      </div>
+    </div>
+    <button class="nav-item" onclick="logout()" style="color:var(--red)">
+      <i class="fa fa-right-from-bracket"></i> Déconnexion
+    </button>
+  </div>
+</aside>
+
+<!-- ══ MAIN ══ -->
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-title">🔔 Mes <span>notifications</span></div>
+    <div class="topbar-right">
+      <button class="btn-mark-all" onclick="markAllRead()">
+        <i class="fa fa-check-double"></i> Tout marquer comme lu
+      </button>
+      <div class="user-pill">
+        <div class="avatar-circle" id="topAvatar">?</div>
+        <span id="topNom">...</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- FILTERS -->
+    <div class="filters">
+      <button class="filter-btn active" onclick="filterNotifs('all', this)">Toutes</button>
+      <button class="filter-btn" onclick="filterNotifs('unread', this)">Non lues</button>
+      <button class="filter-btn" onclick="filterNotifs('statut', this)">Statut</button>
+      <button class="filter-btn" onclick="filterNotifs('message', this)">Messages</button>
+      <button class="filter-btn" onclick="filterNotifs('deadline', this)">Deadlines</button>
+      <button class="filter-btn" onclick="filterNotifs('affectation', this)">Affectations</button>
+    </div>
+
+    <!-- LIST -->
+    <div id="notifList">
+      <div class="empty"><i class="fa fa-spinner fa-spin"></i><p>Chargement...</p></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+
+/* ══ LOGIN ══ */
+const currentUser = {
+  id:     parseInt(localStorage.getItem("user_id")),
+  nom:    localStorage.getItem("user_nom")    || "",
+  prenom: localStorage.getItem("user_prenom") || "",
+photo:  localStorage.getItem("user_photo")  || "", // ← زيد هاذا
+};
+if (!currentUser.id) window.location.href = "login.html";
+const ini = (currentUser.prenom[0]||"") + (currentUser.nom[0]||"");
+document.getElementById("sidebarNom").innerText = currentUser.prenom + " " + currentUser.nom;
+document.getElementById("topNom").innerText     = currentUser.prenom + " " + currentUser.nom;
+
+// ← هنا الإضافة
+if (currentUser.photo) {
+  const url  = "http://localhost:3000/uploads/" + currentUser.photo;
+  document.getElementById("sidebarAvatar").innerHTML =
+    `<img src="${url}" style="width:34px;height:34px;border-radius:50%;object-fit:cover">`;
+  document.getElementById("topAvatar").innerHTML =
+    `<img src="${url}" style="width:26px;height:26px;border-radius:50%;object-fit:cover">`;
+} else {
+  document.getElementById("sidebarAvatar").innerText = ini;
+  document.getElementById("topAvatar").innerText     = ini;
+}
+/* ══ DATA ══ */
+let allNotifs   = [];
+let currentFilter = "all";
+
+/* ══ ICONS ══ */
+const typeIcon = {
+  statut:      "fa-circle-check",
+  message:     "fa-comments",
+  deadline:    "fa-clock",
+  affectation: "fa-user-check",
+  rapport:     "fa-file-check",
+  compte:      "fa-user-gear"
+};
+
+/* ══ LOAD ══ */
+function loadNotifications() {
+  fetch(`http://localhost:3000/notifications/${currentUser.id}`)
+    .then(r => r.json())
+    .then(data => {
+      if (!data.success) { allNotifs = []; render([]); return; }
+      allNotifs = data.notifications;
+
+      // badge sidebar
+      const unread = allNotifs.filter(n => !n.est_lue).length;
+      const badge  = document.getElementById("navBadge");
+      if (unread > 0) { badge.innerText = unread > 99 ? "99+" : unread; badge.classList.remove("hidden"); }
+      else badge.classList.add("hidden");
+
+      filterNotifs(currentFilter, null);
+    })
+    .catch(() => {
+      // pas de route encore → afficher empty
+      render([]);
+    });
+}
+
+/* ══ FILTER ══ */
+function filterNotifs(type, btn) {
+  currentFilter = type;
+  if (btn) {
+    document.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+  }
+  let list = allNotifs;
+  if (type === "unread") list = allNotifs.filter(n => !n.est_lue);
+  else if (type !== "all") list = allNotifs.filter(n => n.type === type);
+  render(list);
+}
+
+/* ══ RENDER ══ */
+function render(list) {
+  const container = document.getElementById("notifList");
+
+  if (!list.length) {
+    container.innerHTML = `<div class="empty"><i class="fa fa-bell-slash"></i><p>Aucune notification</p></div>`;
+    return;
+  }
+
+  // grouper par date
+  const groups = {};
+  list.forEach(n => {
+    const d   = new Date(n.date_creation);
+    const now = new Date();
+    let label;
+    const diffDays = Math.floor((now - d) / (1000*60*60*24));
+    if (diffDays === 0)      label = "Aujourd'hui";
+    else if (diffDays === 1) label = "Hier";
+    else if (diffDays < 7)  label = "Cette semaine";
+    else                    label = "Plus ancien";
+    if (!groups[label]) groups[label] = [];
+    groups[label].push(n);
+  });
+
+  let html = "";
+  Object.entries(groups).forEach(([label, notifs]) => {
+    html += `<div class="notif-group-label">${label}</div>`;
+    notifs.forEach((n, i) => {
+      const icon    = typeIcon[n.type] || "fa-bell";
+      const time    = formatTime(new Date(n.date_creation));
+      const unread  = !n.est_lue ? "unread" : "";
+      html += `
+        <div class="notif-item ${unread}" style="animation-delay:${i*0.04}s"
+             onclick="markRead(${n.id}, this)">
+          <div class="notif-icon ${n.type}">
+            <i class="fa ${icon}"></i>
+          </div>
+          <div class="notif-body">
+            <div class="notif-msg">${n.message}</div>
+            <div class="notif-time">
+              <i class="fa fa-clock"></i> ${time}
+            </div>
+          </div>
+          <div class="notif-dot"></div>
+        </div>`;
+    });
+  });
+
+  container.innerHTML = html;
+}
+
+/* ══ FORMAT TIME ══ */
+function formatTime(date) {
+  const now     = new Date();
+  const diff    = Math.floor((now - date) / 1000);
+  if (diff < 60)   return "À l'instant";
+  if (diff < 3600) return `Il y a ${Math.floor(diff/60)} min`;
+  if (diff < 86400) return `Il y a ${Math.floor(diff/3600)}h`;
+  return date.toLocaleDateString("fr-FR", { day:"numeric", month:"short", hour:"2-digit", minute:"2-digit" });
+}
+
+/* ══ MARK READ ══ */
+function markRead(id, el) {
+  if (!el.classList.contains("unread")) return;
+  fetch(`http://localhost:3000/notifications/read/${id}`, { method: "PUT" })
+    .then(() => {
+      el.classList.remove("unread");
+      el.querySelector(".notif-dot").style.background = "transparent";
+      // update badge
+      const unread = document.querySelectorAll(".notif-item.unread").length;
+      const badge  = document.getElementById("navBadge");
+      if (unread > 0) { badge.innerText = unread; badge.classList.remove("hidden"); }
+      else badge.classList.add("hidden");
+    });
+}
+
+/* ══ MARK ALL READ ══ */
+function markAllRead() {
+  fetch(`http://localhost:3000/notifications/read-all/${currentUser.id}`, { method: "PUT" })
+    .then(() => {
+      document.querySelectorAll(".notif-item.unread").forEach(el => {
+        el.classList.remove("unread");
+        el.querySelector(".notif-dot").style.background = "transparent";
+      });
+      document.getElementById("navBadge").classList.add("hidden");
+    });
+}
+
+/* ══ LOGOUT ══ */
+function logout() { localStorage.clear(); window.location.href = "login.html"; }
+
+/* ══ INIT ══ */
+loadNotifications();
+setInterval(loadNotifications, 10000);
+
+</script>
+</body>
+</html>

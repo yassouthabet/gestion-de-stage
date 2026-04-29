@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ma Carte Étudiant | StageFlow</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f4f6fb;--white:#fff;--border:#e5e9f2;
+  --accent:#4f7cff;--accent2:#7c5cfc;--green:#10b981;
+  --text:#1a1d2e;--muted:#8892a4;--sidebar-w:240px;
+}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);display:flex;min-height:100vh}
+
+/* SIDEBAR */
+.sidebar{width:var(--sidebar-w);background:var(--white);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:24px 14px;position:fixed;top:0;left:0;bottom:0;z-index:100}
+.logo{font-family:'Syne',sans-serif;font-weight:800;font-size:1.35rem;color:var(--text);padding:0 8px 22px;border-bottom:1px solid var(--border);margin-bottom:18px}
+.logo span{color:var(--accent)}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:10px;color:var(--muted);text-decoration:none;font-size:.875rem;font-weight:500;transition:all .18s;margin-bottom:2px;cursor:pointer;border:none;background:none;width:100%;text-align:left}
+.nav-item:hover{background:var(--bg);color:var(--text)}
+.nav-item.active{background:rgba(79,124,255,.1);color:var(--accent);font-weight:600}
+.nav-item i{width:16px;text-align:center;font-size:.85rem}
+.sidebar-bottom{margin-top:auto;border-top:1px solid var(--border);padding-top:14px}
+.user-chip{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg);border-radius:10px;margin-bottom:6px}
+.avatar-circle{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.8rem;color:#fff;flex-shrink:0;overflow:hidden}
+.user-chip-name{font-size:.82rem;font-weight:600;color:var(--text)}
+.user-chip-role{font-size:.7rem;color:var(--muted)}
+
+/* MAIN */
+.main{margin-left:var(--sidebar-w);flex:1;display:flex;flex-direction:column}
+.topbar{background:var(--white);border-bottom:1px solid var(--border);padding:0 28px;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
+.topbar-title{font-family:'Syne',sans-serif;font-weight:700;font-size:1.05rem;color:var(--text)}
+.topbar-title span{color:var(--accent)}
+.user-pill{display:flex;align-items:center;gap:8px;padding:5px 12px 5px 6px;background:var(--bg);border:1px solid var(--border);border-radius:20px;font-size:.82rem;font-weight:500;color:var(--text)}
+.user-pill .avatar-circle{width:26px;height:26px;font-size:.7rem}
+
+/* CONTENT */
+.content{padding:28px;flex:1;display:flex;gap:28px;align-items:flex-start;flex-wrap:wrap}
+
+/* CARD PREVIEW */
+.preview-section{flex:1;min-width:320px}
+.card-title-sec{font-family:'Syne',sans-serif;font-weight:700;font-size:.95rem;color:var(--text);display:flex;align-items:center;gap:8px;margin-bottom:20px}
+.card-title-sec i{color:var(--accent)}
+
+/* CARTE ÉTUDIANT PREVIEW */
+.carte-wrap{
+  perspective: 1000px;
+  width: 100%;
+  max-width: 400px;
+  margin: 0 auto 24px;
+}
+.carte {
+  width: 100%;
+  aspect-ratio: 85.6/54;
+  border-radius: 16px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(79,124,255,0.25), 0 8px 24px rgba(0,0,0,0.1);
+  transition: transform 0.3s ease;
+  cursor: pointer;
+  background: linear-gradient(135deg, #1a1d2e 0%, #2d3561 50%, #1e2d6e 100%);
+}
+.carte:hover { transform: rotateY(-5deg) rotateX(3deg) scale(1.02); }
+
+/* pattern décoratif */
+.carte-pattern {
+  position: absolute; inset: 0;
+  background-image:
+    radial-gradient(circle at 20% 50%, rgba(79,124,255,0.15) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(124,92,252,0.15) 0%, transparent 40%);
+}
+.carte-circles {
+  position: absolute; top: -30px; right: -30px;
+  width: 160px; height: 160px; border-radius: 50%;
+  border: 2px solid rgba(255,255,255,0.06);
+}
+.carte-circles::before {
+  content:''; position:absolute; inset:20px; border-radius:50%;
+  border:2px solid rgba(255,255,255,0.04);
+}
+
+/* bande colorée top */
+.carte-top-bar {
+  position: absolute; top: 0; left: 0; right: 0; height: 4px;
+  background: linear-gradient(90deg, #4f7cff, #7c5cfc, #10b981);
+}
+
+/* logo université */
+.carte-header {
+  position: absolute; top: 12px; left: 16px; right: 16px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.carte-univ {
+  font-family: 'Syne', sans-serif; font-weight: 800;
+  font-size: 0.55rem; color: rgba(255,255,255,0.85);
+  text-transform: uppercase; letter-spacing: 0.1em;
+  line-height: 1.4;
+}
+.carte-logo {
+  width: 28px; height: 28px; border-radius: 7px;
+  background: linear-gradient(135deg,#4f7cff,#7c5cfc);
+  display:flex;align-items:center;justify-content:center;
+  font-size:0.85rem;
+}
+
+/* corps */
+.carte-body {
+  position: absolute; bottom: 0; left: 0; right: 0; top: 44px;
+  padding: 8px 16px 12px;
+  display: flex; gap: 12px; align-items: flex-end;
+}
+
+/* photo */
+.carte-photo {
+  width: 64px; height: 74px; border-radius: 8px;
+  border: 2px solid rgba(255,255,255,0.2);
+  background: rgba(255,255,255,0.08);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.8rem; font-weight: 800; color: rgba(255,255,255,0.5);
+  flex-shrink: 0; overflow: hidden; font-family:'Syne',sans-serif;
+}
+.carte-photo img { width:100%; height:100%; object-fit:cover; }
+
+/* infos */
+.carte-infos { flex: 1; min-width: 0; }
+.carte-nom {
+  font-family: 'Syne', sans-serif; font-weight: 800;
+  font-size: 0.85rem; color: #fff;
+  margin-bottom: 2px; white-space: nowrap;
+  overflow: hidden; text-overflow: ellipsis;
+}
+.carte-filiere {
+  font-size: 0.58rem; color: rgba(255,255,255,0.6);
+  margin-bottom: 6px; font-weight: 400;
+}
+.carte-num {
+  font-size: 0.55rem; color: rgba(255,255,255,0.45);
+  font-family: monospace; letter-spacing: 0.08em; margin-bottom: 4px;
+}
+.carte-annee {
+  display: inline-block;
+  background: rgba(79,124,255,0.3); border: 1px solid rgba(79,124,255,0.4);
+  color: #a5c0ff; font-size: 0.5rem; font-weight: 700;
+  padding: 2px 7px; border-radius: 10px; letter-spacing: 0.05em;
+}
+
+/* QR */
+.carte-qr {
+  width: 52px; height: 52px;
+  background: #fff; border-radius: 6px; padding: 4px;
+  flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+  margin-bottom: 2px;
+}
+
+/* type badge */
+.carte-type {
+  position: absolute; top: 40px; right: 14px;
+  background: rgba(79,124,255,0.2); border: 1px solid rgba(79,124,255,0.35);
+  color: #a5c0ff; font-size: 0.45rem; font-weight: 700;
+  padding: 2px 8px; border-radius: 10px; letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* holographic shimmer */
+.carte-shimmer {
+  position: absolute; inset: 0;
+  background: linear-gradient(105deg,
+    transparent 40%, rgba(255,255,255,0.03) 45%,
+    rgba(255,255,255,0.06) 50%, rgba(255,255,255,0.03) 55%,
+    transparent 60%);
+  animation: shimmer 3s ease-in-out infinite;
+}
+@keyframes shimmer {
+  0%{transform:translateX(-100%)} 100%{transform:translateX(200%)}
+}
+
+/* CONTROLS */
+.controls-section{width:280px;flex-shrink:0}
+.ctrl-card{background:var(--white);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:16px}
+.ctrl-card-title{font-family:'Syne',sans-serif;font-weight:700;font-size:.85rem;color:var(--text);margin-bottom:14px;display:flex;align-items:center;gap:6px}
+.ctrl-card-title i{color:var(--accent)}
+
+.form-group{margin-bottom:12px}
+.form-label{font-size:.75rem;font-weight:600;color:var(--text);margin-bottom:5px;display:block}
+.form-input{border:1px solid var(--border);border-radius:8px;padding:8px 11px;font-family:'DM Sans',sans-serif;font-size:.82rem;color:var(--text);background:var(--bg);outline:none;width:100%;transition:border-color .15s}
+.form-input:focus{border-color:var(--accent);background:var(--white)}
+
+.btn-download{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:11px;border:none;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;font-family:'DM Sans',sans-serif;font-size:.875rem;font-weight:600;cursor:pointer;transition:opacity .18s,transform .18s;margin-top:4px}
+.btn-download:hover{opacity:.88;transform:translateY(-1px)}
+
+.btn-print{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:10px;border:1px solid var(--border);border-radius:10px;background:var(--white);color:var(--text);font-family:'DM Sans',sans-serif;font-size:.82rem;font-weight:600;cursor:pointer;transition:all .18s;margin-top:8px}
+.btn-print:hover{border-color:var(--accent);color:var(--accent)}
+
+/* info badge */
+.info-badge{display:flex;align-items:center;gap:8px;background:rgba(79,124,255,.06);border:1px solid rgba(79,124,255,.15);border-radius:10px;padding:10px 14px;font-size:.75rem;color:var(--muted);line-height:1.5}
+.info-badge i{color:var(--accent);flex-shrink:0}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;right:24px;background:var(--text);color:#fff;padding:12px 20px;border-radius:10px;font-size:.85rem;font-weight:500;box-shadow:0 4px 20px rgba(0,0,0,.15);transform:translateY(80px);opacity:0;transition:all .3s ease;z-index:999}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.success{background:var(--green)}
+
+/* hidden QR for PDF */
+#qrPDF{position:absolute;left:-9999px;top:-9999px}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="logo">Stage<span>Flow</span></div>
+  <nav>
+    <a class="nav-item active" href="etudiant.html"><i class="fa fa-house"></i> Dashboard</a>
+    <a class="nav-item" href="profil.html"><i class="fa fa-user"></i> Profil</a>
+    <a class="nav-item" href="stage.html"><i class="fa fa-briefcase"></i> Mon stage</a>
+    <a class="nav-item" href="journal.html"><i class="fa fa-book-open"></i> Journal de bord</a>
+    <a class="nav-item" href="messagerie.html"><i class="fa fa-comments"></i> Messagerie</a>
+    <a class="nav-item" href="suggestion.html"><i class="fa fa-lightbulb"></i> Suggestions</a>
+    <a class="nav-item" href="notifications.html"><i class="fa fa-bell"></i> Notifications</a>
+    <a class="nav-item" href="cv.html">
+  <i class="fa fa-file-user"></i> CV Generator
+</a>
+<a class="nav-item" href="soutenance.html">
+  <i class="fa fa-graduation-cap"></i> Soutenance en ligne
+</a>
+<a class="nav-item" href="document.html">
+  <i class="fa fa-file-contract"></i> Documents officiels
+</a>
+  <a class="nav-item" href="chatbot.html">
+  <i class="fa fa-robot"></i> Assistant IA
+</a>
+<a class="nav-item" href="carte-etudiant.html">
+  <i class="fa fa-id-card"></i> Ma carte étudiant
+</a>
+<a class="nav-item" href="planning.html">
+  <i class="fa fa-calendar-days"></i> Planning de stage
+</a>
+<a class="nav-item" href="ressource.html">
+  <i class="fa fa-book-bookmark"></i> Ressources
+</a>
+<a class="nav-item" href="carte-stagiaires.html">
+  <i class="fa fa-map-location-dot"></i> Carte des stagiaires
+</a>
+<a class="nav-item" href="rendez-vous.html">
+  <i class="fa fa-calendar-check"></i> Rendez-vous
+</a>
+  </nav>
+  <div class="sidebar-bottom">
+    <div class="user-chip">
+      <div class="avatar-circle" id="sidebarAvatar">?</div>
+      <div>
+        <div class="user-chip-name" id="sidebarNom">...</div>
+        <div class="user-chip-role">Étudiant</div>
+      </div>
+    </div>
+    <button class="nav-item" onclick="logout()" style="color:var(--red,#ef4444)">
+      <i class="fa fa-right-from-bracket"></i> Déconnexion
+    </button>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-title">🪪 Ma carte <span>étudiant</span></div>
+    <div class="user-pill">
+      <div class="avatar-circle" id="topAvatar">?</div>
+      <span id="topNom">...</span>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- PREVIEW -->
+    <div class="preview-section">
+      <div class="card-title-sec"><i class="fa fa-id-card"></i> Aperçu de votre carte</div>
+
+      <div class="carte-wrap">
+        <div class="carte" id="cartePreview">
+          <div class="carte-pattern"></div>
+          <div class="carte-circles"></div>
+          <div class="carte-shimmer"></div>
+          <div class="carte-top-bar"></div>
+
+          <div class="carte-header">
+            <div class="carte-univ" id="carteUnivText">Institut Supérieur<br>des Études</div>
+            <div class="carte-logo">🎓</div>
+          </div>
+
+          <div class="carte-type" id="carteTypeStage">INITIATION</div>
+
+          <div class="carte-body">
+            <div class="carte-photo" id="cartePhoto">?</div>
+            <div class="carte-infos">
+              <div class="carte-nom" id="carteNom">Prénom Nom</div>
+              <div class="carte-filiere" id="carteFiliere">Filière — Spécialité</div>
+              <div class="carte-num" id="carteNum">N° 0000-XXX-0000</div>
+              <div class="carte-annee" id="carteAnnee">2024 — 2025</div>
+            </div>
+            <div class="carte-qr" id="carteQRDiv"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="info-badge">
+        <i class="fa fa-circle-info"></i>
+        <span>La carte est générée automatiquement avec vos informations de profil. Le QR Code permet de vérifier votre identité en ligne.</span>
+      </div>
+    </div>
+
+    <!-- CONTROLS -->
+    <div class="controls-section">
+
+      <div class="ctrl-card">
+        <div class="ctrl-card-title"><i class="fa fa-sliders"></i> Personnalisation</div>
+
+        <div class="form-group">
+          <label class="form-label">Nom de l'université / Institut</label>
+          <input class="form-input" id="inputUniv" placeholder="ISET Nabeul" oninput="updateCarte()">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Année universitaire</label>
+          <input class="form-input" id="inputAnnee" value="2024 — 2025" oninput="updateCarte()">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Spécialité (optionnel)</label>
+          <input class="form-input" id="inputSpec" placeholder="Ex: Développement Web" oninput="updateCarte()">
+        </div>
+      </div>
+
+      <div class="ctrl-card">
+        <div class="ctrl-card-title"><i class="fa fa-download"></i> Télécharger</div>
+        <button class="btn-download" onclick="downloadPDF()">
+          <i class="fa fa-file-pdf"></i> Télécharger en PDF
+        </button>
+        <button class="btn-print" onclick="window.print()">
+          <i class="fa fa-print"></i> Imprimer
+        </button>
+      </div>
+
+      <div class="ctrl-card">
+        <div class="ctrl-card-title"><i class="fa fa-qrcode"></i> QR Code</div>
+        <div style="display:flex;justify-content:center;margin-bottom:12px">
+          <div id="qrBigDiv" style="padding:10px;background:#fff;border-radius:10px;border:1px solid var(--border)"></div>
+        </div>
+        <button onclick="downloadQROnly()" style="display:flex;align-items:center;justify-content:center;gap:6px;width:100%;padding:9px;border:1px solid var(--border);border-radius:9px;background:var(--white);color:var(--text);font-family:'DM Sans',sans-serif;font-size:.78rem;font-weight:600;cursor:pointer;transition:all .18s" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text)'">
+          <i class="fa fa-download"></i> Télécharger QR Code
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- hidden QR for PDF -->
+<div id="qrPDF"></div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ══ LOGIN ══ */
+const currentUser = {
+  id:     parseInt(localStorage.getItem("user_id")),
+  nom:    localStorage.getItem("user_nom")    || "",
+  prenom: localStorage.getItem("user_prenom") || "",
+  photo:  localStorage.getItem("user_photo")  || "",
+};
+if (!currentUser.id) window.location.href = "login.html";
+
+const ini = (currentUser.prenom[0]||"") + (currentUser.nom[0]||"");
+document.getElementById("sidebarNom").innerText = currentUser.prenom + " " + currentUser.nom;
+document.getElementById("topNom").innerText     = currentUser.prenom + " " + currentUser.nom;
+if (currentUser.photo) {
+  const url = "http://localhost:3000/uploads/" + currentUser.photo;
+  document.getElementById("sidebarAvatar").innerHTML = `<img src="${url}" style="width:34px;height:34px;border-radius:50%;object-fit:cover">`;
+  document.getElementById("topAvatar").innerHTML     = `<img src="${url}" style="width:26px;height:26px;border-radius:50%;object-fit:cover">`;
+} else {
+  document.getElementById("sidebarAvatar").innerText = ini;
+  document.getElementById("topAvatar").innerText     = ini;
+}
+
+/* ══ USER DATA ══ */
+let userData = {};
+let stageData = {};
+const verifyUrl = `http://localhost:3000/verify-profil.html?id=${currentUser.id}`;
+
+async function loadData() {
+  try {
+    const r  = await fetch(`http://localhost:3000/profil-complet/${currentUser.id}`);
+    const d  = await r.json();
+    if (d.success) userData = d.user;
+
+    const r2 = await fetch(`http://localhost:3000/mes-stages/${currentUser.id}`);
+    const d2 = await r2.json();
+    if (d2.success && d2.stages.length) stageData = d2.stages[0];
+  } catch(e) {}
+
+  buildCarte();
+}
+
+/* ══ BUILD CARTE ══ */
+function buildCarte() {
+  const nom    = `${userData.prenom||currentUser.prenom} ${userData.nom||currentUser.nom}`;
+  const filiere= userData.filiere || "Filière";
+  const spec   = document.getElementById("inputSpec").value || "";
+  const num    = userData.num_etudiant || `${currentUser.id}-ETU`;
+  const univ   = document.getElementById("inputUniv").value || userData.departement || "Institut Supérieur";
+  const annee  = document.getElementById("inputAnnee").value || "2024 — 2025";
+  const type   = stageData.type_stage || userData.type_stage || "";
+  const typeLabel = { initiation:"INITIATION", perfectionnement:"PERFECTIONNEMENT", fin_etude:"FIN D'ÉTUDES" };
+
+  // update preview
+  document.getElementById("carteNom").innerText    = nom;
+  document.getElementById("carteFiliere").innerText = filiere + (spec ? ` — ${spec}` : "");
+  document.getElementById("carteNum").innerText     = "N° " + num;
+  document.getElementById("carteAnnee").innerText   = annee;
+  document.getElementById("carteUnivText").innerHTML = univ.replace(" ", "<br>");
+  document.getElementById("carteTypeStage").innerText = typeLabel[type] || "ÉTUDIANT";
+
+  // photo
+  const photoEl = document.getElementById("cartePhoto");
+  if (userData.photo || currentUser.photo) {
+    const photoUrl = "http://localhost:3000/uploads/" + (userData.photo || currentUser.photo);
+    photoEl.innerHTML = `<img src="${photoUrl}" onerror="this.parentElement.innerText='${ini}'">`;
+  } else {
+    photoEl.innerText = ini;
+  }
+
+  // QR sur carte
+  document.getElementById("carteQRDiv").innerHTML = "";
+  new QRCode(document.getElementById("carteQRDiv"), {
+    text: verifyUrl, width: 44, height: 44,
+    colorDark: "#1a1d2e", colorLight: "#ffffff",
+    correctLevel: QRCode.CorrectLevel.M
+  });
+
+  // QR grand
+  document.getElementById("qrBigDiv").innerHTML = "";
+  new QRCode(document.getElementById("qrBigDiv"), {
+    text: verifyUrl, width: 130, height: 130,
+    colorDark: "#1a1d2e", colorLight: "#ffffff",
+    correctLevel: QRCode.CorrectLevel.H
+  });
+
+  // QR pour PDF
+  document.getElementById("qrPDF").innerHTML = "";
+  new QRCode(document.getElementById("qrPDF"), {
+    text: verifyUrl, width: 100, height: 100,
+    colorDark: "#1a1d2e", colorLight: "#ffffff",
+    correctLevel: QRCode.CorrectLevel.H
+  });
+}
+
+function updateCarte() { buildCarte(); }
+
+/* ══ DOWNLOAD PDF ══ */
+async function downloadPDF() {
+  const { jsPDF } = window.jspdf;
+
+  // carte format ID card: 85.6mm x 54mm
+  const doc = new jsPDF({ orientation:"landscape", unit:"mm", format:[85.6, 54] });
+  const W = 85.6, H = 54;
+
+  // ── FOND ──
+  doc.setFillColor(26, 29, 46);
+  doc.rect(0, 0, W, H, "F");
+
+  // gradient effect (simulé)
+  doc.setFillColor(20, 30, 80);
+  doc.circle(70, 10, 25, "F");
+  doc.setFillColor(15, 25, 60);
+  doc.circle(15, 45, 20, "F");
+
+  // ── BANDE TOP ──
+  doc.setFillColor(79, 124, 255);
+  doc.rect(0, 0, W/3, 2, "F");
+  doc.setFillColor(124, 92, 252);
+  doc.rect(W/3, 0, W/3, 2, "F");
+  doc.setFillColor(16, 185, 129);
+  doc.rect(W*2/3, 0, W/3, 2, "F");
+
+  // ── LOGO + UNIV ──
+  doc.setFillColor(79, 124, 255);
+  doc.roundedRect(3, 4, 8, 8, 1, 1, "F");
+  doc.setTextColor(255,255,255);
+  doc.setFontSize(6); doc.setFont("helvetica","bold");
+  doc.text("🎓", 5, 9.5);
+
+  const univ = document.getElementById("inputUniv").value || userData.departement || "Institut Supérieur";
+  doc.setFontSize(4.5); doc.setFont("helvetica","bold");
+  doc.setTextColor(200, 210, 235);
+  doc.text(univ.toUpperCase(), 13, 7);
+  doc.setFontSize(3.8); doc.setFont("helvetica","normal");
+  doc.setTextColor(140, 155, 185);
+  doc.text("CARTE ÉTUDIANT — " + (document.getElementById("inputAnnee").value || "2024-2025"), 13, 10.5);
+
+  // ── TYPE BADGE ──
+  const type = stageData.type_stage || "";
+  const typeLabel = { initiation:"INITIATION", perfectionnement:"PERFECTIONNEMENT", fin_etude:"FIN D'ÉTUDES" };
+  const typeText = typeLabel[type] || "ÉTUDIANT";
+  doc.setFillColor(79, 124, 255, 0.3);
+  doc.setFillColor(40, 60, 130);
+  doc.roundedRect(W-28, 4, 25, 5, 1, 1, "F");
+  doc.setTextColor(165, 192, 255);
+  doc.setFontSize(4); doc.setFont("helvetica","bold");
+  doc.text(typeText, W-15.5, 7.5, { align:"center" });
+
+  // ── PHOTO ──
+  const photoEl = document.getElementById("cartePhoto").querySelector("img");
+  if (photoEl) {
+    try {
+      const canvas = document.createElement("canvas");
+      canvas.width = 64; canvas.height = 74;
+      const ctx2 = canvas.getContext("2d");
+      ctx2.drawImage(photoEl, 0, 0, 64, 74);
+      const imgData = canvas.toDataURL("image/jpeg", 0.8);
+      doc.addImage(imgData, "JPEG", 4, 16, 16, 19);
+      // border
+      doc.setDrawColor(255,255,255,0.2);
+      doc.setLineWidth(0.3);
+      doc.roundedRect(4, 16, 16, 19, 1, 1);
+    } catch(e) {
+      // placeholder
+      doc.setFillColor(50,60,100);
+      doc.roundedRect(4, 16, 16, 19, 1, 1, "F");
+      doc.setTextColor(150,160,200);
+      doc.setFontSize(10);
+      doc.text(ini, 12, 27, { align:"center" });
+    }
+  } else {
+    doc.setFillColor(50, 60, 100);
+    doc.roundedRect(4, 16, 16, 19, 1, 1, "F");
+    doc.setTextColor(150, 160, 200);
+    doc.setFontSize(10);
+    doc.text(ini, 12, 27, { align:"center" });
+  }
+
+  // ── INFOS ──
+  const nom    = `${userData.prenom||currentUser.prenom} ${userData.nom||currentUser.nom}`;
+  const filiere= userData.filiere || "Filière";
+  const spec   = document.getElementById("inputSpec").value;
+  const num    = userData.num_etudiant || `${currentUser.id}-ETU`;
+
+  doc.setFontSize(8); doc.setFont("helvetica","bold"); doc.setTextColor(255,255,255);
+  doc.text(nom, 23, 21);
+
+  doc.setFontSize(4.5); doc.setFont("helvetica","normal"); doc.setTextColor(160,175,210);
+  doc.text(filiere + (spec ? ` — ${spec}` : ""), 23, 25.5);
+
+  doc.setFontSize(3.8); doc.setTextColor(100,120,170);
+  doc.text("N° " + num, 23, 29.5);
+
+  // annee badge
+  doc.setFillColor(40, 60, 130);
+  doc.roundedRect(23, 31.5, 20, 4, 1, 1, "F");
+  doc.setTextColor(165, 192, 255);
+  doc.setFontSize(4); doc.setFont("helvetica","bold");
+  doc.text(document.getElementById("inputAnnee").value || "2024 — 2025", 33, 34.2, { align:"center" });
+
+  // ── QR CODE ──
+  const qrEl = document.getElementById("qrPDF")?.querySelector("canvas") ||
+               document.getElementById("qrPDF")?.querySelector("img");
+  if (qrEl) {
+    try {
+      const qrData = qrEl.tagName === "CANVAS" ? qrEl.toDataURL("image/png") : qrEl.src;
+      // fond blanc QR
+      doc.setFillColor(255,255,255);
+      doc.roundedRect(W-22, 15, 18, 18, 2, 2, "F");
+      doc.addImage(qrData, "PNG", W-21, 16, 16, 16);
+    } catch(e) {}
+  }
+
+  doc.setFontSize(3); doc.setTextColor(100,120,160);
+  doc.text("Scannez pour vérifier", W-13, 34.5, { align:"center" });
+
+  // ── LIGNE BAS ──
+  doc.setFillColor(255,255,255,0.05);
+  doc.setFillColor(30, 40, 80);
+  doc.rect(0, H-6, W, 6, "F");
+  doc.setTextColor(80, 100, 150);
+  doc.setFontSize(3.2); doc.setFont("helvetica","italic");
+  doc.text("Ce document est la propriété de l'établissement — StageFlow © 2026", W/2, H-2.5, { align:"center" });
+
+  doc.save(`Carte_Etudiant_${currentUser.prenom}_${currentUser.nom}.pdf`);
+  showToast("✅ Carte téléchargée !", "success");
+}
+
+/* ══ DOWNLOAD QR ONLY ══ */
+function downloadQROnly() {
+  const canvas = document.getElementById("qrBigDiv").querySelector("canvas");
+  if (!canvas) return showToast("QR Code non disponible", "");
+  const link = document.createElement("a");
+  link.download = `QR_${currentUser.prenom}_${currentUser.nom}.png`;
+  link.href = canvas.toDataURL("image/png");
+  link.click();
+  showToast("✅ QR Code téléchargé !", "success");
+}
+
+/* ══ TOAST ══ */
+function showToast(msg, type="") {
+  const t = document.getElementById("toast");
+  t.className = `toast ${type} show`;
+  t.innerText = msg;
+  setTimeout(() => t.classList.remove("show"), 3000);
+}
+
+function logout() { localStorage.clear(); window.location.href = "login.html"; }
+
+/* ══ INIT ══ */
+loadData();
+</script>
+</body>
+</html>

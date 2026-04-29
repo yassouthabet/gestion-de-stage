@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Profil | StageFlow</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:        #f4f6fb;
+  --white:     #ffffff;
+  --border:    #e5e9f2;
+  --accent:    #4f7cff;
+  --accent2:   #7c5cfc;
+  --green:     #10b981;
+  --orange:    #f59e0b;
+  --red:       #ef4444;
+  --text:      #1a1d2e;
+  --muted:     #8892a4;
+  --sidebar-w: 240px;
+}
+
+body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); display: flex; min-height: 100vh; }
+
+/* ══ SIDEBAR ══ */
+.sidebar { width: var(--sidebar-w); background: var(--white); border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 24px 14px; position: fixed; top: 0; left: 0; bottom: 0; z-index: 100; }
+.logo { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.35rem; color: var(--text); padding: 0 8px 22px; border-bottom: 1px solid var(--border); margin-bottom: 18px; }
+.logo span { color: var(--accent); }
+.nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 10px; color: var(--muted); text-decoration: none; font-size: 0.875rem; font-weight: 500; transition: all 0.18s; margin-bottom: 2px; cursor: pointer; border: none; background: none; width: 100%; text-align: left; }
+.nav-item:hover  { background: var(--bg); color: var(--text); }
+.nav-item.active { background: rgba(79,124,255,0.1); color: var(--accent); font-weight: 600; }
+.nav-item i { width: 16px; text-align: center; font-size: 0.85rem; }
+.sidebar-bottom { margin-top: auto; border-top: 1px solid var(--border); padding-top: 14px; }
+
+/* user chip في sidebar */
+.user-chip { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: var(--bg); border-radius: 10px; margin-bottom: 6px; }
+.chip-avatar { width: 34px; height: 34px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), var(--accent2)); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.8rem; color: #fff; flex-shrink: 0; overflow: hidden; }
+.chip-avatar img { width: 34px; height: 34px; border-radius: 50%; object-fit: cover; }
+.user-chip-name { font-size: 0.82rem; font-weight: 600; color: var(--text); }
+.user-chip-role { font-size: 0.7rem; color: var(--muted); }
+
+/* ══ MAIN ══ */
+.main { margin-left: var(--sidebar-w); flex: 1; display: flex; flex-direction: column; }
+
+/* ══ TOPBAR ══ */
+.topbar { background: var(--white); border-bottom: 1px solid var(--border); padding: 0 28px; height: 60px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 50; }
+.topbar-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1.05rem; color: var(--text); }
+.topbar-title span { color: var(--accent); }
+
+/* user pill في topbar */
+.user-pill { display: flex; align-items: center; gap: 8px; padding: 5px 12px 5px 6px; background: var(--bg); border: 1px solid var(--border); border-radius: 20px; font-size: 0.82rem; font-weight: 500; color: var(--text); }
+.pill-avatar { width: 26px; height: 26px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), var(--accent2)); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.7rem; color: #fff; overflow: hidden; flex-shrink: 0; }
+.pill-avatar img { width: 26px; height: 26px; border-radius: 50%; object-fit: cover; }
+
+/* ══ CONTENT ══ */
+.content { padding: 32px; flex: 1; max-width: 780px; margin: 0 auto; width: 100%; }
+
+/* ══ COVER + AVATAR ══ */
+.profile-header { background: var(--white); border: 1px solid var(--border); border-radius: 18px; overflow: hidden; margin-bottom: 20px; animation: fadeUp 0.4s ease both; }
+.cover { height: 120px; background: linear-gradient(135deg, var(--accent), var(--accent2)); }
+.avatar-wrapper { position: relative; display: inline-block; margin: -44px 0 0 28px; }
+.avatar-lg { width: 88px; height: 88px; border-radius: 50%; border: 4px solid var(--white); overflow: hidden; background: linear-gradient(135deg, var(--accent), var(--accent2)); display: flex; align-items: center; justify-content: center; font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.8rem; color: #fff; }
+.avatar-lg img { width: 88px; height: 88px; object-fit: cover; border-radius: 50%; display: none; }
+.avatar-edit-btn { position: absolute; bottom: 4px; right: 4px; width: 28px; height: 28px; border-radius: 50%; background: var(--accent); color: #fff; border: 2px solid var(--white); display: flex; align-items: center; justify-content: center; font-size: 0.65rem; cursor: pointer; transition: transform 0.18s; }
+.avatar-edit-btn:hover { transform: scale(1.1); }
+.profile-info { padding: 12px 28px 22px; }
+.profile-name { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.3rem; color: var(--text); }
+.profile-role { font-size: 0.82rem; color: var(--muted); margin-top: 3px; }
+.info-badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 20px; font-size: 0.78rem; font-weight: 600; background: rgba(79,124,255,0.1); color: var(--accent); margin-top: 10px; }
+
+/* ══ CARD ══ */
+.card { background: var(--white); border: 1px solid var(--border); border-radius: 16px; padding: 24px; margin-bottom: 18px; animation: fadeUp 0.4s ease both; }
+.card-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.95rem; color: var(--text); display: flex; align-items: center; gap: 8px; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
+.card-title i { color: var(--accent); }
+@keyframes fadeUp { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
+
+/* ══ FORM ══ */
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.form-group { display: flex; flex-direction: column; gap: 6px; }
+.form-label { font-size: 0.8rem; font-weight: 600; color: var(--text); display: flex; align-items: center; gap: 5px; }
+.form-label i { color: var(--accent); font-size: 0.75rem; }
+.form-input { border: 1px solid var(--border); border-radius: 10px; padding: 10px 13px; font-family: 'DM Sans', sans-serif; font-size: 0.875rem; color: var(--text); background: var(--bg); outline: none; transition: border-color 0.15s, box-shadow 0.15s; width: 100%; }
+.form-input:focus { border-color: var(--accent); background: var(--white); box-shadow: 0 0 0 3px rgba(79,124,255,0.1); }
+.form-input:disabled { opacity: 0.6; cursor: not-allowed; }
+.form-input::placeholder { color: var(--muted); }
+.input-wrap { position: relative; }
+.input-wrap .form-input { padding-right: 40px; width: 100%; }
+.toggle-eye { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: var(--muted); cursor: pointer; font-size: 0.85rem; }
+.toggle-eye:hover { color: var(--accent); }
+.btn-save { display: flex; align-items: center; gap: 8px; background: var(--accent); color: #fff; border: none; border-radius: 10px; padding: 10px 22px; font-family: 'DM Sans', sans-serif; font-size: 0.875rem; font-weight: 600; cursor: pointer; transition: opacity 0.18s, transform 0.18s; margin-top: 20px; }
+.btn-save:hover { opacity: 0.85; transform: translateY(-1px); }
+
+/* ══ TOAST ══ */
+.toast { position: fixed; bottom: 24px; right: 24px; background: var(--text); color: #fff; padding: 12px 20px; border-radius: 10px; font-size: 0.85rem; font-weight: 500; box-shadow: 0 4px 20px rgba(0,0,0,0.15); transform: translateY(80px); opacity: 0; transition: all 0.3s ease; z-index: 999; }
+.toast.show    { transform: translateY(0); opacity: 1; }
+.toast.success { background: var(--green); }
+.toast.error   { background: var(--red); }
+</style>
+</head>
+
+<body>
+
+<!-- ══ SIDEBAR ══ -->
+<aside class="sidebar">
+  <div class="logo">Stage<span>Flow</span></div>
+  <nav>
+    <a class="nav-item active" href="etudiant.html"><i class="fa fa-house"></i> Dashboard</a>
+    <a class="nav-item" href="profil.html"><i class="fa fa-user"></i> Profil</a>
+    <a class="nav-item" href="stage.html"><i class="fa fa-briefcase"></i> Mon stage</a>
+    <a class="nav-item" href="journal.html"><i class="fa fa-book-open"></i> Journal de bord</a>
+    <a class="nav-item" href="messagerie.html"><i class="fa fa-comments"></i> Messagerie</a>
+    <a class="nav-item" href="suggestion.html"><i class="fa fa-lightbulb"></i> Suggestions</a>
+    <a class="nav-item" href="notifications.html"><i class="fa fa-bell"></i> Notifications</a>
+    <a class="nav-item" href="cv.html">
+  <i class="fa fa-file-user"></i> CV Generator
+</a>
+<a class="nav-item" href="soutenance.html">
+  <i class="fa fa-graduation-cap"></i> Soutenance en ligne
+</a>
+<a class="nav-item" href="document.html">
+  <i class="fa fa-file-contract"></i> Documents officiels
+</a>
+  <a class="nav-item" href="chatbot.html">
+  <i class="fa fa-robot"></i> Assistant IA
+</a>
+<a class="nav-item" href="carte-etudiant.html">
+  <i class="fa fa-id-card"></i> Ma carte étudiant
+</a>
+<a class="nav-item" href="planning.html">
+  <i class="fa fa-calendar-days"></i> Planning de stage
+</a>
+<a class="nav-item" href="ressource.html">
+  <i class="fa fa-book-bookmark"></i> Ressources
+</a>
+<a class="nav-item" href="carte-stagiaires.html">
+  <i class="fa fa-map-location-dot"></i> Carte des stagiaires
+</a>
+<a class="nav-item" href="rendez-vous.html">
+  <i class="fa fa-calendar-check"></i> Rendez-vous
+</a>
+  </nav>
+  <div class="sidebar-bottom">
+    <div class="user-chip">
+      <!-- avatar sidebar -->
+      <div class="chip-avatar" id="sidebarAvatar">?</div>
+      <div>
+        <div class="user-chip-name" id="sidebarNom">...</div>
+        <div class="user-chip-role">Étudiant</div>
+      </div>
+    </div>
+    <button class="nav-item" onclick="logout()" style="color:var(--red)">
+      <i class="fa fa-right-from-bracket"></i> Déconnexion
+    </button>
+  </div>
+</aside>
+
+<!-- ══ MAIN ══ -->
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-title">👤 Mon <span>Profil</span></div>
+    <div class="user-pill">
+      <!-- avatar topbar -->
+      <div class="pill-avatar" id="topAvatar">?</div>
+      <span id="topNom">...</span>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- HEADER PROFIL -->
+    <div class="profile-header">
+      <div class="cover"></div>
+      <div>
+        <div class="avatar-wrapper">
+          <div class="avatar-lg" id="avatarLg">
+            <span id="avatarInitiales">?</span>
+            <img id="avatarImg" src="" alt="photo">
+          </div>
+          <div class="avatar-edit-btn" onclick="document.getElementById('photoInput').click()" title="Changer la photo">
+            <i class="fa fa-camera"></i>
+          </div>
+          <input type="file" id="photoInput" accept="image/*" hidden>
+        </div>
+        <div class="profile-info">
+          <div class="profile-name" id="profileName">Chargement...</div>
+          <div class="profile-role" id="profileRole"></div>
+          <div class="info-badge" id="profileType"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- INFOS PERSONNELLES -->
+    <div class="card">
+      <div class="card-title"><i class="fa fa-user"></i> Informations personnelles</div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label"><i class="fa fa-id-card"></i> Prénom</label>
+          <input class="form-input" id="prenom" placeholder="Votre prénom">
+        </div>
+        <div class="form-group">
+          <label class="form-label"><i class="fa fa-id-card"></i> Nom</label>
+          <input class="form-input" id="nom" placeholder="Votre nom">
+        </div>
+        <div class="form-group">
+          <label class="form-label"><i class="fa fa-envelope"></i> Email</label>
+          <input class="form-input" id="email" disabled>
+        </div>
+        <div class="form-group">
+          <label class="form-label"><i class="fa fa-phone"></i> Téléphone</label>
+          <input class="form-input" id="telephone" placeholder="+216 XX XXX XXX">
+        </div>
+        <div class="form-group">
+          <label class="form-label"><i class="fa fa-id-badge"></i> Numéro étudiant</label>
+          <input class="form-input" id="numEtudiant" disabled>
+        </div>
+        <div class="form-group">
+          <label class="form-label"><i class="fa fa-book"></i> Filière</label>
+          <input class="form-input" id="filiere" disabled>
+        </div>
+      </div>
+      <button class="btn-save" onclick="saveInfos()">
+        <i class="fa fa-floppy-disk"></i> Enregistrer
+      </button>
+    </div>
+
+    <!-- MOT DE PASSE -->
+    <div class="card">
+      <div class="card-title"><i class="fa fa-lock"></i> Changer le mot de passe</div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label"><i class="fa fa-lock"></i> Mot de passe actuel</label>
+          <div class="input-wrap">
+            <input class="form-input" type="password" id="oldPassword" placeholder="••••••••">
+            <i class="fa fa-eye toggle-eye" onclick="togglePwd('oldPassword', this)"></i>
+          </div>
+        </div>
+        <div></div>
+        <div class="form-group">
+          <label class="form-label"><i class="fa fa-key"></i> Nouveau mot de passe</label>
+          <div class="input-wrap">
+            <input class="form-input" type="password" id="newPassword" placeholder="••••••••">
+            <i class="fa fa-eye toggle-eye" onclick="togglePwd('newPassword', this)"></i>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label"><i class="fa fa-key"></i> Confirmer</label>
+          <div class="input-wrap">
+            <input class="form-input" type="password" id="confirmPassword" placeholder="••••••••">
+            <i class="fa fa-eye toggle-eye" onclick="togglePwd('confirmPassword', this)"></i>
+          </div>
+        </div>
+      </div>
+      <button class="btn-save" onclick="changePassword()">
+        <i class="fa fa-shield-halved"></i> Changer le mot de passe
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+
+/* ══ LOGIN ══ */
+const currentUser = {
+  id:     parseInt(localStorage.getItem("user_id")),
+  nom:    localStorage.getItem("user_nom")    || "",
+  prenom: localStorage.getItem("user_prenom") || "",
+  role:   localStorage.getItem("user_role")   || "",
+  photo:  localStorage.getItem("user_photo")  || "",
+};
+if (!currentUser.id) window.location.href = "login.html";
+
+/* ══ FONCTION UPDATE TOUS LES AVATARS ══ */
+function updateAllAvatars(photoFilename) {
+  const url = "http://localhost:3000/uploads/" + photoFilename;
+
+  // 1. avatar grande (header profil)
+  document.getElementById("avatarInitiales").style.display = "none";
+  const avatarImg = document.getElementById("avatarImg");
+  avatarImg.src   = url;
+  avatarImg.style.display = "block";
+
+  // 2. sidebar chip avatar
+  document.getElementById("sidebarAvatar").innerHTML =
+    `<img src="${url}" style="width:34px;height:34px;border-radius:50%;object-fit:cover">`;
+
+  // 3. topbar pill avatar
+  document.getElementById("topAvatar").innerHTML =
+    `<img src="${url}" style="width:26px;height:26px;border-radius:50%;object-fit:cover">`;
+}
+
+/* ══ INIT NOMS + PHOTO ══ */
+function initUI() {
+  const ini = (currentUser.prenom[0]||"") + (currentUser.nom[0]||"");
+
+  document.getElementById("sidebarNom").innerText = currentUser.prenom + " " + currentUser.nom;
+  document.getElementById("topNom").innerText     = currentUser.prenom + " " + currentUser.nom;
+
+  // si photo déjà dans localStorage → l'afficher partout
+  if (currentUser.photo) {
+    updateAllAvatars(currentUser.photo);
+  } else {
+    // initiales
+    document.getElementById("sidebarAvatar").innerText = ini;
+    document.getElementById("topAvatar").innerText     = ini;
+    document.getElementById("avatarInitiales").innerText = ini;
+  }
+}
+
+/* ══ LOAD PROFIL ══ */
+const typeLabel = { initiation:"Initiation", perfectionnement:"Perfectionnement", fin_etude:"Fin d'études" };
+
+function loadProfil() {
+  fetch(`http://localhost:3000/profil-complet/${currentUser.id}`)
+    .then(r => r.json())
+    .then(data => {
+      if (!data.success) return;
+      const u = data.user;
+
+      document.getElementById("profileName").innerText = u.prenom + " " + u.nom;
+      document.getElementById("profileRole").innerText = (u.role || "") + (u.departement ? " · " + u.departement : "");
+      document.getElementById("profileType").innerText = typeLabel[u.type_stage] || "";
+
+      document.getElementById("prenom").value      = u.prenom      || "";
+      document.getElementById("nom").value         = u.nom         || "";
+      document.getElementById("email").value       = u.email       || "";
+      document.getElementById("telephone").value   = u.telephone   || "";
+      document.getElementById("numEtudiant").value = u.num_etudiant || "";
+      document.getElementById("filiere").value     = u.filiere     || "";
+
+      // si photo dans base → mettre à jour
+      if (u.photo && u.photo !== currentUser.photo) {
+        localStorage.setItem("user_photo", u.photo);
+        updateAllAvatars(u.photo);
+      }
+    });
+}
+
+/* ══ UPLOAD PHOTO ══ */
+document.getElementById("photoInput").addEventListener("change", function() {
+  const file = this.files[0];
+  if (!file) return;
+
+  // preview immédiat avant upload
+  const reader = new FileReader();
+  reader.onload = e => {
+    document.getElementById("avatarInitiales").style.display = "none";
+    const avatarImg = document.getElementById("avatarImg");
+    avatarImg.src   = e.target.result;
+    avatarImg.style.display = "block";
+    // sidebar + topbar preview aussi
+    document.getElementById("sidebarAvatar").innerHTML =
+      `<img src="${e.target.result}" style="width:34px;height:34px;border-radius:50%;object-fit:cover">`;
+    document.getElementById("topAvatar").innerHTML =
+      `<img src="${e.target.result}" style="width:26px;height:26px;border-radius:50%;object-fit:cover">`;
+  };
+  reader.readAsDataURL(file);
+
+  // upload vers server
+  const formData = new FormData();
+  formData.append("photo",   file);
+  formData.append("user_id", currentUser.id);
+
+  fetch("http://localhost:3000/upload-photo", { method: "POST", body: formData })
+    .then(r => r.json())
+    .then(data => {
+      if (data.success) {
+        // sauvegarder dans localStorage pour les autres pages
+        localStorage.setItem("user_photo", data.filename);
+        currentUser.photo = data.filename;
+        // mettre à jour avec l'URL définitive du server
+        updateAllAvatars(data.filename);
+        showToast("✅ Photo mise à jour !", "success");
+      } else {
+        showToast("Erreur lors de l'upload", "error");
+      }
+    });
+});
+
+/* ══ SAVE INFOS ══ */
+function saveInfos() {
+  const prenom    = document.getElementById("prenom").value.trim();
+  const nom       = document.getElementById("nom").value.trim();
+  const telephone = document.getElementById("telephone").value.trim();
+
+  if (!prenom || !nom) return showToast("Prénom et nom obligatoires", "error");
+
+  fetch("http://localhost:3000/update-profil", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ user_id: currentUser.id, prenom, nom, telephone })
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.success) {
+      localStorage.setItem("user_nom",    nom);
+      localStorage.setItem("user_prenom", prenom);
+      document.getElementById("profileName").innerText = prenom + " " + nom;
+      document.getElementById("sidebarNom").innerText  = prenom + " " + nom;
+      document.getElementById("topNom").innerText      = prenom + " " + nom;
+      showToast("✅ Profil mis à jour !", "success");
+    } else {
+      showToast("Erreur lors de la mise à jour", "error");
+    }
+  });
+}
+
+/* ══ CHANGE PASSWORD ══ */
+function changePassword() {
+  const oldPwd  = document.getElementById("oldPassword").value;
+  const newPwd  = document.getElementById("newPassword").value;
+  const confPwd = document.getElementById("confirmPassword").value;
+
+  if (!oldPwd || !newPwd || !confPwd) return showToast("Remplissez tous les champs", "error");
+  if (newPwd !== confPwd)             return showToast("Les mots de passe ne correspondent pas", "error");
+  if (newPwd.length < 6)             return showToast("Minimum 6 caractères", "error");
+
+  fetch("http://localhost:3000/change-password", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ user_id: currentUser.id, old_password: oldPwd, new_password: newPwd })
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.success) {
+      document.getElementById("oldPassword").value     = "";
+      document.getElementById("newPassword").value     = "";
+      document.getElementById("confirmPassword").value = "";
+      showToast("✅ Mot de passe changé !", "success");
+    } else {
+      showToast(data.message || "Mot de passe actuel incorrect", "error");
+    }
+  });
+}
+
+/* ══ TOGGLE PWD ══ */
+function togglePwd(id, icon) {
+  const input = document.getElementById(id);
+  input.type  = input.type === "password" ? "text" : "password";
+  icon.className = input.type === "text"
+    ? "fa fa-eye-slash toggle-eye"
+    : "fa fa-eye toggle-eye";
+}
+
+/* ══ TOAST ══ */
+function showToast(msg, type="") {
+  const t = document.getElementById("toast");
+  t.className = `toast ${type} show`;
+  t.innerText = msg;
+  setTimeout(() => t.classList.remove("show"), 3000);
+}
+
+/* ══ LOGOUT ══ */
+function logout() { localStorage.clear(); window.location.href = "login.html"; }
+
+/* ══ INIT ══ */
+initUI();
+loadProfil();
+
+</script>
+</body>
+</html>

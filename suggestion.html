@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Suggestions | StageFlow</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:        #f4f6fb;
+  --white:     #ffffff;
+  --border:    #e5e9f2;
+  --accent:    #4f7cff;
+  --accent2:   #7c5cfc;
+  --green:     #10b981;
+  --orange:    #f59e0b;
+  --red:       #ef4444;
+  --text:      #1a1d2e;
+  --muted:     #8892a4;
+  --sidebar-w: 240px;
+}
+
+body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); display: flex; min-height: 100vh; }
+
+/* ══ SIDEBAR ══ */
+.sidebar { width: var(--sidebar-w); background: var(--white); border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 24px 14px; position: fixed; top: 0; left: 0; bottom: 0; z-index: 100; }
+.logo { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.35rem; color: var(--text); padding: 0 8px 22px; border-bottom: 1px solid var(--border); margin-bottom: 18px; }
+.logo span { color: var(--accent); }
+.nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 10px; color: var(--muted); text-decoration: none; font-size: 0.875rem; font-weight: 500; transition: all 0.18s; margin-bottom: 2px; cursor: pointer; border: none; background: none; width: 100%; text-align: left; }
+.nav-item:hover  { background: var(--bg); color: var(--text); }
+.nav-item.active { background: rgba(79,124,255,0.1); color: var(--accent); font-weight: 600; }
+.nav-item i { width: 16px; text-align: center; font-size: 0.85rem; }
+.sidebar-bottom { margin-top: auto; border-top: 1px solid var(--border); padding-top: 14px; }
+.user-chip { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: var(--bg); border-radius: 10px; margin-bottom: 6px;  overflow: hidden;}
+.avatar-circle { width: 34px; height: 34px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), var(--accent2)); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.8rem; color: #fff; flex-shrink: 0; }
+.user-chip-name { font-size: 0.82rem; font-weight: 600; color: var(--text); }
+.user-chip-role { font-size: 0.7rem; color: var(--muted); }
+
+/* ══ MAIN ══ */
+.main { margin-left: var(--sidebar-w); flex: 1; display: flex; flex-direction: column; }
+
+/* ══ TOPBAR ══ */
+.topbar { background: var(--white); border-bottom: 1px solid var(--border); padding: 0 28px; height: 60px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 50; }
+.topbar-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1.05rem; color: var(--text); }
+.topbar-title span { color: var(--accent); }
+.user-pill { display: flex; align-items: center; gap: 8px; padding: 5px 12px 5px 6px; background: var(--bg); border: 1px solid var(--border); border-radius: 20px; font-size: 0.82rem; font-weight: 500; color: var(--text); }
+.user-pill .avatar-circle { width: 26px; height: 26px; font-size: 0.7rem; }
+
+/* ══ CONTENT ══ */
+.content { padding: 28px; flex: 1; }
+
+/* ══ TOP BAR ACTIONS ══ */
+.actions-bar {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 22px; flex-wrap: wrap;
+}
+
+.filters { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; flex: 1; }
+
+.filter-btn { padding: 7px 16px; border-radius: 20px; border: 1px solid var(--border); background: var(--white); color: var(--muted); font-family: 'DM Sans', sans-serif; font-size: 0.82rem; font-weight: 500; cursor: pointer; transition: all 0.18s; }
+.filter-btn:hover  { border-color: var(--accent); color: var(--accent); }
+.filter-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+.search-box { display: flex; align-items: center; gap: 8px; background: var(--white); border: 1px solid var(--border); border-radius: 20px; padding: 7px 16px; }
+.search-box i { color: var(--muted); font-size: 0.82rem; }
+.search-box input { border: none; outline: none; font-family: 'DM Sans', sans-serif; font-size: 0.82rem; color: var(--text); background: transparent; width: 160px; }
+.search-box input::placeholder { color: var(--muted); }
+
+/* Bouton proposer sujet */
+.btn-propose {
+  display: flex; align-items: center; gap: 8px;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  color: #fff; border: none; border-radius: 10px;
+  padding: 9px 18px; font-family: 'DM Sans', sans-serif;
+  font-size: 0.82rem; font-weight: 600; cursor: pointer;
+  transition: opacity 0.18s, transform 0.18s;
+  white-space: nowrap;
+}
+.btn-propose:hover { opacity: 0.88; transform: translateY(-1px); }
+
+/* ══ CARDS GRID ══ */
+.cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 18px; }
+
+.suggestion-card { background: var(--white); border: 1px solid var(--border); border-radius: 16px; padding: 22px; display: flex; flex-direction: column; gap: 14px; transition: box-shadow 0.2s, transform 0.2s, border-color 0.2s; animation: fadeUp 0.4s ease both; }
+.suggestion-card:hover { box-shadow: 0 6px 24px rgba(79,124,255,0.1); transform: translateY(-3px); border-color: rgba(79,124,255,0.3); }
+@keyframes fadeUp { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
+
+.card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+.card-titre { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.95rem; color: var(--text); line-height: 1.4; flex: 1; }
+.badge { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 20px; font-size: 0.72rem; font-weight: 600; white-space: nowrap; flex-shrink: 0; }
+.badge.initiation       { background: rgba(16,185,129,0.1);  color: var(--green); }
+.badge.perfectionnement { background: rgba(245,158,11,0.1);  color: var(--orange); }
+.badge.fin_etude        { background: rgba(79,124,255,0.1);  color: var(--accent); }
+.badge.green  { background: rgba(16,185,129,0.1);  color: var(--green); }
+.badge.blue   { background: rgba(79,124,255,0.1);  color: var(--accent); }
+.badge.orange { background: rgba(245,158,11,0.1);  color: var(--orange); }
+
+.card-desc { font-size: 0.82rem; color: var(--muted); line-height: 1.6; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.tech-list { display: flex; flex-wrap: wrap; gap: 6px; }
+.tech-tag { background: var(--bg); border: 1px solid var(--border); color: var(--text); font-size: 0.72rem; font-weight: 500; padding: 3px 10px; border-radius: 6px; }
+.card-footer { display: flex; align-items: center; justify-content: space-between; padding-top: 12px; border-top: 1px solid var(--border); }
+.enc-info { display: flex; align-items: center; gap: 8px; }
+.enc-avatar { width: 28px; height: 28px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), var(--accent2)); display: flex; align-items: center; justify-content: center; font-size: 0.65rem; font-weight: 700; color: #fff; }
+.enc-name { font-size: 0.78rem; font-weight: 600; color: var(--text); }
+.enc-dept { font-size: 0.7rem; color: var(--muted); }
+
+.btn-postuler { padding: 7px 16px; background: var(--accent); color: #fff; border: none; border-radius: 8px; font-family: 'DM Sans', sans-serif; font-size: 0.78rem; font-weight: 600; cursor: pointer; transition: opacity 0.18s, transform 0.18s; display: flex; align-items: center; gap: 6px; }
+.btn-postuler:hover    { opacity: 0.85; transform: translateY(-1px); }
+.btn-postuler:disabled { background: var(--border); color: var(--muted); cursor: not-allowed; transform: none; }
+
+.empty { text-align: center; padding: 60px 20px; color: var(--muted); grid-column: 1/-1; }
+.empty i { font-size: 2.5rem; margin-bottom: 12px; display: block; opacity: 0.3; }
+
+/* ══ MODAL ══ */
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.45);
+  backdrop-filter: blur(3px);
+  z-index: 500;
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.25s;
+}
+.modal-overlay.show { opacity: 1; pointer-events: all; }
+
+.modal {
+  background: var(--white);
+  border-radius: 20px;
+  width: 100%; max-width: 600px;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 32px;
+  transform: translateY(20px) scale(0.97);
+  transition: transform 0.25s;
+  margin: 16px;
+}
+.modal-overlay.show .modal { transform: translateY(0) scale(1); }
+.modal::-webkit-scrollbar { width: 4px; }
+.modal::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+
+.modal-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 24px; padding-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+}
+.modal-title { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.1rem; color: var(--text); display: flex; align-items: center; gap: 8px; }
+.modal-title i { color: var(--accent); }
+.modal-close { width: 32px; height: 32px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); color: var(--muted); display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 0.85rem; transition: all 0.15s; }
+.modal-close:hover { border-color: var(--red); color: var(--red); }
+
+/* Steps mini */
+.mini-steps { display: flex; align-items: center; gap: 6px; margin-bottom: 24px; }
+.mini-step { display: flex; align-items: center; gap: 6px; }
+.mini-dot { width: 26px; height: 26px; border-radius: 50%; border: 2px solid var(--border); background: var(--white); color: var(--muted); display: flex; align-items: center; justify-content: center; font-size: 0.72rem; font-weight: 700; transition: all 0.2s; flex-shrink: 0; }
+.mini-dot.active { border-color: var(--accent); background: var(--accent); color: #fff; }
+.mini-dot.done   { border-color: var(--green); background: var(--green); color: #fff; }
+.mini-label { font-size: 0.72rem; color: var(--muted); font-weight: 500; }
+.mini-step.active .mini-label { color: var(--accent); font-weight: 600; }
+.mini-step.done   .mini-label { color: var(--green); }
+.mini-line { flex: 1; height: 2px; background: var(--border); transition: background 0.2s; }
+.mini-line.done { background: var(--green); }
+
+/* Form */
+.form-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
+.form-row    { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.form-label  { font-size: 0.8rem; font-weight: 600; color: var(--text); display: flex; align-items: center; gap: 5px; }
+.form-label .req { color: var(--red); }
+.form-label i    { color: var(--accent); font-size: 0.75rem; }
+.form-input, .form-select, .form-textarea {
+  border: 1px solid var(--border); border-radius: 10px;
+  padding: 9px 13px; font-family: 'DM Sans', sans-serif;
+  font-size: 0.875rem; color: var(--text);
+  background: var(--bg); outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s; width: 100%;
+}
+.form-input:focus, .form-select:focus, .form-textarea:focus {
+  border-color: var(--accent); background: var(--white);
+  box-shadow: 0 0 0 3px rgba(79,124,255,0.1);
+}
+.form-input::placeholder, .form-textarea::placeholder { color: var(--muted); }
+.form-textarea { resize: vertical; min-height: 90px; }
+.form-hint { font-size: 0.72rem; color: var(--muted); }
+
+/* Encadrant list in modal */
+.enc-list { display: flex; flex-direction: column; gap: 8px; }
+.enc-option { display: flex; align-items: center; gap: 12px; padding: 11px 14px; border-radius: 10px; border: 2px solid var(--border); cursor: pointer; transition: all 0.18s; background: var(--bg); }
+.enc-option:hover    { border-color: var(--accent); background: rgba(79,124,255,0.04); }
+.enc-option.selected { border-color: var(--accent); background: rgba(79,124,255,0.08); }
+.enc-option-avatar { width: 34px; height: 34px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), var(--accent2)); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.78rem; color: #fff; flex-shrink: 0; }
+.enc-option-name  { font-size: 0.85rem; font-weight: 600; color: var(--text); }
+.enc-option-grade { font-size: 0.72rem; color: var(--muted); }
+.enc-check { margin-left: auto; width: 20px; height: 20px; border-radius: 50%; border: 2px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 0.65rem; transition: all 0.18s; }
+.enc-option.selected .enc-check { border-color: var(--accent); background: var(--accent); color: #fff; }
+
+/* Recap */
+.recap-item { display: flex; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 0.855rem; }
+.recap-item:last-child { border-bottom: none; }
+.recap-label { color: var(--muted); min-width: 130px; font-size: 0.78rem; font-weight: 500; }
+.recap-val   { color: var(--text); font-weight: 500; flex: 1; }
+
+/* Modal footer */
+.modal-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 24px; padding-top: 18px; border-top: 1px solid var(--border); }
+.btn-mback { display: flex; align-items: center; gap: 6px; background: none; color: var(--muted); border: 1px solid var(--border); border-radius: 9px; padding: 9px 18px; font-family: 'DM Sans', sans-serif; font-size: 0.82rem; font-weight: 500; cursor: pointer; transition: all 0.18s; }
+.btn-mback:hover { border-color: var(--text); color: var(--text); }
+.btn-mnext { display: flex; align-items: center; gap: 6px; background: var(--accent); color: #fff; border: none; border-radius: 9px; padding: 9px 20px; font-family: 'DM Sans', sans-serif; font-size: 0.82rem; font-weight: 600; cursor: pointer; transition: opacity 0.18s; }
+.btn-mnext:hover    { opacity: 0.85; }
+.btn-mnext:disabled { background: var(--border); color: var(--muted); cursor: not-allowed; }
+
+/* Success modal */
+.modal-success { text-align: center; padding: 10px 0; }
+.success-icon { width: 68px; height: 68px; border-radius: 50%; background: rgba(16,185,129,0.1); display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; font-size: 1.8rem; color: var(--green); animation: popIn 0.4s cubic-bezier(0.175,0.885,0.32,1.275) both; }
+@keyframes popIn { from{transform:scale(0)} to{transform:scale(1)} }
+.success-title { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.2rem; color: var(--text); margin-bottom: 8px; }
+.success-sub   { font-size: 0.82rem; color: var(--muted); line-height: 1.6; margin-bottom: 20px; }
+
+/* toast */
+.toast { position: fixed; bottom: 24px; right: 24px; background: var(--text); color: #fff; padding: 12px 20px; border-radius: 10px; font-size: 0.85rem; font-weight: 500; box-shadow: 0 4px 20px rgba(0,0,0,0.15); transform: translateY(80px); opacity: 0; transition: all 0.3s ease; z-index: 999; }
+.toast.show    { transform: translateY(0); opacity: 1; }
+.toast.success { background: var(--green); }
+.toast.error   { background: var(--red); }
+</style>
+</head>
+
+<body>
+
+<!-- ══ SIDEBAR ══ -->
+<aside class="sidebar">
+  <div class="logo">Stage<span>Flow</span></div>
+ <nav>
+    <a class="nav-item active" href="etudiant.html"><i class="fa fa-house"></i> Dashboard</a>
+    <a class="nav-item" href="profil.html"><i class="fa fa-user"></i> Profil</a>
+    <a class="nav-item" href="stage.html"><i class="fa fa-briefcase"></i> Mon stage</a>
+    <a class="nav-item" href="journal.html"><i class="fa fa-book-open"></i> Journal de bord</a>
+    <a class="nav-item" href="messagerie.html"><i class="fa fa-comments"></i> Messagerie</a>
+    <a class="nav-item" href="suggestion.html"><i class="fa fa-lightbulb"></i> Suggestions</a>
+    <a class="nav-item" href="notifications.html"><i class="fa fa-bell"></i> Notifications</a>
+    <a class="nav-item" href="cv.html">
+  <i class="fa fa-file-user"></i> CV Generator
+</a>
+<a class="nav-item" href="soutenance.html">
+  <i class="fa fa-graduation-cap"></i> Soutenance en ligne
+</a>
+<a class="nav-item" href="document.html">
+  <i class="fa fa-file-contract"></i> Documents officiels
+</a>
+  <a class="nav-item" href="chatbot.html">
+  <i class="fa fa-robot"></i> Assistant IA
+</a>
+<a class="nav-item" href="carte-etudiant.html">
+  <i class="fa fa-id-card"></i> Ma carte étudiant
+</a>
+<a class="nav-item" href="planning.html">
+  <i class="fa fa-calendar-days"></i> Planning de stage
+</a>
+<a class="nav-item" href="ressource.html">
+  <i class="fa fa-book-bookmark"></i> Ressources
+</a>
+<a class="nav-item" href="carte-stagiaires.html">
+  <i class="fa fa-map-location-dot"></i> Carte des stagiaires
+</a>
+<a class="nav-item" href="rendez-vous.html">
+  <i class="fa fa-calendar-check"></i> Rendez-vous
+</a>
+  </nav>
+  <div class="sidebar-bottom">
+    <div class="user-chip">
+      <div class="avatar-circle" id="sidebarAvatar">?</div>
+      <div>
+        <div class="user-chip-name" id="sidebarNom">...</div>
+        <div class="user-chip-role">Étudiant</div>
+      </div>
+    </div>
+    <button class="nav-item" onclick="logout()" style="color:var(--red)">
+      <i class="fa fa-right-from-bracket"></i> Déconnexion
+    </button>
+  </div>
+</aside>
+
+<!-- ══ MAIN ══ -->
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-title">💡 Idées de <span>sujets</span></div>
+    <div class="user-pill">
+      <div class="avatar-circle" id="topAvatar">?</div>
+      <span id="topNom">...</span>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- ACTIONS BAR -->
+    <div class="actions-bar">
+      <div class="filters">
+        <button class="filter-btn active" onclick="filterType('all',this)">Tous</button>
+        <button class="filter-btn" onclick="filterType('initiation',this)">Initiation</button>
+        <button class="filter-btn" onclick="filterType('perfectionnement',this)">Perfectionnement</button>
+        <button class="filter-btn" onclick="filterType('fin_etude',this)">Fin d'études</button>
+        <div class="search-box">
+          <i class="fa fa-search"></i>
+          <input type="text" id="searchInput" placeholder="Rechercher..." oninput="filterSearch()">
+        </div>
+      </div>
+      <!-- BOUTON PROPOSER -->
+      <button class="btn-propose" onclick="openModal()">
+        <i class="fa fa-plus"></i> Proposer mon sujet
+      </button>
+    </div>
+
+    <!-- CARDS -->
+    <div class="cards-grid" id="cardsGrid">
+      <div class="empty"><i class="fa fa-spinner fa-spin"></i><p>Chargement...</p></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══ MODAL DEMANDE ══ -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModalOutside(event)">
+  <div class="modal" id="modalBox">
+
+    <div class="modal-header">
+      <div class="modal-title"><i class="fa fa-file-pen"></i> Proposer mon propre sujet</div>
+      <div class="modal-close" onclick="closeModal()"><i class="fa fa-times"></i></div>
+    </div>
+
+    <!-- MINI STEPS -->
+    <div class="mini-steps" id="miniSteps">
+      <div class="mini-step active" id="mstep1"><div class="mini-dot active">1</div><div class="mini-label">Sujet</div></div>
+      <div class="mini-line" id="mline1"></div>
+      <div class="mini-step" id="mstep2"><div class="mini-dot">2</div><div class="mini-label">Entreprise</div></div>
+      <div class="mini-line" id="mline2"></div>
+      <div class="mini-step" id="mstep3"><div class="mini-dot">3</div><div class="mini-label">Encadrant</div></div>
+      <div class="mini-line" id="mline3"></div>
+      <div class="mini-step" id="mstep4"><div class="mini-dot">4</div><div class="mini-label">Confirmer</div></div>
+    </div>
+
+    <!-- STEP 1: SUJET -->
+    <div id="mform1">
+      <div class="form-group">
+        <label class="form-label"><i class="fa fa-heading"></i> Titre <span class="req">*</span></label>
+        <input class="form-input" id="mTitre" placeholder="Titre de votre sujet de stage...">
+      </div>
+      <div class="form-group">
+        <label class="form-label"><i class="fa fa-align-left"></i> Description <span class="req">*</span></label>
+        <textarea class="form-textarea" id="mDesc" placeholder="Décrivez les objectifs et tâches..."></textarea>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label"><i class="fa fa-code"></i> Technologies</label>
+          <input class="form-input" id="mTech" placeholder="React, Node.js, MySQL...">
+        </div>
+        <div class="form-group">
+          <label class="form-label"><i class="fa fa-graduation-cap"></i> Type</label>
+          <select class="form-select" id="mType" disabled>
+            <option value="initiation">Initiation</option>
+            <option value="perfectionnement">Perfectionnement</option>
+            <option value="fin_etude">Fin d'études</option>
+          </select>
+          <span class="form-hint">Automatique selon votre année</span>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <div></div>
+        <button class="btn-mnext" onclick="mGoStep(2)">Suivant <i class="fa fa-arrow-right"></i></button>
+      </div>
+    </div>
+
+    <!-- STEP 2: ENTREPRISE -->
+    <div id="mform2" style="display:none">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label"><i class="fa fa-building"></i> Entreprise <span class="req">*</span></label>
+          <input class="form-input" id="mEntreprise" placeholder="Nom de l'entreprise">
+        </div>
+        <div class="form-group">
+          <label class="form-label"><i class="fa fa-location-dot"></i> Ville</label>
+          <input class="form-input" id="mVille" placeholder="Tunis, Sfax...">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label"><i class="fa fa-calendar-check"></i> Date début</label>
+          <input class="form-input" type="date" id="mDateDebut">
+        </div>
+        <div class="form-group">
+          <label class="form-label"><i class="fa fa-calendar-xmark"></i> Date fin</label>
+          <input class="form-input" type="date" id="mDateFin">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-mback" onclick="mGoStep(1)"><i class="fa fa-arrow-left"></i> Retour</button>
+        <button class="btn-mnext" onclick="mGoStep(3)">Suivant <i class="fa fa-arrow-right"></i></button>
+      </div>
+    </div>
+
+    <!-- STEP 3: ENCADRANT -->
+    <div id="mform3" style="display:none">
+      <p style="font-size:0.82rem;color:var(--muted);margin-bottom:14px">Choisissez l'encadrant qui supervisera votre stage :</p>
+      <div class="enc-list" id="mEncList">
+        <div style="text-align:center;padding:20px;color:var(--muted)"><i class="fa fa-spinner fa-spin"></i> Chargement...</div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-mback" onclick="mGoStep(2)"><i class="fa fa-arrow-left"></i> Retour</button>
+        <button class="btn-mnext" id="btnMStep3" onclick="mGoStep(4)" disabled>Suivant <i class="fa fa-arrow-right"></i></button>
+      </div>
+    </div>
+
+    <!-- STEP 4: RECAP -->
+    <div id="mform4" style="display:none">
+      <div id="mRecap"></div>
+      <div class="modal-footer">
+        <button class="btn-mback" onclick="mGoStep(3)"><i class="fa fa-arrow-left"></i> Retour</button>
+        <button class="btn-mnext" id="btnMSubmit" onclick="submitDemande()">
+          <i class="fa fa-paper-plane"></i> Envoyer
+        </button>
+      </div>
+    </div>
+
+    <!-- SUCCESS -->
+    <div id="mformSuccess" style="display:none">
+      <div class="modal-success">
+        <div class="success-icon"><i class="fa fa-check"></i></div>
+        <div class="success-title">Demande envoyée ! 🎉</div>
+        <div class="success-sub">Votre demande est en attente de validation par l'encadrant choisi.</div>
+        <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+          <a href="stage.html" style="display:flex;align-items:center;gap:6px;background:var(--accent);color:#fff;border-radius:9px;padding:9px 18px;text-decoration:none;font-weight:600;font-size:0.82rem">
+            <i class="fa fa-briefcase"></i> Voir mon stage
+          </a>
+          <button onclick="closeModal()" style="display:flex;align-items:center;gap:6px;background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:9px;padding:9px 18px;font-family:'DM Sans',sans-serif;font-weight:600;font-size:0.82rem;cursor:pointer">
+            Fermer
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+
+/* ══ LOGIN ══ */
+const currentUser = {
+  id:     parseInt(localStorage.getItem("user_id")),
+  nom:    localStorage.getItem("user_nom")    || "",
+  prenom: localStorage.getItem("user_prenom") || "",
+  role:   localStorage.getItem("user_role")   || "",
+   photo:  localStorage.getItem("user_photo")  || "", // ← زيد هاذا
+};
+if (!currentUser.id) window.location.href = "login.html";
+
+const ini = (currentUser.prenom[0]||"") + (currentUser.nom[0]||"");
+document.getElementById("sidebarNom").innerText = currentUser.prenom + " " + currentUser.nom;
+document.getElementById("topNom").innerText     = currentUser.prenom + " " + currentUser.nom;
+
+// ← هنا الإضافة
+if (currentUser.photo) {
+  const url  = "http://localhost:3000/uploads/" + currentUser.photo;
+  document.getElementById("sidebarAvatar").innerHTML =
+    `<img src="${url}" style="width:34px;height:34px;border-radius:50%;object-fit:cover">`;
+  document.getElementById("topAvatar").innerHTML =
+    `<img src="${url}" style="width:26px;height:26px;border-radius:50%;object-fit:cover">`;
+} else {
+  document.getElementById("sidebarAvatar").innerText = ini;
+  document.getElementById("topAvatar").innerText     = ini;
+}
+/* ══ DATA ══ */
+let allSuggestions = [];
+let currentType    = "all";
+let typeStage      = "initiation";
+let selectedEncId  = null;
+let selectedEncNom = "";
+let mCurrentStep   = 1;
+
+/* ══ INIT ══ */
+async function initPage() {
+  const r = await fetch(`http://localhost:3000/user-type-stage/${currentUser.id}`);
+  const d = await r.json();
+  if (d.success) {
+    typeStage = d.type_stage;
+    document.getElementById("mType").value = typeStage;
+  }
+  loadSuggestions();
+}
+
+/* ══ SUGGESTIONS ══ */
+const typeLabel = { initiation:"Initiation", perfectionnement:"Perfectionnement", fin_etude:"Fin d'études" };
+
+function loadSuggestions() {
+  fetch(`http://localhost:3000/suggestions/${currentUser.id}`)
+    .then(r => r.json())
+    .then(data => {
+      if (!data.success) { allSuggestions = []; renderCards([]); return; }
+      allSuggestions = data.suggestions;
+      renderCards(allSuggestions);
+    });
+}
+
+function renderCards(list) {
+  const grid = document.getElementById("cardsGrid");
+  if (!list.length) {
+    grid.innerHTML = `<div class="empty"><i class="fa fa-folder-open"></i><p>Aucune suggestion trouvée pour votre profil</p></div>`;
+    return;
+  }
+  grid.innerHTML = list.map((s, i) => {
+    const techs  = s.technologies ? s.technologies.split(",").map(t => `<span class="tech-tag">${t.trim()}</span>`).join("") : "";
+    const encIni = (s.enc_prenom?.[0]||"") + (s.enc_nom?.[0]||"");
+    return `
+      <div class="suggestion-card" style="animation-delay:${i*0.05}s">
+        <div class="card-top">
+          <div class="card-titre">${s.titre}</div>
+          <span class="badge ${s.type_stage}">${typeLabel[s.type_stage]||s.type_stage}</span>
+        </div>
+        ${s.description ? `<p class="card-desc">${s.description}</p>` : ""}
+        ${techs ? `<div class="tech-list">${techs}</div>` : ""}
+        <div class="card-footer">
+          <div class="enc-info">
+            <div class="enc-avatar">${encIni}</div>
+            <div>
+              <div class="enc-name">${s.enc_prenom} ${s.enc_nom}</div>
+              <div class="enc-dept">${s.departement}</div>
+            </div>
+          </div>
+          ${s.est_disponible
+            ? `<button class="btn-postuler" onclick="postuler(${s.id},this)"><i class="fa fa-paper-plane"></i> Postuler</button>`
+            : `<button class="btn-postuler" disabled><i class="fa fa-check"></i> Pris</button>`}
+        </div>
+      </div>`;
+  }).join("");
+}
+
+function filterType(type, btn) {
+  currentType = type;
+  document.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
+  btn.classList.add("active");
+  filterSearch();
+}
+function filterSearch() {
+  const q = document.getElementById("searchInput").value.toLowerCase();
+  let list = allSuggestions;
+  if (currentType !== "all") list = list.filter(s => s.type_stage === currentType);
+  if (q) list = list.filter(s => s.titre.toLowerCase().includes(q) || (s.description||"").toLowerCase().includes(q) || (s.technologies||"").toLowerCase().includes(q));
+  renderCards(list);
+}
+
+/* ══ POSTULER ══ */
+function postuler(suggestionId, btn) {
+  btn.disabled = true;
+  btn.innerHTML = `<i class="fa fa-spinner fa-spin"></i>`;
+  fetch("http://localhost:3000/postuler", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ etudiant_id: currentUser.id, suggestion_id: suggestionId })
+  }).then(r => r.json()).then(data => {
+    if (data.success) {
+      btn.innerHTML = `<i class="fa fa-check"></i> Postulé`;
+      showToast("✅ Demande envoyée !", "success");
+    } else {
+      btn.disabled = false;
+      btn.innerHTML = `<i class="fa fa-paper-plane"></i> Postuler`;
+      showToast(data.message || "Erreur", "error");
+    }
+  });
+}
+
+/* ══ MODAL ══ */
+function openModal() {
+  mReset();
+  document.getElementById("modalOverlay").classList.add("show");
+  document.body.style.overflow = "hidden";
+}
+function closeModal() {
+  document.getElementById("modalOverlay").classList.remove("show");
+  document.body.style.overflow = "";
+}
+function closeModalOutside(e) {
+  if (e.target === document.getElementById("modalOverlay")) closeModal();
+}
+function mReset() {
+  mGoStep(1);
+  ["mTitre","mDesc","mTech","mEntreprise","mVille","mDateDebut","mDateFin"].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = "";
+  });
+  selectedEncId = null; selectedEncNom = "";
+  document.getElementById("btnMStep3").disabled = true;
+  // hide success, show steps
+  document.getElementById("miniSteps").style.display = "flex";
+  document.getElementById("mformSuccess").style.display = "none";
+}
+
+/* ══ MODAL STEPS ══ */
+function mGoStep(n) {
+  if (n === 2 && !mValidateStep1()) return;
+
+  // كي مش fin_etude → تخطى step encadrant
+  if (n === 3 && typeStage !== "fin_etude") {
+    selectedEncId  = null;
+    selectedEncNom = "Non requis";
+    n = 4;
+  }
+
+  if (n === 4) mBuildRecap();
+
+  [1,2,3,4,"Success"].forEach(s => {
+    const el = document.getElementById("mform" + s);
+    if (el) el.style.display = "none";
+  });
+  document.getElementById("mform" + n).style.display = "block";
+  mCurrentStep = n;
+
+  for (let i = 1; i <= 4; i++) {
+    const step = document.getElementById("mstep" + i);
+    const dot  = step.querySelector(".mini-dot");
+    step.className = "mini-step " + (i < n ? "done" : i === n ? "active" : "");
+    dot.className  = "mini-dot "  + (i < n ? "done" : i === n ? "active" : "");
+    if (i < n) dot.innerHTML = `<i class="fa fa-check" style="font-size:0.6rem"></i>`;
+    else dot.innerText = i;
+  }
+  for (let i = 1; i <= 3; i++) {
+    document.getElementById("mline" + i).className = "mini-line " + (i < n ? "done" : "");
+  }
+
+  if (n === 3) mLoadEncadrants();
+}
+function mValidateStep1() {
+  if (!document.getElementById("mTitre").value.trim()) {
+    showToast("Le titre est obligatoire", "error");
+    document.getElementById("mTitre").focus();
+    return false;
+  }
+  if (!document.getElementById("mDesc").value.trim()) {
+    showToast("La description est obligatoire", "error");
+    document.getElementById("mDesc").focus();
+    return false;
+  }
+  return true;
+}
+
+function mLoadEncadrants() {
+  fetch(`http://localhost:3000/encadrants-departement/${currentUser.id}`)
+    .then(r => r.json())
+    .then(data => {
+      if (!data.success || !data.encadrants.length) {
+        document.getElementById("mEncList").innerHTML = `<div style="text-align:center;padding:20px;color:var(--muted)">Aucun encadrant disponible</div>`;
+        return;
+      }
+      document.getElementById("mEncList").innerHTML = data.encadrants.map(enc => {
+        const encIni = (enc.prenom?.[0]||"") + (enc.nom?.[0]||"");
+        return `
+          <div class="enc-option" id="menc-${enc.id}" onclick="mSelectEnc(${enc.id},'${enc.prenom} ${enc.nom}')">
+            <div class="enc-option-avatar">${encIni}</div>
+            <div>
+              <div class="enc-option-name">${enc.prenom} ${enc.nom}</div>
+              <div class="enc-option-grade">${enc.grade||"Encadrant"} · ${enc.nb_etudiants_actuel}/${enc.nb_etudiants_max} étudiants</div>
+            </div>
+            <div class="enc-check" id="mcheck-${enc.id}"></div>
+          </div>`;
+      }).join("");
+    });
+}
+
+function mSelectEnc(id, nom) {
+  selectedEncId  = id;
+  selectedEncNom = nom;
+  document.querySelectorAll(".enc-option").forEach(el => el.classList.remove("selected"));
+  document.querySelectorAll(".enc-check").forEach(el => el.innerHTML = "");
+  document.getElementById("menc-" + id).classList.add("selected");
+  document.getElementById("mcheck-" + id).innerHTML = `<i class="fa fa-check"></i>`;
+  document.getElementById("btnMStep3").disabled = false;
+}
+
+function mBuildRecap() {
+  const titre      = document.getElementById("mTitre").value;
+  const desc       = document.getElementById("mDesc").value;
+  const tech       = document.getElementById("mTech").value;
+  const entreprise = document.getElementById("mEntreprise").value;
+  const ville      = document.getElementById("mVille").value;
+  const dd         = document.getElementById("mDateDebut").value;
+  const df         = document.getElementById("mDateFin").value;
+
+  document.getElementById("mRecap").innerHTML = `
+    <div class="recap-item"><span class="recap-label">Titre</span><span class="recap-val">${titre}</span></div>
+    <div class="recap-item"><span class="recap-label">Description</span><span class="recap-val" style="white-space:pre-line">${desc}</span></div>
+    ${tech ? `<div class="recap-item"><span class="recap-label">Technologies</span><span class="recap-val">${tech}</span></div>` : ""}
+    <div class="recap-item"><span class="recap-label">Type</span><span class="recap-val"><span class="badge blue">${typeLabel[typeStage]}</span></span></div>
+    <div class="recap-item"><span class="recap-label">Entreprise</span><span class="recap-val">${entreprise||"—"}</span></div>
+    <div class="recap-item"><span class="recap-label">Ville</span><span class="recap-val">${ville||"—"}</span></div>
+    <div class="recap-item"><span class="recap-label">Dates</span><span class="recap-val">${dd ? new Date(dd).toLocaleDateString("fr-FR") : "—"} → ${df ? new Date(df).toLocaleDateString("fr-FR") : "—"}</span></div>
+    <div class="recap-item"><span class="recap-label">Encadrant</span><span class="recap-val">${selectedEncNom}</span></div>`;
+}
+
+/* ══ SUBMIT ══ */
+async function submitDemande() {
+  const btn = document.getElementById("btnMSubmit");
+  btn.disabled = true;
+  btn.innerHTML = `<i class="fa fa-spinner fa-spin"></i> Envoi...`;
+
+  const r = await fetch("http://localhost:3000/demande-stage", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      etudiant_id:  currentUser.id,
+      encadrant_id: selectedEncId,
+      titre:        document.getElementById("mTitre").value,
+      description:  document.getElementById("mDesc").value,
+      technologies: document.getElementById("mTech").value,
+      type_stage:   typeStage,
+      entreprise:   document.getElementById("mEntreprise").value,
+      ville:        document.getElementById("mVille").value,
+      date_debut:   document.getElementById("mDateDebut").value || null,
+      date_fin:     document.getElementById("mDateFin").value   || null,
+    })
+  });
+  const d = await r.json();
+
+  if (d.success) {
+    // hide steps, show success
+    document.getElementById("miniSteps").style.display = "none";
+    [1,2,3,4].forEach(i => { document.getElementById("mform"+i).style.display = "none"; });
+    document.getElementById("mformSuccess").style.display = "block";
+    showToast("✅ Demande envoyée avec succès !", "success");
+  } else {
+    showToast(d.message || "Erreur", "error");
+    btn.disabled = false;
+    btn.innerHTML = `<i class="fa fa-paper-plane"></i> Envoyer`;
+  }
+}
+
+/* ══ TOAST ══ */
+function showToast(msg, type="") {
+  const t = document.getElementById("toast");
+  t.className = `toast ${type} show`;
+  t.innerText = msg;
+  setTimeout(() => t.classList.remove("show"), 3000);
+}
+
+/* ══ LOGOUT ══ */
+function logout() { localStorage.clear(); window.location.href = "login.html"; }
+
+/* ══ START ══ */
+initPage();
+</script>
+</body>
+</html>

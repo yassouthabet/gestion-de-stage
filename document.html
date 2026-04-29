@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Documents Officiels | StageFlow</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f4f6fb;--white:#fff;--border:#e5e9f2;
+  --accent:#4f7cff;--accent2:#7c5cfc;--green:#10b981;
+  --orange:#f59e0b;--red:#ef4444;--text:#1a1d2e;--muted:#8892a4;
+  --sidebar-w:240px;
+}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);display:flex;min-height:100vh}
+
+/* SIDEBAR */
+.sidebar{width:var(--sidebar-w);background:var(--white);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:24px 14px;position:fixed;top:0;left:0;bottom:0;z-index:100}
+.logo{font-family:'Syne',sans-serif;font-weight:800;font-size:1.35rem;color:var(--text);padding:0 8px 22px;border-bottom:1px solid var(--border);margin-bottom:18px}
+.logo span{color:var(--accent)}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:10px;color:var(--muted);text-decoration:none;font-size:.875rem;font-weight:500;transition:all .18s;margin-bottom:2px;cursor:pointer;border:none;background:none;width:100%;text-align:left}
+.nav-item:hover{background:var(--bg);color:var(--text)}
+.nav-item.active{background:rgba(79,124,255,.1);color:var(--accent);font-weight:600}
+.nav-item i{width:16px;text-align:center;font-size:.85rem}
+.sidebar-bottom{margin-top:auto;border-top:1px solid var(--border);padding-top:14px}
+.user-chip{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg);border-radius:10px;margin-bottom:6px}
+.avatar-circle{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.8rem;color:#fff;flex-shrink:0;overflow:hidden}
+.user-chip-name{font-size:.82rem;font-weight:600;color:var(--text)}
+.user-chip-role{font-size:.7rem;color:var(--muted)}
+
+/* MAIN */
+.main{margin-left:var(--sidebar-w);flex:1;display:flex;flex-direction:column}
+.topbar{background:var(--white);border-bottom:1px solid var(--border);padding:0 28px;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
+.topbar-title{font-family:'Syne',sans-serif;font-weight:700;font-size:1.05rem;color:var(--text)}
+.topbar-title span{color:var(--accent)}
+.user-pill{display:flex;align-items:center;gap:8px;padding:5px 12px 5px 6px;background:var(--bg);border:1px solid var(--border);border-radius:20px;font-size:.82rem;font-weight:500;color:var(--text)}
+.user-pill .avatar-circle{width:26px;height:26px;font-size:.7rem}
+
+/* CONTENT */
+.content{padding:28px;flex:1}
+
+/* DOCUMENT CARDS */
+.docs-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:18px;margin-bottom:28px}
+
+.doc-card{background:var(--white);border:1px solid var(--border);border-radius:16px;padding:22px;cursor:pointer;transition:all .2s;animation:fadeUp .4s ease both;position:relative;overflow:hidden}
+.doc-card:hover{border-color:var(--accent);box-shadow:0 6px 24px rgba(79,124,255,.12);transform:translateY(-3px)}
+.doc-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+.doc-card.convention::before{background:linear-gradient(90deg,var(--accent),var(--accent2))}
+.doc-card.lettre::before{background:linear-gradient(90deg,var(--green),#059669)}
+.doc-card.attestation::before{background:linear-gradient(90deg,var(--orange),#d97706)}
+.doc-card.demande::before{background:linear-gradient(90deg,var(--accent2),var(--red))}
+
+.doc-icon{width:52px;height:52px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:1.4rem;margin-bottom:14px}
+.doc-card.convention .doc-icon{background:rgba(79,124,255,.1)}
+.doc-card.lettre .doc-icon{background:rgba(16,185,129,.1)}
+.doc-card.attestation .doc-icon{background:rgba(245,158,11,.1)}
+.doc-card.demande .doc-icon{background:rgba(124,92,252,.1)}
+
+.doc-title{font-family:'Syne',sans-serif;font-weight:700;font-size:.95rem;color:var(--text);margin-bottom:5px}
+.doc-desc{font-size:.78rem;color:var(--muted);line-height:1.5;margin-bottom:16px}
+.doc-btn{display:flex;align-items:center;gap:6px;padding:8px 16px;border-radius:9px;border:none;font-family:'DM Sans',sans-serif;font-size:.78rem;font-weight:600;cursor:pointer;transition:opacity .18s;width:100%;justify-content:center}
+.doc-card.convention .doc-btn{background:rgba(79,124,255,.1);color:var(--accent)}
+.doc-card.lettre .doc-btn{background:rgba(16,185,129,.1);color:var(--green)}
+.doc-card.attestation .doc-btn{background:rgba(245,158,11,.1);color:var(--orange)}
+.doc-card.demande .doc-btn{background:rgba(124,92,252,.1);color:var(--accent2)}
+.doc-btn:hover{opacity:.8}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);backdrop-filter:blur(3px);z-index:500;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .25s}
+.modal-overlay.show{opacity:1;pointer-events:all}
+.modal{background:var(--white);border-radius:18px;width:100%;max-width:560px;max-height:88vh;overflow-y:auto;padding:28px;transform:translateY(20px) scale(.97);transition:transform .25s;margin:16px}
+.modal-overlay.show .modal{transform:translateY(0) scale(1)}
+.modal::-webkit-scrollbar{width:4px}
+.modal::-webkit-scrollbar-thumb{background:var(--border);border-radius:10px}
+.modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:22px;padding-bottom:14px;border-bottom:1px solid var(--border)}
+.modal-title{font-family:'Syne',sans-serif;font-weight:800;font-size:1.05rem;color:var(--text);display:flex;align-items:center;gap:8px}
+.modal-close{width:30px;height:30px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--muted);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:.8rem}
+.modal-close:hover{border-color:var(--red);color:var(--red)}
+
+/* FORM */
+.form-section-title{font-size:.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin:16px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.form-group{display:flex;flex-direction:column;gap:5px;margin-bottom:12px}
+.form-label{font-size:.78rem;font-weight:600;color:var(--text)}
+.form-input{border:1px solid var(--border);border-radius:9px;padding:8px 12px;font-family:'DM Sans',sans-serif;font-size:.855rem;color:var(--text);background:var(--bg);outline:none;transition:border-color .15s;width:100%}
+.form-input:focus{border-color:var(--accent);background:var(--white);box-shadow:0 0 0 3px rgba(79,124,255,.1)}
+.form-input::placeholder{color:var(--muted)}
+
+/* PREVIEW MINI */
+.preview-mini{background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:16px;margin:18px 0;font-size:.75rem;color:var(--muted);line-height:1.8;font-style:italic}
+.preview-mini strong{color:var(--accent);font-style:normal}
+
+/* MODAL FOOTER */
+.modal-footer{display:flex;gap:10px;margin-top:20px;padding-top:16px;border-top:1px solid var(--border)}
+.btn-cancel{flex:1;padding:10px;border-radius:9px;border:1px solid var(--border);background:none;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:.855rem;cursor:pointer;transition:all .18s}
+.btn-cancel:hover{border-color:var(--text);color:var(--text)}
+.btn-download{flex:2;padding:10px;border-radius:9px;border:none;background:var(--accent);color:#fff;font-family:'DM Sans',sans-serif;font-size:.855rem;font-weight:600;cursor:pointer;transition:opacity .18s;display:flex;align-items:center;justify-content:center;gap:8px}
+.btn-download:hover{opacity:.85}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;right:24px;background:var(--text);color:#fff;padding:12px 20px;border-radius:10px;font-size:.85rem;font-weight:500;box-shadow:0 4px 20px rgba(0,0,0,.15);transform:translateY(80px);opacity:0;transition:all .3s ease;z-index:999}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.success{background:var(--green)}
+</style>
+</head>
+
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="logo">Stage<span>Flow</span></div>
+  <nav>
+    <a class="nav-item active" href="etudiant.html"><i class="fa fa-house"></i> Dashboard</a>
+    <a class="nav-item" href="profil.html"><i class="fa fa-user"></i> Profil</a>
+    <a class="nav-item" href="stage.html"><i class="fa fa-briefcase"></i> Mon stage</a>
+    <a class="nav-item" href="journal.html"><i class="fa fa-book-open"></i> Journal de bord</a>
+    <a class="nav-item" href="messagerie.html"><i class="fa fa-comments"></i> Messagerie</a>
+    <a class="nav-item" href="suggestion.html"><i class="fa fa-lightbulb"></i> Suggestions</a>
+    <a class="nav-item" href="notifications.html"><i class="fa fa-bell"></i> Notifications</a>
+    <a class="nav-item" href="cv.html">
+  <i class="fa fa-file-user"></i> CV Generator
+</a>
+<a class="nav-item" href="soutenance.html">
+  <i class="fa fa-graduation-cap"></i> Soutenance en ligne
+</a>
+<a class="nav-item" href="document.html">
+  <i class="fa fa-file-contract"></i> Documents officiels
+</a>
+  <a class="nav-item" href="chatbot.html">
+  <i class="fa fa-robot"></i> Assistant IA
+</a>
+<a class="nav-item" href="carte-etudiant.html">
+  <i class="fa fa-id-card"></i> Ma carte étudiant
+</a>
+<a class="nav-item" href="planning.html">
+  <i class="fa fa-calendar-days"></i> Planning de stage
+</a>
+<a class="nav-item" href="ressource.html">
+  <i class="fa fa-book-bookmark"></i> Ressources
+</a>
+<a class="nav-item" href="carte-stagiaires.html">
+  <i class="fa fa-map-location-dot"></i> Carte des stagiaires
+</a>
+<a class="nav-item" href="rendez-vous.html">
+  <i class="fa fa-calendar-check"></i> Rendez-vous
+</a>
+  </nav>
+  <div class="sidebar-bottom">
+    <div class="user-chip">
+      <div class="avatar-circle" id="sidebarAvatar">?</div>
+      <div>
+        <div class="user-chip-name" id="sidebarNom">...</div>
+        <div class="user-chip-role">Étudiant</div>
+      </div>
+    </div>
+    <button class="nav-item" onclick="logout()" style="color:var(--red)">
+      <i class="fa fa-right-from-bracket"></i> Déconnexion
+    </button>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-title">📋 Documents <span>officiels</span></div>
+    <div class="user-pill">
+      <div class="avatar-circle" id="topAvatar">?</div>
+      <span id="topNom">...</span>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <p style="font-size:.82rem;color:var(--muted);margin-bottom:22px">
+      Générez vos documents officiels automatiquement remplis avec vos informations de stage.
+    </p>
+
+    <div class="docs-grid">
+
+      <!-- CONVENTION -->
+      <div class="doc-card convention" style="animation-delay:.05s">
+        <div class="doc-icon">📄</div>
+        <div class="doc-title">Convention de stage</div>
+        <div class="doc-desc">Document officiel tripartite entre l'étudiant, l'université et l'entreprise. Obligatoire avant le début du stage.</div>
+        <button class="doc-btn" onclick="openModal('convention')">
+          <i class="fa fa-wand-magic-sparkles"></i> Générer automatiquement
+        </button>
+      </div>
+
+      <!-- LETTRE DE DEMANDE -->
+      <div class="doc-card lettre" style="animation-delay:.1s">
+        <div class="doc-icon">✉️</div>
+        <div class="doc-title">Lettre de demande de stage</div>
+        <div class="doc-desc">Lettre formelle pour demander un stage dans une entreprise. Personnalisée avec vos informations.</div>
+        <button class="doc-btn" onclick="openModal('lettre')">
+          <i class="fa fa-wand-magic-sparkles"></i> Générer automatiquement
+        </button>
+      </div>
+
+      <!-- ATTESTATION -->
+      <div class="doc-card attestation" style="animation-delay:.15s">
+        <div class="doc-icon">🏅</div>
+        <div class="doc-title">Attestation de stage</div>
+        <div class="doc-desc">Document officiel confirmant votre présence et participation au stage. Délivré par l'entreprise.</div>
+        <button class="doc-btn" onclick="openModal('attestation')">
+          <i class="fa fa-wand-magic-sparkles"></i> Générer automatiquement
+        </button>
+      </div>
+
+      <!-- LETTRE DE MOTIVATION -->
+      <div class="doc-card demande" style="animation-delay:.2s">
+        <div class="doc-icon">🎯</div>
+        <div class="doc-title">Lettre de motivation</div>
+        <div class="doc-desc">Lettre de motivation professionnelle pour accompagner votre CV lors d'une candidature spontanée.</div>
+        <button class="doc-btn" onclick="openModal('motivation')">
+          <i class="fa fa-wand-magic-sparkles"></i> Générer automatiquement
+        </button>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModalOutside(event)">
+  <div class="modal" id="modalBox">
+    <div class="modal-header">
+      <div class="modal-title" id="modalTitle">Document</div>
+      <div class="modal-close" onclick="closeModal()"><i class="fa fa-times"></i></div>
+    </div>
+    <div id="modalBody"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+
+/* ══ LOGIN ══ */
+const currentUser = {
+  id:     parseInt(localStorage.getItem("user_id")),
+  nom:    localStorage.getItem("user_nom")    || "",
+  prenom: localStorage.getItem("user_prenom") || "",
+  photo:  localStorage.getItem("user_photo")  || "",
+};
+if (!currentUser.id) window.location.href = "login.html";
+
+const ini = (currentUser.prenom[0]||"") + (currentUser.nom[0]||"");
+document.getElementById("sidebarNom").innerText = currentUser.prenom + " " + currentUser.nom;
+document.getElementById("topNom").innerText     = currentUser.prenom + " " + currentUser.nom;
+if (currentUser.photo) {
+  const url = "http://localhost:3000/uploads/" + currentUser.photo;
+  document.getElementById("sidebarAvatar").innerHTML = `<img src="${url}" style="width:34px;height:34px;border-radius:50%;object-fit:cover">`;
+  document.getElementById("topAvatar").innerHTML     = `<img src="${url}" style="width:26px;height:26px;border-radius:50%;object-fit:cover">`;
+} else {
+  document.getElementById("sidebarAvatar").innerText = ini;
+  document.getElementById("topAvatar").innerText     = ini;
+}
+
+/* ══ USER DATA ══ */
+let userData = {};
+let stageData = {};
+
+async function loadUserData() {
+  try {
+    const r  = await fetch(`http://localhost:3000/profil-complet/${currentUser.id}`);
+    const d  = await r.json();
+    if (d.success) userData = d.user;
+
+    const r2 = await fetch(`http://localhost:3000/mes-stages/${currentUser.id}`);
+    const d2 = await r2.json();
+    if (d2.success && d2.stages.length) stageData = d2.stages[0];
+  } catch(e) {}
+}
+
+/* ══ MODAL ══ */
+let currentDocType = "";
+
+const modalConfigs = {
+  convention: {
+    title: "📄 Convention de stage",
+    fields: [
+      { section: "Informations étudiant" },
+      { id:"nom", label:"Nom complet", placeholder:"Sara Ben Ahmed" },
+      { id:"filiere", label:"Filière", placeholder:"Informatique" },
+      { id:"numEtu", label:"N° étudiant", placeholder:"2024-INFO-001" },
+      { id:"tel", label:"Téléphone", placeholder:"+216 XX XXX XXX" },
+      { section: "Informations stage" },
+      { id:"entreprise", label:"Entreprise", placeholder:"Société TechSoft" },
+      { id:"adresseEnt", label:"Adresse entreprise", placeholder:"Tunis, Tunisie" },
+      { id:"tuteur", label:"Tuteur entreprise", placeholder:"M. Ahmed Masmoudi" },
+      { id:"dateDebut", label:"Date début", type:"date" },
+      { id:"dateFin", label:"Date fin", type:"date" },
+      { section: "Informations université" },
+      { id:"universite", label:"Université / Institut", placeholder:"ISET Nabeul" },
+      { id:"encadrant", label:"Encadrant universitaire", placeholder:"Dr. Mohamed Ben Ali" },
+    ]
+  },
+  lettre: {
+    title: "✉️ Lettre de demande de stage",
+    fields: [
+      { section: "Vos informations" },
+      { id:"nom", label:"Nom complet", placeholder:"Sara Ben Ahmed" },
+      { id:"adresse", label:"Adresse", placeholder:"12 Rue de la République, Tunis" },
+      { id:"tel", label:"Téléphone", placeholder:"+216 XX XXX XXX" },
+      { id:"email", label:"Email", placeholder:"sara@etudiant.tn" },
+      { section: "Informations entreprise" },
+      { id:"entreprise", label:"Nom de l'entreprise", placeholder:"Société TechSoft" },
+      { id:"responsable", label:"Nom du responsable", placeholder:"M. le Directeur" },
+      { id:"ville", label:"Ville", placeholder:"Tunis" },
+      { section: "Stage" },
+      { id:"poste", label:"Poste demandé", placeholder:"Développeur Web" },
+      { id:"dateDebut", label:"Date début souhaitée", type:"date" },
+      { id:"duree", label:"Durée", placeholder:"3 mois" },
+    ]
+  },
+  attestation: {
+    title: "🏅 Attestation de stage",
+    fields: [
+      { section: "Informations étudiant" },
+      { id:"nom", label:"Nom complet étudiant", placeholder:"Sara Ben Ahmed" },
+      { id:"cin", label:"CIN", placeholder:"12345678" },
+      { id:"filiere", label:"Filière", placeholder:"Informatique" },
+      { section: "Informations stage" },
+      { id:"entreprise", label:"Entreprise", placeholder:"Société TechSoft" },
+      { id:"poste", label:"Poste occupé", placeholder:"Développeur Web" },
+      { id:"dateDebut", label:"Date début", type:"date" },
+      { id:"dateFin", label:"Date fin", type:"date" },
+      { id:"responsable", label:"Responsable (signataire)", placeholder:"M. Ahmed Masmoudi" },
+      { id:"qualite", label:"Qualité du responsable", placeholder:"Directeur Général" },
+    ]
+  },
+  motivation: {
+    title: "🎯 Lettre de motivation",
+    fields: [
+      { section: "Vos informations" },
+      { id:"nom", label:"Nom complet", placeholder:"Sara Ben Ahmed" },
+      { id:"email", label:"Email", placeholder:"sara@etudiant.tn" },
+      { id:"tel", label:"Téléphone", placeholder:"+216 XX XXX XXX" },
+      { section: "Entreprise cible" },
+      { id:"entreprise", label:"Nom de l'entreprise", placeholder:"Société TechSoft" },
+      { id:"ville", label:"Ville", placeholder:"Tunis" },
+      { section: "Candidature" },
+      { id:"poste", label:"Poste visé", placeholder:"Développeur Web Full Stack" },
+      { id:"competences", label:"Compétences clés", placeholder:"React, Node.js, MySQL" },
+      { id:"motivation", label:"Votre motivation (1-2 phrases)", placeholder:"Passionnée par le développement web..." },
+    ]
+  }
+};
+
+function openModal(type) {
+  currentDocType = type;
+  const config = modalConfigs[type];
+  document.getElementById("modalTitle").innerHTML = config.title;
+
+  let html = "";
+  config.fields.forEach(f => {
+    if (f.section) {
+      html += `<div class="form-section-title">${f.section}</div>`;
+    } else {
+      html += `
+        <div class="form-group">
+          <label class="form-label">${f.label}</label>
+          <input class="form-input" id="field_${f.id}" type="${f.type||'text'}"
+            placeholder="${f.placeholder||''}" oninput="updatePreview()">
+        </div>`;
+    }
+  });
+
+  html += `
+    <div class="preview-mini" id="docPreview">
+      Remplissez les champs ci-dessus pour voir l'aperçu du document...
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal()">Annuler</button>
+      <button class="btn-download" onclick="downloadPDF()">
+        <i class="fa fa-file-pdf"></i> Télécharger PDF
+      </button>
+    </div>`;
+
+  document.getElementById("modalBody").innerHTML = html;
+  document.getElementById("modalOverlay").classList.add("show");
+
+  // pré-remplir avec données user
+  prefillModal(type);
+}
+
+function prefillModal(type) {
+  const set = (id, val) => {
+    const el = document.getElementById("field_" + id);
+    if (el && val) el.value = val;
+  };
+
+  set("nom",       `${userData.prenom||currentUser.prenom} ${userData.nom||currentUser.nom}`);
+  set("email",     userData.email || "");
+  set("tel",       userData.telephone || "");
+  set("filiere",   userData.filiere || "");
+  set("numEtu",    userData.num_etudiant || "");
+  set("entreprise",stageData.entreprise || "");
+  set("ville",     stageData.ville || "");
+  set("encadrant", "Dr. " + (userData.encadrant_nom || ""));
+
+  if (stageData.date_debut)    set("dateDebut", stageData.date_debut?.split("T")[0]);
+  if (stageData.date_fin_prevue) set("dateFin", stageData.date_fin_prevue?.split("T")[0]);
+
+  setTimeout(updatePreview, 100);
+}
+
+function getVal(id) {
+  const el = document.getElementById("field_" + id);
+  return el ? el.value.trim() : "";
+}
+
+function fmtDate(dateStr) {
+  if (!dateStr) return "—";
+  try { return new Date(dateStr).toLocaleDateString("fr-FR"); } catch(e) { return dateStr; }
+}
+
+/* ══ PREVIEW ══ */
+function updatePreview() {
+  const preview = document.getElementById("docPreview");
+  if (!preview) return;
+
+  const type = currentDocType;
+  let html = "";
+
+  if (type === "convention") {
+    const nom = getVal("nom"), ent = getVal("entreprise"), dd = getVal("dateDebut"), df = getVal("dateFin");
+    html = `Convention de stage entre <strong>${nom||"[Nom étudiant]"}</strong>, l'université et <strong>${ent||"[Entreprise]"}</strong> — du <strong>${fmtDate(dd)}</strong> au <strong>${fmtDate(df)}</strong>.`;
+  } else if (type === "lettre") {
+    const nom = getVal("nom"), ent = getVal("entreprise"), poste = getVal("poste");
+    html = `<strong>${nom||"[Nom]"}</strong> sollicite un stage de <strong>${getVal("duree")||"[Durée]"}</strong> en tant que <strong>${poste||"[Poste]"}</strong> au sein de <strong>${ent||"[Entreprise]"}</strong>.`;
+  } else if (type === "attestation") {
+    const nom = getVal("nom"), ent = getVal("entreprise"), poste = getVal("poste"), dd = getVal("dateDebut"), df = getVal("dateFin");
+    html = `<strong>${ent||"[Entreprise]"}</strong> atteste que <strong>${nom||"[Nom]"}</strong> a effectué un stage en tant que <strong>${poste||"[Poste]"}</strong> du <strong>${fmtDate(dd)}</strong> au <strong>${fmtDate(df)}</strong>.`;
+  } else if (type === "motivation") {
+    const nom = getVal("nom"), ent = getVal("entreprise"), poste = getVal("poste");
+    html = `<strong>${nom||"[Nom]"}</strong> candidate au poste de <strong>${poste||"[Poste]"}</strong> chez <strong>${ent||"[Entreprise]"}</strong>. ${getVal("motivation")||""}`;
+  }
+
+  preview.innerHTML = html;
+}
+
+/* ══ DOWNLOAD PDF ══ */
+function downloadPDF() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation:"portrait", unit:"mm", format:"a4" });
+  const W = 210, M = 20;
+  const type = currentDocType;
+
+  // Header université
+  doc.setFillColor(79, 124, 255);
+  doc.rect(0, 0, W, 28, "F");
+  doc.setTextColor(255,255,255);
+  doc.setFontSize(11);
+  doc.setFont("helvetica","bold");
+  doc.text("République Tunisienne", M, 10);
+  doc.setFontSize(8);
+  doc.setFont("helvetica","normal");
+  doc.text("Ministère de l'Enseignement Supérieur", M, 16);
+  doc.text(getVal("universite") || "Institut Supérieur", M, 21);
+
+  // Titre document
+  doc.setTextColor(26,29,46);
+  let titre = "";
+  if (type === "convention")  titre = "CONVENTION DE STAGE";
+  if (type === "lettre")      titre = "LETTRE DE DEMANDE DE STAGE";
+  if (type === "attestation") titre = "ATTESTATION DE STAGE";
+  if (type === "motivation")  titre = "LETTRE DE MOTIVATION";
+
+  doc.setFontSize(14);
+  doc.setFont("helvetica","bold");
+  doc.text(titre, W/2, 44, { align:"center" });
+
+  // ligne décorative
+  doc.setDrawColor(79,124,255);
+  doc.setLineWidth(0.8);
+  doc.line(M, 48, W-M, 48);
+
+  let y = 58;
+
+  const txt = (text, x, cy, size=10, bold=false) => {
+    doc.setFontSize(size);
+    doc.setFont("helvetica", bold?"bold":"normal");
+    doc.setTextColor(26,29,46);
+    doc.text(text, x, cy);
+  };
+
+  const section = (title, cy) => {
+    doc.setFillColor(240, 244, 255);
+    doc.rect(M, cy-4, W-M*2, 8, "F");
+    doc.setFontSize(9);
+    doc.setFont("helvetica","bold");
+    doc.setTextColor(79,124,255);
+    doc.text(title.toUpperCase(), M+2, cy+1);
+    return cy + 12;
+  };
+
+  const row = (label, val, cy) => {
+    doc.setFontSize(9);
+    doc.setFont("helvetica","bold");
+    doc.setTextColor(100,100,120);
+    doc.text(label + " :", M, cy);
+    doc.setFont("helvetica","normal");
+    doc.setTextColor(26,29,46);
+    const lines = doc.splitTextToSize(val||"—", W-M*2-40);
+    doc.text(lines, M+40, cy);
+    return cy + lines.length * 5 + 2;
+  };
+
+  if (type === "convention") {
+    y = section("Informations sur l'étudiant", y);
+    y = row("Nom complet",    getVal("nom"), y);
+    y = row("Filière",        getVal("filiere"), y);
+    y = row("N° Étudiant",   getVal("numEtu"), y);
+    y = row("Téléphone",      getVal("tel"), y);
+    y += 4;
+    y = section("Informations sur le stage", y);
+    y = row("Entreprise",     getVal("entreprise"), y);
+    y = row("Adresse",        getVal("adresseEnt"), y);
+    y = row("Tuteur",         getVal("tuteur"), y);
+    y = row("Date de début",  fmtDate(getVal("dateDebut")), y);
+    y = row("Date de fin",    fmtDate(getVal("dateFin")), y);
+    y += 4;
+    y = section("Informations universitaires", y);
+    y = row("Établissement",  getVal("universite"), y);
+    y = row("Encadrant",      getVal("encadrant"), y);
+    y += 16;
+
+    // Signatures
+    doc.setFontSize(9);
+    doc.setFont("helvetica","bold");
+    doc.setTextColor(79,124,255);
+    doc.text("SIGNATURES", W/2, y, { align:"center" });
+    y += 8;
+    const sigW = (W - M*2) / 3;
+    ["L'Étudiant(e)", "L'Entreprise", "L'Université"].forEach((s, i) => {
+      const sx = M + i * sigW + sigW/2;
+      doc.setFontSize(8); doc.setFont("helvetica","bold"); doc.setTextColor(60,60,80);
+      doc.text(s, sx, y, { align:"center" });
+      doc.setDrawColor(180,180,200); doc.setLineWidth(0.3);
+      doc.line(sx-20, y+16, sx+20, y+16);
+    });
+
+  } else if (type === "lettre") {
+    // En-tête expéditeur
+    txt(`${getVal("nom")}`, M, y, 10, true); y+=6;
+    txt(getVal("adresse")||"", M, y, 9); y+=5;
+    txt(getVal("tel")||"", M, y, 9); y+=5;
+    txt(getVal("email")||"", M, y, 9); y+=10;
+
+    // Date
+    doc.setFontSize(9); doc.setFont("helvetica","italic"); doc.setTextColor(100,100,120);
+    doc.text(`Tunis, le ${new Date().toLocaleDateString("fr-FR")}`, W-M, y, { align:"right" }); y+=10;
+
+    // Destinataire
+    txt(getVal("responsable")||"M. le Directeur", W-M-60, y, 9, true); y+=5;
+    txt(getVal("entreprise")||"", W-M-60, y, 9); y+=5;
+    txt(getVal("ville")||"", W-M-60, y, 9); y+=14;
+
+    // Objet
+    doc.setFontSize(10); doc.setFont("helvetica","bold"); doc.setTextColor(79,124,255);
+    doc.text(`Objet : Demande de stage — ${getVal("poste")||"[Poste]"}`, M, y); y+=12;
+
+    // Corps
+    const corps = [
+      `Monsieur/Madame,`,
+      ``,
+      `Je me permets de vous adresser ma candidature pour un stage de ${getVal("duree")||"[Durée]"} au sein de votre entreprise ${getVal("entreprise")||"[Entreprise]"}, en tant que ${getVal("poste")||"[Poste]"}.`,
+      ``,
+      `Actuellement étudiant(e) en ${getVal("filiere")||"[Filière]"}, je souhaite mettre en pratique les connaissances théoriques acquises lors de ma formation, et apporter ma contribution à vos équipes.`,
+      ``,
+      `Je suis disponible à partir du ${fmtDate(getVal("dateDebut"))||"[Date]"} et reste à votre disposition pour tout entretien.`,
+      ``,
+      `Dans l'espoir d'une réponse favorable, veuillez agréer, Monsieur/Madame, l'expression de mes salutations distinguées.`,
+      ``,
+      `${getVal("nom")||"[Nom]"}`,
+    ];
+    doc.setFontSize(9); doc.setFont("helvetica","normal"); doc.setTextColor(40,40,60);
+    corps.forEach(line => {
+      if (line === "") { y += 4; return; }
+      const lines = doc.splitTextToSize(line, W-M*2);
+      doc.text(lines, M, y);
+      y += lines.length * 5;
+    });
+
+  } else if (type === "attestation") {
+    y += 6;
+    doc.setFontSize(10); doc.setFont("helvetica","normal"); doc.setTextColor(40,40,60);
+    const text = `Nous soussignés, ${getVal("responsable")||"[Responsable]"}, ${getVal("qualite")||"[Qualité]"} de la société ${getVal("entreprise")||"[Entreprise]"}, attestons par la présente que :`;
+    const lines1 = doc.splitTextToSize(text, W-M*2);
+    doc.text(lines1, M, y); y += lines1.length * 6 + 8;
+
+    doc.setFont("helvetica","bold"); doc.setFontSize(11); doc.setTextColor(79,124,255);
+    doc.text(getVal("nom")||"[Nom étudiant]", W/2, y, { align:"center" }); y += 8;
+    doc.setFontSize(9); doc.setFont("helvetica","normal"); doc.setTextColor(80,80,80);
+    doc.text(`CIN : ${getVal("cin")||"—"} — Filière : ${getVal("filiere")||"—"}`, W/2, y, { align:"center" }); y += 12;
+
+    doc.setFont("helvetica","normal"); doc.setFontSize(10); doc.setTextColor(40,40,60);
+    const text2 = `a effectué un stage au sein de notre entreprise en qualité de ${getVal("poste")||"[Poste]"}, du ${fmtDate(getVal("dateDebut"))} au ${fmtDate(getVal("dateFin"))}.`;
+    const lines2 = doc.splitTextToSize(text2, W-M*2);
+    doc.text(lines2, M, y); y += lines2.length * 6 + 8;
+
+    const text3 = "Durant cette période, cet(te) étudiant(e) a fait preuve de sérieux, de rigueur et de professionnalisme. Nous lui souhaitons plein succès dans la suite de sa carrière.";
+    const lines3 = doc.splitTextToSize(text3, W-M*2);
+    doc.text(lines3, M, y); y += lines3.length * 6 + 20;
+
+    doc.setFontSize(9); doc.setFont("helvetica","bold"); doc.setTextColor(60,60,80);
+    doc.text(`Fait à ${getVal("ville")||"Tunis"}, le ${new Date().toLocaleDateString("fr-FR")}`, M, y); y += 14;
+    doc.text(getVal("responsable")||"[Responsable]", W-M, y, { align:"right" });
+    doc.line(W-M-50, y+12, W-M, y+12);
+
+  } else if (type === "motivation") {
+    txt(`${getVal("nom")}`, M, y, 10, true); y+=6;
+    txt(getVal("email")||"", M, y, 9); y+=5;
+    txt(getVal("tel")||"", M, y, 9); y+=12;
+    doc.setFontSize(9); doc.setFont("helvetica","italic"); doc.setTextColor(100,100,120);
+    doc.text(`Tunis, le ${new Date().toLocaleDateString("fr-FR")}`, W-M, y, { align:"right" }); y+=10;
+    txt(`${getVal("entreprise")||"[Entreprise]"}`, W-M-60, y, 9, true); y+=5;
+    txt(getVal("ville")||"", W-M-60, y, 9); y+=14;
+    doc.setFontSize(10); doc.setFont("helvetica","bold"); doc.setTextColor(79,124,255);
+    doc.text(`Objet : Candidature — ${getVal("poste")||"[Poste]"}`, M, y); y+=12;
+
+    const corps2 = [
+      "Madame, Monsieur,",
+      "",
+      `Actuellement étudiant(e) en ${getVal("filiere")||"informatique"}, je vous adresse ma candidature pour le poste de ${getVal("poste")||"[Poste]"} au sein de ${getVal("entreprise")||"[Entreprise]"}.`,
+      "",
+      getVal("motivation") || "Passionné(e) par mon domaine, je souhaite mettre mes compétences au service de votre entreprise.",
+      "",
+      `Mes compétences techniques incluent : ${getVal("competences")||"[Compétences]"}.`,
+      "",
+      "Je serais ravi(e) de vous rencontrer lors d'un entretien afin de vous présenter plus en détail mon profil et ma motivation.",
+      "",
+      "Veuillez agréer, Madame, Monsieur, l'expression de mes salutations distinguées.",
+      "",
+      getVal("nom")||"[Nom]",
+    ];
+    doc.setFontSize(9); doc.setFont("helvetica","normal"); doc.setTextColor(40,40,60);
+    corps2.forEach(line => {
+      if (line === "") { y += 4; return; }
+      const lines = doc.splitTextToSize(line, W-M*2);
+      doc.text(lines, M, y);
+      y += lines.length * 5;
+    });
+  }
+
+  // Footer
+  doc.setFontSize(7); doc.setTextColor(150,150,170); doc.setFont("helvetica","italic");
+  doc.text("Généré par StageFlow — Plateforme de gestion des stages universitaires", W/2, 285, { align:"center" });
+
+  const nom = getVal("nom") || `${currentUser.prenom}_${currentUser.nom}`;
+  doc.save(`${titre.replace(/ /g,"_")}_${nom}.pdf`);
+  showToast("✅ Document téléchargé !", "success");
+}
+
+/* ══ MODAL CONTROLS ══ */
+function closeModal() {
+  document.getElementById("modalOverlay").classList.remove("show");
+}
+function closeModalOutside(e) {
+  if (e.target === document.getElementById("modalOverlay")) closeModal();
+}
+
+/* ══ TOAST ══ */
+function showToast(msg, type="") {
+  const t = document.getElementById("toast");
+  t.className = `toast ${type} show`;
+  t.innerText = msg;
+  setTimeout(() => t.classList.remove("show"), 3000);
+}
+
+function logout() { localStorage.clear(); window.location.href = "login.html"; }
+
+/* ══ INIT ══ */
+loadUserData();
+</script>
+</body>
+</html>

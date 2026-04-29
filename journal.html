@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Journal de bord | StageFlow</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:        #f4f6fb;
+  --white:     #ffffff;
+  --border:    #e5e9f2;
+  --accent:    #4f7cff;
+  --accent2:   #7c5cfc;
+  --green:     #10b981;
+  --orange:    #f59e0b;
+  --red:       #ef4444;
+  --text:      #1a1d2e;
+  --muted:     #8892a4;
+  --sidebar-w: 240px;
+}
+
+body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); display: flex; min-height: 100vh; }
+
+/* ══ SIDEBAR ══ */
+.sidebar { width: var(--sidebar-w); background: var(--white); border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 24px 14px; position: fixed; top: 0; left: 0; bottom: 0; z-index: 100; }
+.logo { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.35rem; color: var(--text); padding: 0 8px 22px; border-bottom: 1px solid var(--border); margin-bottom: 18px; }
+.logo span { color: var(--accent); }
+.nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 10px; color: var(--muted); text-decoration: none; font-size: 0.875rem; font-weight: 500; transition: all 0.18s; margin-bottom: 2px; cursor: pointer; border: none; background: none; width: 100%; text-align: left; }
+.nav-item:hover  { background: var(--bg); color: var(--text); }
+.nav-item.active { background: rgba(79,124,255,0.1); color: var(--accent); font-weight: 600; }
+.nav-item i { width: 16px; text-align: center; font-size: 0.85rem; }
+.sidebar-bottom { margin-top: auto; border-top: 1px solid var(--border); padding-top: 14px; }
+.user-chip { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: var(--bg); border-radius: 10px; margin-bottom: 6px; }
+.avatar-circle { width: 34px; height: 34px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), var(--accent2)); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.8rem; color: #fff; flex-shrink: 0; overflow: hidden; }
+.user-chip-name { font-size: 0.82rem; font-weight: 600; color: var(--text); }
+.user-chip-role { font-size: 0.7rem; color: var(--muted); }
+
+/* ══ MAIN ══ */
+.main { margin-left: var(--sidebar-w); flex: 1; display: flex; flex-direction: column; }
+
+/* ══ TOPBAR ══ */
+.topbar { background: var(--white); border-bottom: 1px solid var(--border); padding: 0 28px; height: 60px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 50; }
+.topbar-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1.05rem; color: var(--text); }
+.topbar-title span { color: var(--accent); }
+.user-pill { display: flex; align-items: center; gap: 8px; padding: 5px 12px 5px 6px; background: var(--bg); border: 1px solid var(--border); border-radius: 20px; font-size: 0.82rem; font-weight: 500; color: var(--text); }
+.user-pill .avatar-circle { width: 26px; height: 26px; font-size: 0.7rem; }
+
+/* ══ CONTENT ══ */
+.content { padding: 28px; flex: 1; }
+.grid2 { display: grid; grid-template-columns: 1fr 1.4fr; gap: 20px; align-items: start; }
+
+/* ══ CARD ══ */
+.card { background: var(--white); border: 1px solid var(--border); border-radius: 16px; padding: 22px; margin-bottom: 18px; animation: fadeUp 0.4s ease both; }
+.card-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.95rem; color: var(--text); display: flex; align-items: center; gap: 8px; margin-bottom: 18px; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
+.card-title i { color: var(--accent); }
+@keyframes fadeUp { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
+
+/* ══ FORM ══ */
+.form-group { margin-bottom: 14px; }
+.form-label { font-size: 0.8rem; font-weight: 600; color: var(--text); margin-bottom: 6px; display: flex; align-items: center; gap: 5px; }
+.form-label i { color: var(--accent); font-size: 0.75rem; }
+.form-input { border: 1px solid var(--border); border-radius: 10px; padding: 9px 13px; font-family: 'DM Sans', sans-serif; font-size: 0.875rem; color: var(--text); background: var(--bg); outline: none; transition: border-color 0.15s, box-shadow 0.15s; width: 100%; }
+.form-input:focus { border-color: var(--accent); background: var(--white); box-shadow: 0 0 0 3px rgba(79,124,255,0.1); }
+.form-textarea { border: 1px solid var(--border); border-radius: 10px; padding: 10px 13px; font-family: 'DM Sans', sans-serif; font-size: 0.875rem; color: var(--text); background: var(--bg); outline: none; transition: border-color 0.15s, box-shadow 0.15s; width: 100%; resize: vertical; min-height: 110px; line-height: 1.6; }
+.form-textarea:focus { border-color: var(--accent); background: var(--white); box-shadow: 0 0 0 3px rgba(79,124,255,0.1); }
+.form-textarea::placeholder { color: var(--muted); }
+
+/* ══ VOCAL ══ */
+.vocal-wrap {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 10px;
+}
+.btn-vocal {
+  display: flex; align-items: center; gap: 7px;
+  padding: 8px 16px; border-radius: 9px; border: 1px solid rgba(239,68,68,0.2);
+  background: rgba(239,68,68,0.07); color: var(--red);
+  font-family: 'DM Sans', sans-serif; font-size: 0.78rem;
+  font-weight: 600; cursor: pointer; transition: all 0.18s;
+  flex-shrink: 0;
+}
+.btn-vocal:hover { background: rgba(239,68,68,0.14); border-color: rgba(239,68,68,0.4); }
+.btn-vocal.recording {
+  background: var(--red); color: #fff; border-color: var(--red);
+  animation: recPulse 1.2s infinite;
+}
+@keyframes recPulse {
+  0%,100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.35); }
+  50%      { box-shadow: 0 0 0 8px rgba(239,68,68,0); }
+}
+
+.vocal-status {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 0.75rem; color: var(--muted);
+}
+.vocal-status.active { color: var(--red); }
+
+.vocal-waves { display: none; gap: 3px; align-items: center; height: 16px; }
+.vocal-waves.show { display: flex; }
+.vocal-wave {
+  width: 3px; border-radius: 3px; background: var(--red);
+  animation: wave 0.8s ease-in-out infinite;
+}
+.vocal-wave:nth-child(1){height:5px;animation-delay:0s}
+.vocal-wave:nth-child(2){height:12px;animation-delay:0.1s}
+.vocal-wave:nth-child(3){height:7px;animation-delay:0.2s}
+.vocal-wave:nth-child(4){height:14px;animation-delay:0.15s}
+.vocal-wave:nth-child(5){height:5px;animation-delay:0.05s}
+@keyframes wave {
+  0%,100% { transform: scaleY(1); opacity: 0.8; }
+  50%      { transform: scaleY(1.8); opacity: 1; }
+}
+
+/* lang selector vocal */
+.vocal-lang {
+  padding: 5px 9px; border: 1px solid var(--border); border-radius: 8px;
+  font-family: 'DM Sans', sans-serif; font-size: 0.72rem;
+  color: var(--muted); background: var(--bg); outline: none; cursor: pointer;
+}
+.vocal-lang:focus { border-color: var(--accent); }
+
+/* humeur */
+.mood-btns { display: flex; gap: 8px; flex-wrap: wrap; }
+.mood-btn { padding: 6px 14px; border-radius: 20px; border: 2px solid var(--border); background: var(--bg); cursor: pointer; font-size: 0.82rem; transition: all 0.18s; }
+.mood-btn:hover { border-color: var(--accent); }
+.mood-btn.selected { border-color: var(--accent); background: rgba(79,124,255,0.08); font-weight: 600; }
+
+/* tags */
+.tags-input-wrap { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 10px; border: 1px solid var(--border); border-radius: 10px; background: var(--bg); cursor: text; min-height: 42px; align-items: center; }
+.tags-input-wrap:focus-within { border-color: var(--accent); background: var(--white); }
+.tag-item { background: rgba(79,124,255,0.1); color: var(--accent); padding: 3px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; display: flex; align-items: center; gap: 5px; }
+.tag-item span { cursor: pointer; opacity: 0.6; }
+.tag-item span:hover { opacity: 1; }
+.tag-input { border: none; outline: none; background: transparent; font-family: 'DM Sans', sans-serif; font-size: 0.82rem; min-width: 100px; flex: 1; }
+
+/* btn save */
+.btn-save { display: flex; align-items: center; gap: 8px; background: var(--accent); color: #fff; border: none; border-radius: 10px; padding: 10px 22px; font-family: 'DM Sans', sans-serif; font-size: 0.875rem; font-weight: 600; cursor: pointer; transition: opacity 0.18s, transform 0.18s; margin-top: 6px; }
+.btn-save:hover { opacity: 0.85; transform: translateY(-1px); }
+.btn-save:disabled { background: var(--border); color: var(--muted); cursor: not-allowed; transform: none; }
+
+/* ══ ENTRIES LIST ══ */
+.entry-item { padding: 16px; border: 1px solid var(--border); border-radius: 14px; margin-bottom: 12px; background: var(--white); transition: box-shadow 0.2s, border-color 0.2s; animation: fadeUp 0.3s ease both; cursor: pointer; }
+.entry-item:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.07); border-color: rgba(79,124,255,0.2); }
+.entry-item.has-feedback { border-left: 3px solid var(--green); }
+.entry-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.entry-date { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.82rem; color: var(--accent); }
+.entry-mood { font-size: 1rem; }
+.entry-title { font-weight: 600; font-size: 0.875rem; color: var(--text); margin-bottom: 4px; }
+.entry-desc { font-size: 0.8rem; color: var(--muted); line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.entry-tags { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
+.entry-tag { background: var(--bg); border: 1px solid var(--border); color: var(--muted); font-size: 0.7rem; padding: 2px 8px; border-radius: 10px; }
+.entry-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--border); }
+.feedback-badge { display: flex; align-items: center; gap: 5px; font-size: 0.72rem; font-weight: 600; color: var(--green); }
+.no-feedback { font-size: 0.72rem; color: var(--muted); }
+.entry-actions { display: flex; gap: 6px; }
+.action-btn { width: 28px; height: 28px; border-radius: 7px; border: 1px solid var(--border); background: var(--bg); color: var(--muted); display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 0.72rem; transition: all 0.15s; }
+.action-btn:hover { border-color: var(--red); color: var(--red); }
+.action-btn.edit:hover { border-color: var(--accent); color: var(--accent); }
+
+/* ══ MODAL ══ */
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); backdrop-filter: blur(3px); z-index: 500; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.25s; }
+.modal-overlay.show { opacity: 1; pointer-events: all; }
+.modal { background: var(--white); border-radius: 18px; width: 100%; max-width: 560px; max-height: 85vh; overflow-y: auto; padding: 28px; transform: translateY(20px) scale(0.97); transition: transform 0.25s; margin: 16px; }
+.modal-overlay.show .modal { transform: translateY(0) scale(1); }
+.modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+.modal-title { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.05rem; color: var(--text); }
+.modal-close { width: 30px; height: 30px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); color: var(--muted); display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 0.8rem; }
+.modal-close:hover { border-color: var(--red); color: var(--red); }
+.detail-section { margin-bottom: 18px; }
+.detail-label { font-size: 0.72rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
+.detail-text { font-size: 0.875rem; color: var(--text); line-height: 1.65; white-space: pre-wrap; }
+.feedback-box { background: rgba(16,185,129,0.05); border: 1px solid rgba(16,185,129,0.2); border-radius: 10px; padding: 14px; margin-top: 6px; }
+.feedback-text { font-size: 0.855rem; color: var(--text); line-height: 1.6; }
+.feedback-meta { font-size: 0.72rem; color: var(--muted); margin-top: 6px; }
+
+/* empty */
+.empty { text-align: center; padding: 40px 20px; color: var(--muted); }
+.empty i { font-size: 2rem; opacity: 0.25; display: block; margin-bottom: 10px; }
+
+/* badge */
+.badge { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 20px; font-size: 0.72rem; font-weight: 600; }
+.badge.blue { background: rgba(79,124,255,0.1); color: var(--accent); }
+
+/* toast */
+.toast { position: fixed; bottom: 24px; right: 24px; background: var(--text); color: #fff; padding: 12px 20px; border-radius: 10px; font-size: 0.85rem; font-weight: 500; box-shadow: 0 4px 20px rgba(0,0,0,0.15); transform: translateY(80px); opacity: 0; transition: all 0.3s ease; z-index: 999; }
+.toast.show    { transform: translateY(0); opacity: 1; }
+.toast.success { background: var(--green); }
+.toast.error   { background: var(--red); }
+</style>
+</head>
+
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="logo">Stage<span>Flow</span></div>
+ <nav>
+    <a class="nav-item active" href="etudiant.html"><i class="fa fa-house"></i> Dashboard</a>
+    <a class="nav-item" href="profil.html"><i class="fa fa-user"></i> Profil</a>
+    <a class="nav-item" href="stage.html"><i class="fa fa-briefcase"></i> Mon stage</a>
+    <a class="nav-item" href="journal.html"><i class="fa fa-book-open"></i> Journal de bord</a>
+    <a class="nav-item" href="messagerie.html"><i class="fa fa-comments"></i> Messagerie</a>
+    <a class="nav-item" href="suggestion.html"><i class="fa fa-lightbulb"></i> Suggestions</a>
+    <a class="nav-item" href="notifications.html"><i class="fa fa-bell"></i> Notifications</a>
+    <a class="nav-item" href="cv.html">
+  <i class="fa fa-file-user"></i> CV Generator
+</a>
+<a class="nav-item" href="soutenance.html">
+  <i class="fa fa-graduation-cap"></i> Soutenance en ligne
+</a>
+<a class="nav-item" href="document.html">
+  <i class="fa fa-file-contract"></i> Documents officiels
+</a>
+  <a class="nav-item" href="chatbot.html">
+  <i class="fa fa-robot"></i> Assistant IA
+</a>
+<a class="nav-item" href="carte-etudiant.html">
+  <i class="fa fa-id-card"></i> Ma carte étudiant
+</a>
+<a class="nav-item" href="planning.html">
+  <i class="fa fa-calendar-days"></i> Planning de stage
+</a>
+<a class="nav-item" href="ressource.html">
+  <i class="fa fa-book-bookmark"></i> Ressources
+</a>
+<a class="nav-item" href="carte-stagiaires.html">
+  <i class="fa fa-map-location-dot"></i> Carte des stagiaires
+</a>
+<a class="nav-item" href="rendez-vous.html">
+  <i class="fa fa-calendar-check"></i> Rendez-vous
+</a>
+  </nav>
+  <div class="sidebar-bottom">
+    <div class="user-chip">
+      <div class="avatar-circle" id="sidebarAvatar">?</div>
+      <div>
+        <div class="user-chip-name" id="sidebarNom">...</div>
+        <div class="user-chip-role">Étudiant</div>
+      </div>
+    </div>
+    <button class="nav-item" onclick="logout()" style="color:var(--red)">
+      <i class="fa fa-right-from-bracket"></i> Déconnexion
+    </button>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-title">📓 Journal de <span>bord</span></div>
+    <div class="user-pill">
+      <div class="avatar-circle" id="topAvatar">?</div>
+      <span id="topNom">...</span>
+    </div>
+  </div>
+
+  <div class="content">
+    <div class="grid2">
+
+      <!-- FORMULAIRE -->
+      <div>
+        <div class="card">
+          <div class="card-title"><i class="fa fa-pen"></i> Nouvelle entrée</div>
+
+          <div class="form-group">
+            <label class="form-label"><i class="fa fa-calendar"></i> Date</label>
+            <input class="form-input" type="date" id="entreeDate">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label"><i class="fa fa-heading"></i> Titre <span style="color:var(--red)">*</span></label>
+            <input class="form-input" id="entreeTitre" placeholder="Ex: Développement du module authentification">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label"><i class="fa fa-align-left"></i> Ce que j'ai fait aujourd'hui <span style="color:var(--red)">*</span></label>
+
+            <!-- VOCAL WRAP -->
+            <div class="vocal-wrap">
+              <button class="btn-vocal" id="btnVocal" onclick="toggleVoice()" type="button">
+                <i class="fa fa-microphone"></i>
+                <span id="btnVocalText">Dicter</span>
+              </button>
+              <select class="vocal-lang" id="vocalLang">
+                <option value="fr-FR">🇫🇷 Français</option>
+                <option value="ar-TN">🇹🇳 Arabe</option>
+                <option value="en-US">🇺🇸 English</option>
+              </select>
+              <div class="vocal-status" id="vocalStatus">
+                <div class="vocal-waves" id="vocalWaves">
+                  <div class="vocal-wave"></div>
+                  <div class="vocal-wave"></div>
+                  <div class="vocal-wave"></div>
+                  <div class="vocal-wave"></div>
+                  <div class="vocal-wave"></div>
+                </div>
+                <span id="vocalStatusText">Cliquez pour dicter</span>
+              </div>
+            </div>
+
+            <textarea class="form-textarea" id="entreeContenu"
+              placeholder="Décrivez vos activités, avancées, difficultés rencontrées...&#10;Ou utilisez le bouton microphone pour dicter 🎤"></textarea>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label"><i class="fa fa-tags"></i> Tâches réalisées</label>
+            <div class="tags-input-wrap" id="tagsWrap" onclick="document.getElementById('tagInput').focus()">
+              <input id="tagInput" class="tag-input" placeholder="Ajouter une tâche + Entrée" onkeydown="addTag(event)">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label"><i class="fa fa-face-smile"></i> Humeur du jour</label>
+            <div class="mood-btns">
+              <button class="mood-btn" onclick="selectMood(this,'😊')" data-mood="😊">😊 Bien</button>
+              <button class="mood-btn" onclick="selectMood(this,'😐')" data-mood="😐">😐 Neutre</button>
+              <button class="mood-btn" onclick="selectMood(this,'😤')" data-mood="😤">😤 Difficile</button>
+              <button class="mood-btn" onclick="selectMood(this,'🔥')" data-mood="🔥">🔥 Excellent</button>
+              <button class="mood-btn" onclick="selectMood(this,'😴')" data-mood="😴">😴 Fatigué</button>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label"><i class="fa fa-chart-line"></i> Progression aujourd'hui (%)</label>
+            <input class="form-input" type="number" id="entreeProgression" min="0" max="100" placeholder="Ex: 5">
+          </div>
+
+          <button class="btn-save" onclick="saveEntry()">
+            <i class="fa fa-floppy-disk"></i> Enregistrer l'entrée
+          </button>
+        </div>
+      </div>
+
+      <!-- LISTE ENTRÉES -->
+      <div>
+        <div class="card">
+          <div class="card-title" style="justify-content:space-between">
+            <span><i class="fa fa-list"></i> Mes entrées</span>
+            <span id="entreeCount" class="badge blue">0</span>
+          </div>
+          <div id="entriesList">
+            <div class="empty"><i class="fa fa-book-open"></i><p>Aucune entrée pour l'instant</p></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+  <div class="modal" id="modalBox">
+    <div class="modal-header">
+      <div class="modal-title" id="modalTitle">Détail de l'entrée</div>
+      <div class="modal-close" onclick="closeModalDirect()"><i class="fa fa-times"></i></div>
+    </div>
+    <div id="modalBody"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+
+/* ══ LOGIN ══ */
+const currentUser = {
+  id:     parseInt(localStorage.getItem("user_id")),
+  nom:    localStorage.getItem("user_nom")    || "",
+  prenom: localStorage.getItem("user_prenom") || "",
+  photo:  localStorage.getItem("user_photo")  || "",
+};
+if (!currentUser.id) window.location.href = "login.html";
+
+const ini = (currentUser.prenom[0]||"") + (currentUser.nom[0]||"");
+document.getElementById("sidebarNom").innerText = currentUser.prenom + " " + currentUser.nom;
+document.getElementById("topNom").innerText     = currentUser.prenom + " " + currentUser.nom;
+if (currentUser.photo) {
+  const url = "http://localhost:3000/uploads/" + currentUser.photo;
+  document.getElementById("sidebarAvatar").innerHTML = `<img src="${url}" style="width:34px;height:34px;border-radius:50%;object-fit:cover">`;
+  document.getElementById("topAvatar").innerHTML     = `<img src="${url}" style="width:26px;height:26px;border-radius:50%;object-fit:cover">`;
+} else {
+  document.getElementById("sidebarAvatar").innerText = ini;
+  document.getElementById("topAvatar").innerText     = ini;
+}
+
+document.getElementById("entreeDate").value = new Date().toISOString().split("T")[0];
+
+/* ══ TAGS ══ */
+let tags = [];
+let selectedMood = "";
+
+function addTag(e) {
+  if (e.key !== "Enter") return;
+  e.preventDefault();
+  const val = e.target.value.trim();
+  if (!val || tags.includes(val)) return;
+  tags.push(val);
+  renderTags();
+  e.target.value = "";
+}
+function renderTags() {
+  const wrap = document.getElementById("tagsWrap");
+  const input = document.getElementById("tagInput");
+  wrap.innerHTML = "";
+  tags.forEach((t, i) => {
+    const el = document.createElement("div");
+    el.className = "tag-item";
+    el.innerHTML = `${t} <span onclick="removeTag(${i})">×</span>`;
+    wrap.appendChild(el);
+  });
+  wrap.appendChild(input);
+}
+function removeTag(i) { tags.splice(i, 1); renderTags(); }
+function selectMood(btn, mood) {
+  selectedMood = mood;
+  document.querySelectorAll(".mood-btn").forEach(b => b.classList.remove("selected"));
+  btn.classList.add("selected");
+}
+
+/* ══ SPEECH TO TEXT ══ */
+let recognition = null;
+let isRecording  = false;
+let finalText    = "";
+
+function initSpeech() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) {
+    document.getElementById("btnVocal").title = "Non supporté dans ce navigateur";
+    document.getElementById("btnVocal").style.opacity = "0.4";
+    document.getElementById("btnVocal").disabled = true;
+    document.getElementById("vocalStatusText").innerText = "Non supporté (utilisez Chrome)";
+    return;
+  }
+
+  recognition = new SR();
+  recognition.continuous    = true;
+  recognition.interimResults = true;
+
+  recognition.onstart = () => {
+    isRecording = true;
+    finalText   = "";
+    document.getElementById("btnVocal").classList.add("recording");
+    document.getElementById("btnVocalText").innerText = "Arrêter";
+    document.getElementById("btnVocal").querySelector("i").className = "fa fa-stop";
+    document.getElementById("vocalWaves").classList.add("show");
+    document.getElementById("vocalStatusText").innerText = "Enregistrement...";
+    document.getElementById("vocalStatus").classList.add("active");
+  };
+
+  recognition.onresult = (e) => {
+    let interim = "";
+    finalText   = "";
+    for (let i = 0; i < e.results.length; i++) {
+      if (e.results[i].isFinal) finalText += e.results[i][0].transcript + " ";
+      else interim += e.results[i][0].transcript;
+    }
+    const textarea = document.getElementById("entreeContenu");
+    textarea.value = finalText + interim;
+    textarea.style.height = "auto";
+    textarea.style.height = Math.min(textarea.scrollHeight, 300) + "px";
+  };
+
+  recognition.onend = () => {
+    isRecording = false;
+    document.getElementById("btnVocal").classList.remove("recording");
+    document.getElementById("btnVocalText").innerText = "Dicter";
+    document.getElementById("btnVocal").querySelector("i").className = "fa fa-microphone";
+    document.getElementById("vocalWaves").classList.remove("show");
+    document.getElementById("vocalStatus").classList.remove("active");
+    document.getElementById("vocalStatusText").innerText = "Cliquez pour dicter";
+    if (finalText.trim()) {
+      document.getElementById("entreeContenu").value = finalText.trim();
+      showToast("✅ Texte transcrit avec succès !", "success");
+    }
+  };
+
+  recognition.onerror = (e) => {
+    isRecording = false;
+    document.getElementById("btnVocal").classList.remove("recording");
+    document.getElementById("btnVocalText").innerText = "Dicter";
+    document.getElementById("btnVocal").querySelector("i").className = "fa fa-microphone";
+    document.getElementById("vocalWaves").classList.remove("show");
+    document.getElementById("vocalStatus").classList.remove("active");
+    document.getElementById("vocalStatusText").innerText = "Cliquez pour dicter";
+    if (e.error !== "no-speech") showToast("Erreur micro: " + e.error, "error");
+  };
+}
+
+function toggleVoice() {
+  if (!recognition) return showToast("Non supporté — utilisez Chrome ou Edge", "error");
+  if (isRecording) {
+    recognition.stop();
+  } else {
+    recognition.lang = document.getElementById("vocalLang").value;
+    recognition.start();
+  }
+}
+
+/* ══ SAVE ENTRY ══ */
+function saveEntry() {
+  const titre       = document.getElementById("entreeTitre").value.trim();
+  const contenu     = document.getElementById("entreeContenu").value.trim();
+  const date        = document.getElementById("entreeDate").value;
+  const progression = parseInt(document.getElementById("entreeProgression").value) || 0;
+
+  if (!titre)   return showToast("Le titre est obligatoire", "error");
+  if (!contenu) return showToast("Le contenu est obligatoire", "error");
+
+  fetch("http://localhost:3000/journal", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      etudiant_id: currentUser.id,
+      titre, contenu, date,
+      tags: tags.join(","),
+      mood: selectedMood,
+      progression
+    })
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.success) {
+      showToast("✅ Entrée enregistrée !", "success");
+      resetForm();
+      loadEntries();
+    } else {
+      showToast(data.message || "Erreur", "error");
+    }
+  });
+}
+
+function resetForm() {
+  document.getElementById("entreeTitre").value      = "";
+  document.getElementById("entreeContenu").value    = "";
+  document.getElementById("entreeProgression").value = "";
+  document.getElementById("entreeDate").value = new Date().toISOString().split("T")[0];
+  tags = []; selectedMood = "";
+  renderTags();
+  document.querySelectorAll(".mood-btn").forEach(b => b.classList.remove("selected"));
+}
+
+/* ══ LOAD ENTRIES ══ */
+function loadEntries() {
+  fetch(`http://localhost:3000/journal/${currentUser.id}`)
+    .then(r => r.json())
+    .then(data => {
+      if (!data.success || !data.entries.length) {
+        document.getElementById("entriesList").innerHTML =
+          `<div class="empty"><i class="fa fa-book-open"></i><p>Aucune entrée pour l'instant</p></div>`;
+        document.getElementById("entreeCount").innerText = 0;
+        return;
+      }
+      document.getElementById("entreeCount").innerText = data.entries.length;
+      document.getElementById("entriesList").innerHTML = data.entries.map((e, i) => {
+        const date = new Date(e.date).toLocaleDateString("fr-FR", { weekday:"short", day:"numeric", month:"short" });
+        const tagsList = e.tags ? e.tags.split(",").map(t => `<span class="entry-tag">${t.trim()}</span>`).join("") : "";
+        return `
+          <div class="entry-item ${e.feedback?'has-feedback':''}" style="animation-delay:${i*0.04}s" onclick="openEntry(${e.id})">
+            <div class="entry-header">
+              <span class="entry-date"><i class="fa fa-calendar" style="margin-right:4px"></i>${date}</span>
+              <span class="entry-mood">${e.mood||""}</span>
+            </div>
+            <div class="entry-title">${e.titre}</div>
+            <div class="entry-desc">${e.contenu}</div>
+            ${tagsList ? `<div class="entry-tags">${tagsList}</div>` : ""}
+            <div class="entry-footer">
+              ${e.feedback
+                ? `<span class="feedback-badge"><i class="fa fa-comment-dots"></i> Feedback reçu</span>`
+                : `<span class="no-feedback">Pas encore de feedback</span>`}
+              <div class="entry-actions" onclick="event.stopPropagation()">
+                <div class="action-btn edit" onclick="editEntry(${e.id})" title="Modifier"><i class="fa fa-pen"></i></div>
+                <div class="action-btn" onclick="deleteEntry(${e.id})" title="Supprimer"><i class="fa fa-trash"></i></div>
+              </div>
+            </div>
+          </div>`;
+      }).join("");
+    });
+}
+
+/* ══ OPEN ENTRY ══ */
+function openEntry(id) {
+  fetch(`http://localhost:3000/journal-entry/${id}`)
+    .then(r => r.json())
+    .then(data => {
+      if (!data.success) return;
+      const e    = data.entry;
+      const date = new Date(e.date).toLocaleDateString("fr-FR", { weekday:"long", day:"numeric", month:"long", year:"numeric" });
+      const tagsList = e.tags ? e.tags.split(",").map(t => `<span class="entry-tag">${t.trim()}</span>`).join("") : "—";
+      document.getElementById("modalTitle").innerText = e.titre;
+      document.getElementById("modalBody").innerHTML = `
+        <div class="detail-section">
+          <div class="detail-label">Date</div>
+          <div class="detail-text">${date} ${e.mood||""}</div>
+        </div>
+        <div class="detail-section">
+          <div class="detail-label">Activités du jour</div>
+          <div class="detail-text">${e.contenu}</div>
+        </div>
+        ${e.tags ? `<div class="detail-section"><div class="detail-label">Tâches réalisées</div><div class="entry-tags" style="margin-top:4px">${tagsList}</div></div>` : ""}
+        ${e.progression ? `<div class="detail-section"><div class="detail-label">Progression ajoutée</div><div class="detail-text">+${e.progression}%</div></div>` : ""}
+        <div class="detail-section">
+          <div class="detail-label" style="color:var(--green)"><i class="fa fa-comment-dots"></i> Feedback encadrant</div>
+          ${e.feedback
+            ? `<div class="feedback-box"><div class="feedback-text">${e.feedback}</div><div class="feedback-meta"><i class="fa fa-clock"></i> ${new Date(e.feedback_date).toLocaleDateString("fr-FR")}</div></div>`
+            : `<div style="color:var(--muted);font-size:0.82rem;padding:10px 0">Aucun feedback pour l'instant.</div>`}
+        </div>`;
+      document.getElementById("modalOverlay").classList.add("show");
+    });
+}
+
+function closeModal(e) { if (e.target === document.getElementById("modalOverlay")) closeModalDirect(); }
+function closeModalDirect() { document.getElementById("modalOverlay").classList.remove("show"); }
+
+/* ══ DELETE ══ */
+function deleteEntry(id) {
+  if (!confirm("Supprimer cette entrée ?")) return;
+  fetch(`http://localhost:3000/journal/${id}`, { method:"DELETE" })
+    .then(() => { showToast("Entrée supprimée", ""); loadEntries(); });
+}
+
+/* ══ EDIT ══ */
+function editEntry(id) {
+  fetch(`http://localhost:3000/journal-entry/${id}`)
+    .then(r => r.json())
+    .then(data => {
+      if (!data.success) return;
+      const e = data.entry;
+      document.getElementById("entreeTitre").value       = e.titre;
+      document.getElementById("entreeContenu").value     = e.contenu;
+      document.getElementById("entreeDate").value        = e.date?.split("T")[0] || "";
+      document.getElementById("entreeProgression").value = e.progression || "";
+      tags = e.tags ? e.tags.split(",").map(t => t.trim()).filter(Boolean) : [];
+      renderTags();
+      document.querySelector(".card").scrollIntoView({ behavior:"smooth" });
+      showToast("Modifiez et réenregistrez", "");
+      fetch(`http://localhost:3000/journal/${id}`, { method:"DELETE" });
+    });
+}
+
+/* ══ TOAST ══ */
+function showToast(msg, type="") {
+  const t = document.getElementById("toast");
+  t.className = `toast ${type} show`;
+  t.innerText = msg;
+  setTimeout(() => t.classList.remove("show"), 3000);
+}
+
+function logout() { localStorage.clear(); window.location.href = "login.html"; }
+
+/* ══ INIT ══ */
+initSpeech();
+loadEntries();
+</script>
+</body>
+</html>

@@ -1,0 +1,1023 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>StageFlow | Espace Encadrant</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f4f6fb;--white:#fff;--border:#e5e9f2;
+  --accent:#4f7cff;--accent2:#7c5cfc;--green:#10b981;
+  --orange:#f59e0b;--red:#ef4444;--text:#1a1d2e;--muted:#8892a4;
+  --sidebar-w:240px;
+}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);display:flex;min-height:100vh}
+
+/* SIDEBAR */
+.sidebar{width:var(--sidebar-w);background:var(--white);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:24px 14px;position:fixed;top:0;left:0;bottom:0;z-index:100;overflow-y:auto}
+.logo{font-family:'Syne',sans-serif;font-weight:800;font-size:1.35rem;color:var(--text);padding:0 8px 22px;border-bottom:1px solid var(--border);margin-bottom:18px;flex-shrink:0}
+.logo span{color:var(--accent)}
+.nav-section{font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);padding:0 12px;margin:14px 0 6px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:10px;color:var(--muted);text-decoration:none;font-size:.875rem;font-weight:500;transition:all .18s;margin-bottom:2px;cursor:pointer;border:none;background:none;width:100%;text-align:left}
+.nav-item:hover{background:var(--bg);color:var(--text)}
+.nav-item.active{background:rgba(79,124,255,.1);color:var(--accent);font-weight:600}
+.nav-item i{width:16px;text-align:center;font-size:.85rem}
+.nav-badge{margin-left:auto;background:var(--red);color:#fff;font-size:.6rem;font-weight:700;min-width:16px;height:16px;border-radius:8px;display:flex;align-items:center;justify-content:center;padding:0 4px}
+.sidebar-bottom{margin-top:auto;border-top:1px solid var(--border);padding-top:14px}
+.user-chip{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg);border-radius:10px;margin-bottom:6px}
+.avatar-circle{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.8rem;color:#fff;flex-shrink:0;overflow:hidden}
+.user-chip-name{font-size:.82rem;font-weight:600;color:var(--text)}
+.user-chip-role{font-size:.7rem;color:var(--muted)}
+
+/* MAIN */
+.main{margin-left:var(--sidebar-w);flex:1;display:flex;flex-direction:column}
+.topbar{background:var(--white);border-bottom:1px solid var(--border);padding:0 28px;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
+.topbar-left{font-family:'Syne',sans-serif;font-weight:700;font-size:1.05rem;color:var(--text)}
+.topbar-left span{color:var(--accent)}
+.topbar-right{display:flex;align-items:center;gap:10px}
+.icon-btn{width:36px;height:36px;border-radius:9px;background:var(--bg);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--muted);font-size:.82rem;transition:all .18s;text-decoration:none;position:relative}
+.icon-btn:hover{border-color:var(--accent);color:var(--accent)}
+.icon-btn .dot{position:absolute;top:-3px;right:-3px;width:8px;height:8px;background:var(--red);border:2px solid var(--white);border-radius:50%}
+.user-pill{display:flex;align-items:center;gap:8px;padding:5px 12px 5px 6px;background:var(--bg);border:1px solid var(--border);border-radius:20px;font-size:.82rem;font-weight:500;color:var(--text)}
+.user-pill .avatar-circle{width:26px;height:26px;font-size:.7rem}
+
+/* TABS */
+.tabs{background:var(--white);border-bottom:1px solid var(--border);padding:0 28px;display:flex;gap:0}
+.tab{padding:14px 20px;font-size:.82rem;font-weight:500;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .18s;display:flex;align-items:center;gap:7px;white-space:nowrap}
+.tab:hover{color:var(--text)}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:600}
+.tab i{font-size:.78rem}
+
+/* CONTENT */
+.content{padding:24px 28px;flex:1}
+.tab-content{display:none}
+.tab-content.active{display:block;animation:fadeUp .35s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+/* CARDS */
+.card{background:var(--white);border:1px solid var(--border);border-radius:14px;padding:22px;margin-bottom:18px}
+.card-title{font-family:'Syne',sans-serif;font-weight:700;font-size:.95rem;color:var(--text);display:flex;align-items:center;gap:8px;margin-bottom:18px;padding-bottom:12px;border-bottom:1px solid var(--border)}
+.card-title i{color:var(--accent)}
+
+/* STATS GRID */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px}
+.stat-card{background:var(--white);border:1px solid var(--border);border-radius:14px;padding:18px;display:flex;align-items:center;gap:14px;transition:all .2s;animation:fadeUp .4s ease both}
+.stat-card:hover{box-shadow:0 4px 20px rgba(0,0,0,.07);transform:translateY(-2px)}
+.stat-icon{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0}
+.si-blue{background:rgba(79,124,255,.1);color:var(--accent)}
+.si-green{background:rgba(16,185,129,.1);color:var(--green)}
+.si-orange{background:rgba(245,158,11,.1);color:var(--orange)}
+.si-purple{background:rgba(124,92,252,.1);color:var(--accent2)}
+.stat-label{font-size:.75rem;color:var(--muted);margin-bottom:3px}
+.stat-value{font-family:'Syne',sans-serif;font-size:1.7rem;font-weight:800;color:var(--text);line-height:1}
+
+/* ETUDIANT CARDS */
+.etudiants-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
+.etu-card{background:var(--white);border:1px solid var(--border);border-radius:14px;padding:18px;transition:all .2s;cursor:pointer;animation:fadeUp .4s ease both}
+.etu-card:hover{border-color:rgba(79,124,255,.3);box-shadow:0 6px 24px rgba(79,124,255,.1);transform:translateY(-2px)}
+.etu-header{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.etu-avatar{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.9rem;color:#fff;flex-shrink:0;overflow:hidden}
+.etu-name{font-family:'Syne',sans-serif;font-weight:700;font-size:.9rem;color:var(--text)}
+.etu-info{font-size:.72rem;color:var(--muted);margin-top:2px}
+.etu-stage{font-size:.78rem;color:var(--text);margin-bottom:10px;line-height:1.5}
+.progress-bar{height:6px;background:var(--border);border-radius:10px;overflow:hidden;margin-bottom:6px}
+.progress-fill{height:100%;border-radius:10px;transition:width 1s ease}
+.prog-label{font-size:.68rem;color:var(--muted);display:flex;justify-content:space-between}
+.etu-footer{display:flex;align-items:center;justify-content:space-between;margin-top:12px;padding-top:10px;border-top:1px solid var(--border)}
+.etu-actions{display:flex;gap:6px}
+.btn-sm{padding:5px 11px;border-radius:7px;font-size:.72rem;font-weight:600;cursor:pointer;transition:all .15s;border:none;font-family:'DM Sans',sans-serif;display:flex;align-items:center;gap:4px}
+.btn-sm.primary{background:var(--accent);color:#fff}
+.btn-sm.primary:hover{opacity:.85}
+.btn-sm.outline{background:var(--bg);color:var(--muted);border:1px solid var(--border)}
+.btn-sm.outline:hover{border-color:var(--accent);color:var(--accent)}
+.btn-sm.green{background:rgba(16,185,129,.1);color:var(--green);border:1px solid rgba(16,185,129,.2)}
+.btn-sm.green:hover{background:rgba(16,185,129,.2)}
+.btn-sm.red{background:rgba(239,68,68,.1);color:var(--red);border:1px solid rgba(239,68,68,.2)}
+.btn-sm.red:hover{background:rgba(239,68,68,.2)}
+
+/* BADGES */
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:.7rem;font-weight:600}
+.badge.blue{background:rgba(79,124,255,.1);color:var(--accent)}
+.badge.green{background:rgba(16,185,129,.1);color:var(--green)}
+.badge.orange{background:rgba(245,158,11,.1);color:var(--orange)}
+.badge.red{background:rgba(239,68,68,.1);color:var(--red)}
+.badge.purple{background:rgba(124,92,252,.1);color:var(--accent2)}
+
+/* TABLE */
+table{width:100%;border-collapse:collapse}
+thead tr{border-bottom:2px solid var(--border)}
+th{padding:9px 14px;text-align:left;font-size:.7rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+tbody tr{border-bottom:1px solid var(--border);transition:background .15s}
+tbody tr:last-child{border-bottom:none}
+tbody tr:hover{background:var(--bg)}
+td{padding:11px 14px;font-size:.855rem;color:var(--text)}
+
+/* FORM */
+.form-group{margin-bottom:14px}
+.form-label{font-size:.78rem;font-weight:600;color:var(--text);margin-bottom:5px;display:block}
+.form-input{border:1px solid var(--border);border-radius:9px;padding:9px 12px;font-family:'DM Sans',sans-serif;font-size:.855rem;color:var(--text);background:var(--bg);outline:none;transition:all .15s;width:100%}
+.form-input:focus{border-color:var(--accent);background:var(--white);box-shadow:0 0 0 3px rgba(79,124,255,.1)}
+.form-textarea{border:1px solid var(--border);border-radius:9px;padding:9px 12px;font-family:'DM Sans',sans-serif;font-size:.855rem;color:var(--text);background:var(--bg);outline:none;width:100%;resize:vertical;min-height:80px;transition:all .15s}
+.form-textarea:focus{border-color:var(--accent);background:var(--white)}
+.btn-save{display:flex;align-items:center;gap:7px;padding:10px 20px;border:none;border-radius:9px;background:var(--accent);color:#fff;font-family:'DM Sans',sans-serif;font-size:.855rem;font-weight:600;cursor:pointer;transition:all .18s}
+.btn-save:hover{opacity:.85;transform:translateY(-1px)}
+
+/* GRID 2 */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+
+/* RDV */
+.rdv-slot{display:flex;align-items:center;gap:12px;padding:12px;background:var(--bg);border:1px solid var(--border);border-radius:10px;margin-bottom:8px;transition:all .18s}
+.rdv-slot:hover{border-color:rgba(79,124,255,.2)}
+.rdv-time{font-family:'Syne',sans-serif;font-weight:700;font-size:.85rem;color:var(--text);min-width:80px}
+.rdv-info{flex:1}
+.rdv-etu{font-size:.78rem;font-weight:600;color:var(--text)}
+.rdv-sujet{font-size:.7rem;color:var(--muted);margin-top:2px}
+.rdv-actions-row{display:flex;gap:6px;margin-left:auto}
+
+/* TIMELINE etu detail */
+.tl-dot{width:10px;height:10px;border-radius:50%;background:var(--green);border:2px solid var(--white);box-shadow:0 0 0 2px var(--green);flex-shrink:0}
+.tl-dot.pending{background:var(--orange);box-shadow:0 0 0 2px var(--orange)}
+.tl-dot.locked{background:var(--border);box-shadow:0 0 0 2px var(--border)}
+
+/* EMPTY */
+.empty{text-align:center;padding:40px 20px;color:var(--muted)}
+.empty i{font-size:2rem;opacity:.2;display:block;margin-bottom:10px}
+
+/* DISPONIBILITE */
+.dispo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px}
+.dispo-slot{padding:12px;background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.2);border-radius:10px;text-align:center;position:relative}
+.dispo-slot.reserve{background:rgba(245,158,11,.06);border-color:rgba(245,158,11,.2)}
+.dispo-date{font-family:'Syne',sans-serif;font-weight:700;font-size:.78rem;color:var(--text)}
+.dispo-heure{font-size:.7rem;color:var(--muted);margin-top:2px}
+.dispo-remove{position:absolute;top:6px;right:6px;width:16px;height:16px;border-radius:50%;background:rgba(239,68,68,.1);color:var(--red);border:none;cursor:pointer;font-size:.6rem;display:flex;align-items:center;justify-content:center}
+
+/* UPLOAD ZONE */
+.upload-zone{border:2px dashed var(--border);border-radius:12px;padding:28px;text-align:center;cursor:pointer;transition:all .2s}
+.upload-zone:hover{border-color:var(--accent);background:rgba(79,124,255,.03)}
+.upload-zone i{font-size:1.5rem;color:var(--muted);margin-bottom:8px;display:block}
+.upload-zone p{font-size:.8rem;color:var(--muted)}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;right:24px;background:var(--text);color:#fff;padding:12px 20px;border-radius:10px;font-size:.85rem;font-weight:500;box-shadow:0 4px 20px rgba(0,0,0,.15);transform:translateY(80px);opacity:0;transition:all .3s ease;z-index:999}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.success{background:var(--green)}
+.toast.error{background:var(--red)}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);backdrop-filter:blur(3px);z-index:500;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .25s}
+.modal-overlay.show{opacity:1;pointer-events:all}
+.modal{background:var(--white);border-radius:18px;width:100%;max-width:520px;max-height:85vh;overflow-y:auto;padding:28px;transform:translateY(20px) scale(.97);transition:transform .25s;margin:16px}
+.modal-overlay.show .modal{transform:translateY(0) scale(1)}
+.modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.modal-title{font-family:'Syne',sans-serif;font-weight:800;font-size:1rem;color:var(--text)}
+.modal-close{width:28px;height:28px;border-radius:7px;border:1px solid var(--border);background:var(--bg);color:var(--muted);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:.75rem}
+.modal-close:hover{border-color:var(--red);color:var(--red)}
+</style>
+</head>
+
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="logo">Stage<span>Flow</span></div>
+
+  <div class="nav-section">Principal</div>
+  <a class="nav-item active" onclick="switchTab('dashboard')"><i class="fa fa-house"></i> Dashboard</a>
+  <a class="nav-item" onclick="switchTab('etudiants')"><i class="fa fa-users"></i> Mes étudiants</a>
+  <a class="nav-item" onclick="switchTab('stages')"><i class="fa fa-briefcase"></i> Stages en cours</a>
+  <a class="nav-item" onclick="switchTab('rapports')">
+    <i class="fa fa-file-pdf"></i> Rapports
+    <span class="nav-badge" id="navBadgeRapports">0</span>
+  </a>
+
+  <div class="nav-section">Outils</div>
+  <a class="nav-item" onclick="switchTab('suggestions')"><i class="fa fa-lightbulb"></i> Suggestions publiées</a>
+  <a class="nav-item" onclick="switchTab('rdv')"><i class="fa fa-calendar-check"></i> Rendez-vous</a>
+  <a class="nav-item" onclick="switchTab('ressources')"><i class="fa fa-book-bookmark"></i> Ressources</a>
+  <a class="nav-item" href="messagerie.html"><i class="fa fa-comments"></i> Messagerie</a>
+  <a class="nav-item" href="notifications.html">
+    <i class="fa fa-bell"></i> Notifications
+    <span class="nav-badge" id="navBadgeNotif">0</span>
+  </a>
+
+  <div class="sidebar-bottom">
+    <div class="user-chip">
+      <div class="avatar-circle" id="sidebarAvatar">?</div>
+      <div>
+        <div class="user-chip-name" id="sidebarNom">...</div>
+        <div class="user-chip-role">Encadrant</div>
+      </div>
+    </div>
+    <button class="nav-item" onclick="logout()" style="color:var(--red)">
+      <i class="fa fa-right-from-bracket"></i> Déconnexion
+    </button>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="topbar-left">Bonjour, <span id="prenomHeader">...</span> 👋</div>
+    <div class="topbar-right">
+      <a class="icon-btn" href="notifications.html"><i class="fa fa-bell"></i><span class="dot" id="notifDot" style="display:none"></span></a>
+      <a class="icon-btn" href="messagerie.html"><i class="fa fa-comments"></i></a>
+      <div class="user-pill">
+        <div class="avatar-circle" id="topAvatar">?</div>
+        <span id="topNom">...</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- TABS -->
+  <div class="tabs" id="tabsBar">
+    <div class="tab active" onclick="switchTab('dashboard')"><i class="fa fa-house"></i> Dashboard</div>
+    <div class="tab" onclick="switchTab('etudiants')"><i class="fa fa-users"></i> Étudiants</div>
+    <div class="tab" onclick="switchTab('stages')"><i class="fa fa-briefcase"></i> Stages</div>
+    <div class="tab" onclick="switchTab('rapports')"><i class="fa fa-file-pdf"></i> Rapports</div>
+    <div class="tab" onclick="switchTab('suggestions')"><i class="fa fa-lightbulb"></i> Suggestions</div>
+    <div class="tab" onclick="switchTab('rdv')"><i class="fa fa-calendar-check"></i> RDV</div>
+    <div class="tab" onclick="switchTab('ressources')"><i class="fa fa-book-bookmark"></i> Ressources</div>
+  </div>
+
+  <div class="content">
+
+    <!-- ══ TAB: DASHBOARD ══ -->
+    <div class="tab-content active" id="tab-dashboard">
+
+      <!-- STATS -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon si-blue"><i class="fa fa-users"></i></div>
+          <div><div class="stat-label">Étudiants</div><div class="stat-value" id="statEtu">—</div></div>
+        </div>
+        <div class="stat-card" style="animation-delay:.05s">
+          <div class="stat-icon si-orange"><i class="fa fa-clock"></i></div>
+          <div><div class="stat-label">Stages en cours</div><div class="stat-value" id="statEnCours">—</div></div>
+        </div>
+        <div class="stat-card" style="animation-delay:.1s">
+          <div class="stat-icon si-green"><i class="fa fa-circle-check"></i></div>
+          <div><div class="stat-label">Stages validés</div><div class="stat-value" id="statValides">—</div></div>
+        </div>
+        <div class="stat-card" style="animation-delay:.15s">
+          <div class="stat-icon si-purple"><i class="fa fa-file-pdf"></i></div>
+          <div><div class="stat-label">Rapports en attente</div><div class="stat-value" id="statRapports">—</div></div>
+        </div>
+      </div>
+
+      <!-- GRID: Étudiants récents + Activité -->
+      <div class="grid2">
+        <div class="card">
+          <div class="card-title"><i class="fa fa-users"></i> Étudiants récents</div>
+          <div id="recentEtudiants"><div class="empty"><i class="fa fa-spinner fa-spin"></i></div></div>
+        </div>
+
+        <div class="card">
+          <div class="card-title"><i class="fa fa-calendar-check"></i> Prochains rendez-vous</div>
+          <div id="prochainRdv"><div class="empty"><i class="fa fa-calendar"></i><p>Aucun rendez-vous</p></div></div>
+        </div>
+      </div>
+
+      <!-- Rapports récents -->
+      <div class="card">
+        <div class="card-title"><i class="fa fa-file-pdf"></i> Rapports récents à valider</div>
+        <div id="recentRapports"><div class="empty"><i class="fa fa-spinner fa-spin"></i></div></div>
+      </div>
+
+    </div>
+
+    <!-- ══ TAB: ÉTUDIANTS ══ -->
+    <div class="tab-content" id="tab-etudiants">
+      <div class="card">
+        <div class="card-title" style="justify-content:space-between">
+          <span><i class="fa fa-users"></i> Mes étudiants</span>
+          <span id="etuCount" style="font-size:.75rem;color:var(--muted)"></span>
+        </div>
+        <div class="etudiants-grid" id="etudiantsList">
+          <div class="empty" style="grid-column:1/-1"><i class="fa fa-spinner fa-spin"></i><p>Chargement...</p></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ TAB: STAGES ══ -->
+    <div class="tab-content" id="tab-stages">
+      <div class="card">
+        <div class="card-title"><i class="fa fa-briefcase"></i> Stages en cours</div>
+        <table>
+          <thead>
+            <tr>
+              <th>Étudiant</th><th>Titre du stage</th><th>Entreprise</th>
+              <th>Type</th><th>Statut</th><th>Progression</th><th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="stagesBody">
+            <tr><td colspan="7" style="color:var(--muted);text-align:center;padding:20px">Chargement...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ══ TAB: RAPPORTS ══ -->
+    <div class="tab-content" id="tab-rapports">
+      <div class="card">
+        <div class="card-title"><i class="fa fa-file-pdf"></i> Rapports déposés</div>
+        <table>
+          <thead>
+            <tr><th>Étudiant</th><th>Stage</th><th>Fichier</th><th>Date dépôt</th><th>Statut</th><th>Actions</th></tr>
+          </thead>
+          <tbody id="rapportsBody">
+            <tr><td colspan="6" style="color:var(--muted);text-align:center;padding:20px">Chargement...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ══ TAB: SUGGESTIONS ══ -->
+    <div class="tab-content" id="tab-suggestions">
+      <div class="grid2">
+
+        <!-- Formulaire nouvelle suggestion -->
+        <div class="card">
+          <div class="card-title"><i class="fa fa-plus"></i> Publier une suggestion</div>
+          <div class="form-group">
+            <label class="form-label">Titre du sujet</label>
+            <input class="form-input" id="sugTitre" placeholder="Ex: Application de gestion des notes">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Description</label>
+            <textarea class="form-textarea" id="sugDesc" placeholder="Décrivez le sujet, objectifs, livrables attendus..."></textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Technologies</label>
+            <input class="form-input" id="sugTech" placeholder="Ex: React, Node.js, MySQL">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Type de stage</label>
+            <select class="form-input" id="sugType">
+              <option value="initiation">Initiation</option>
+              <option value="perfectionnement">Perfectionnement</option>
+              <option value="fin_etude">Fin d'études (PFE)</option>
+            </select>
+          </div>
+          <button class="btn-save" onclick="publierSuggestion()">
+            <i class="fa fa-paper-plane"></i> Publier
+          </button>
+        </div>
+
+        <!-- Liste suggestions -->
+        <div class="card">
+          <div class="card-title"><i class="fa fa-list"></i> Mes suggestions publiées</div>
+          <div id="suggestionsList"><div class="empty"><i class="fa fa-spinner fa-spin"></i></div></div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ══ TAB: RDV ══ -->
+    <div class="tab-content" id="tab-rdv">
+      <div class="grid2">
+
+        <!-- Ajouter disponibilité -->
+        <div class="card">
+          <div class="card-title"><i class="fa fa-calendar-plus"></i> Ajouter une disponibilité</div>
+          <div class="form-group">
+            <label class="form-label">Date</label>
+            <input class="form-input" type="date" id="rdvDate">
+          </div>
+          <div class="grid2" style="gap:10px">
+            <div class="form-group">
+              <label class="form-label">Heure début</label>
+              <input class="form-input" type="time" id="rdvDebut" value="09:00">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Heure fin</label>
+              <input class="form-input" type="time" id="rdvFin" value="09:30">
+            </div>
+          </div>
+          <button class="btn-save" onclick="ajouterDispo()">
+            <i class="fa fa-plus"></i> Ajouter le créneau
+          </button>
+
+          <!-- Mes dispos -->
+          <div style="margin-top:20px;padding-top:14px;border-top:1px solid var(--border)">
+            <div style="font-size:.78rem;font-weight:600;color:var(--text);margin-bottom:10px">Créneaux ajoutés</div>
+            <div class="dispo-grid" id="dispoGrid">
+              <div class="empty" style="grid-column:1/-1;padding:20px"><i class="fa fa-calendar-xmark"></i><p>Aucun créneau</p></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Demandes RDV -->
+        <div class="card">
+          <div class="card-title"><i class="fa fa-clock"></i> Demandes de rendez-vous</div>
+          <div id="rdvDemandes"><div class="empty"><i class="fa fa-spinner fa-spin"></i></div></div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ══ TAB: RESSOURCES ══ -->
+    <div class="tab-content" id="tab-ressources">
+      <div class="grid2">
+
+        <!-- Upload -->
+        <div class="card">
+          <div class="card-title"><i class="fa fa-upload"></i> Ajouter une ressource</div>
+          <div class="form-group">
+            <label class="form-label">Titre</label>
+            <input class="form-input" id="resTitre" placeholder="Ex: Rapport PFE 2024 — Application Web">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Description</label>
+            <textarea class="form-textarea" id="resDesc" placeholder="Description de la ressource..."></textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Type</label>
+            <select class="form-input" id="resType">
+              <option value="rapport">Rapport de référence</option>
+              <option value="guide">Guide</option>
+              <option value="template">Template</option>
+              <option value="autre">Autre</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Fichier</label>
+            <div class="upload-zone" onclick="document.getElementById('resFile').click()">
+              <i class="fa fa-cloud-arrow-up"></i>
+              <p id="uploadLabel">Cliquez pour choisir un fichier (PDF, Word, PPT)</p>
+            </div>
+            <input type="file" id="resFile" style="display:none" accept=".pdf,.doc,.docx,.ppt,.pptx" onchange="updateUploadLabel(this)">
+          </div>
+          <button class="btn-save" onclick="uploadRessource()">
+            <i class="fa fa-floppy-disk"></i> Publier la ressource
+          </button>
+        </div>
+
+        <!-- Liste ressources -->
+        <div class="card">
+          <div class="card-title"><i class="fa fa-book-bookmark"></i> Ressources publiées</div>
+          <div id="ressourcesList"><div class="empty"><i class="fa fa-spinner fa-spin"></i></div></div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- MODAL FEEDBACK / VALIDER -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modalTitle">Action</div>
+      <div class="modal-close" onclick="closeModalDirect()"><i class="fa fa-times"></i></div>
+    </div>
+    <div id="modalBody"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+
+/* ══ LOGIN ══ */
+const currentUser = {
+  id:     parseInt(localStorage.getItem("user_id")),
+  nom:    localStorage.getItem("user_nom")    || "",
+  prenom: localStorage.getItem("user_prenom") || "",
+  photo:  localStorage.getItem("user_photo")  || "",
+};
+if (!currentUser.id) window.location.href = "login.html";
+
+const ini = (currentUser.prenom[0]||"") + (currentUser.nom[0]||"");
+document.getElementById("prenomHeader").innerText = currentUser.prenom;
+document.getElementById("sidebarNom").innerText   = currentUser.prenom + " " + currentUser.nom;
+document.getElementById("topNom").innerText       = currentUser.prenom + " " + currentUser.nom;
+if (currentUser.photo) {
+  const url = "http://localhost:3000/uploads/" + currentUser.photo;
+  ["sidebarAvatar","topAvatar"].forEach(id => {
+    const sz = id === "sidebarAvatar" ? "34" : "26";
+    document.getElementById(id).innerHTML = `<img src="${url}" style="width:${sz}px;height:${sz}px;border-radius:50%;object-fit:cover">`;
+  });
+} else {
+  document.getElementById("sidebarAvatar").innerText = ini;
+  document.getElementById("topAvatar").innerText     = ini;
+}
+
+/* ══ TABS ══ */
+function switchTab(tab) {
+  document.querySelectorAll(".tab-content").forEach(t => t.classList.remove("active"));
+  document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+  document.querySelectorAll(".nav-item").forEach(n => n.classList.remove("active"));
+
+  document.getElementById("tab-" + tab)?.classList.add("active");
+  document.querySelectorAll(".tab")[["dashboard","etudiants","stages","rapports","suggestions","rdv","ressources"].indexOf(tab)]?.classList.add("active");
+
+  // load data per tab
+  const loaders = {
+    dashboard:   loadDashboard,
+    etudiants:   loadEtudiants,
+    stages:      loadStages,
+    rapports:    loadRapports,
+    suggestions: loadSuggestions,
+    rdv:         loadRdv,
+    ressources:  loadRessources,
+  };
+  loaders[tab]?.();
+}
+
+/* ══ LOAD DATA ══ */
+async function loadDashboard() {
+  try {
+    const r  = await fetch(`http://localhost:3000/mes-etudiants/${currentUser.id}`);
+    const d  = await r.json();
+    const etudiants = d.success ? d.etudiants : [];
+
+    let enCours = 0, valides = 0;
+    etudiants.forEach(e => {
+      if (e.statut === "valide") valides++;
+      else if (["en_cours","rapport_depose","affecte"].includes(e.statut)) enCours++;
+    });
+
+    document.getElementById("statEtu").innerText     = etudiants.length;
+    document.getElementById("statEnCours").innerText  = enCours;
+    document.getElementById("statValides").innerText  = valides;
+
+    // recent étudiants (3)
+    const recent = etudiants.slice(0,3);
+    document.getElementById("recentEtudiants").innerHTML = recent.length ? recent.map(e => `
+      <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)">
+        <div class="avatar-circle" style="width:34px;height:34px;font-size:.75rem">${(e.prenom[0]||"")+(e.nom[0]||"")}</div>
+        <div style="flex:1">
+          <div style="font-size:.82rem;font-weight:600;color:var(--text)">${e.prenom} ${e.nom}</div>
+          <div style="font-size:.7rem;color:var(--muted)">${e.titre||"—"}</div>
+        </div>
+        <span class="badge ${e.statut==="valide"?"green":e.statut==="refuse"?"red":"blue"}">${statutLabel(e.statut)}</span>
+      </div>`).join("") :
+      `<div class="empty"><i class="fa fa-users"></i><p>Aucun étudiant</p></div>`;
+
+  } catch(e) { loadDemoStats(); }
+
+  // rapports récents
+  loadRapportsRecents();
+  loadRdvProchains();
+}
+
+function loadDemoStats() {
+  document.getElementById("statEtu").innerText     = "4";
+  document.getElementById("statEnCours").innerText  = "2";
+  document.getElementById("statValides").innerText  = "1";
+  document.getElementById("statRapports").innerText = "2";
+  document.getElementById("navBadgeRapports").innerText = "2";
+  document.getElementById("recentEtudiants").innerHTML = demoEtuHtml();
+}
+
+function demoEtuHtml() {
+  const demo = [
+    {prenom:"Sara",nom:"Ben Ahmed",titre:"Application web gestion notes",statut:"en_cours"},
+    {prenom:"Ahmed",nom:"Saidi",titre:"Dashboard BI analyse données",statut:"rapport_depose"},
+    {prenom:"Ines",nom:"Chabbi",titre:"App mobile gestion livraisons",statut:"valide"},
+  ];
+  return demo.map(e => `
+    <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)">
+      <div class="avatar-circle" style="width:34px;height:34px;font-size:.75rem">${e.prenom[0]}${e.nom[0]}</div>
+      <div style="flex:1">
+        <div style="font-size:.82rem;font-weight:600;color:var(--text)">${e.prenom} ${e.nom}</div>
+        <div style="font-size:.7rem;color:var(--muted)">${e.titre}</div>
+      </div>
+      <span class="badge ${e.statut==="valide"?"green":e.statut==="rapport_depose"?"orange":"blue"}">${statutLabel(e.statut)}</span>
+    </div>`).join("");
+}
+
+async function loadRapportsRecents() {
+  document.getElementById("recentRapports").innerHTML = `
+    <table><thead><tr><th>Étudiant</th><th>Stage</th><th>Date</th><th>Actions</th></tr></thead>
+    <tbody>
+      <tr><td>Ahmed Saidi</td><td>Dashboard BI</td><td>28 mars 2026</td>
+      <td><div style="display:flex;gap:6px">
+        <button class="btn-sm primary" onclick="validerRapport(1)"><i class="fa fa-check"></i> Valider</button>
+        <button class="btn-sm outline" onclick="window.open('#')"><i class="fa fa-eye"></i> Voir</button>
+      </div></td></tr>
+      <tr><td>Sara Ben Ahmed</td><td>App gestion notes</td><td>25 mars 2026</td>
+      <td><div style="display:flex;gap:6px">
+        <button class="btn-sm primary" onclick="validerRapport(2)"><i class="fa fa-check"></i> Valider</button>
+        <button class="btn-sm outline"><i class="fa fa-eye"></i> Voir</button>
+      </div></td></tr>
+    </tbody></table>`;
+  document.getElementById("statRapports").innerText = "2";
+  document.getElementById("navBadgeRapports").innerText = "2";
+}
+
+async function loadRdvProchains() {
+  const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate()+1);
+  const d2 = new Date(); d2.setDate(d2.getDate()+3);
+  document.getElementById("prochainRdv").innerHTML = `
+    <div class="rdv-slot">
+      <div class="rdv-time">Dem. 10:00</div>
+      <div class="rdv-info">
+        <div class="rdv-etu">Sara Ben Ahmed</div>
+        <div class="rdv-sujet">Revue du code backend</div>
+      </div>
+      <span class="badge green">Confirmé</span>
+    </div>
+    <div class="rdv-slot">
+      <div class="rdv-time">Jeu. 14:00</div>
+      <div class="rdv-info">
+        <div class="rdv-etu">Ahmed Saidi</div>
+        <div class="rdv-sujet">Questions rapport</div>
+      </div>
+      <span class="badge orange">En attente</span>
+    </div>`;
+}
+
+/* ══ ÉTUDIANTS ══ */
+async function loadEtudiants() {
+  try {
+    const r = await fetch(`http://localhost:3000/mes-etudiants/${currentUser.id}`);
+    const d = await r.json();
+    if (!d.success || !d.etudiants.length) {
+      renderEtudiants(demoEtudiants());
+      return;
+    }
+    renderEtudiants(d.etudiants);
+  } catch(e) { renderEtudiants(demoEtudiants()); }
+}
+
+function demoEtudiants() {
+  return [
+    {id:1,prenom:"Sara",nom:"Ben Ahmed",filiere:"Informatique",titre:"Application web gestion notes",entreprise:"TechSoft",type_stage:"fin_etude",statut:"en_cours",progression:65,date_fin_prevue:"2026-06-15"},
+    {id:2,prenom:"Ahmed",nom:"Saidi",filiere:"Informatique",titre:"Dashboard BI analyse données",entreprise:"DataVision",type_stage:"perfectionnement",statut:"rapport_depose",progression:90,date_fin_prevue:"2026-04-20"},
+    {id:3,prenom:"Ines",nom:"Chabbi",filiere:"Info",titre:"App mobile gestion livraisons",entreprise:"LogiTech",type_stage:"fin_etude",statut:"valide",progression:100,date_fin_prevue:"2026-03-01"},
+    {id:4,prenom:"Karim",nom:"Maatoug",filiere:"Mécanique",titre:"Système supervision",entreprise:"IndustriaPlus",type_stage:"initiation",statut:"affecte",progression:20,date_fin_prevue:"2026-05-30"},
+  ];
+}
+
+function renderEtudiants(list) {
+  document.getElementById("etuCount").innerText = list.length + " étudiant" + (list.length>1?"s":"");
+  const typeLabel = {initiation:"Init.",perfectionnement:"Perf.",fin_etude:"PFE"};
+  document.getElementById("etudiantsList").innerHTML = list.map((e,i) => {
+    const prog = e.progression || 0;
+    const progColor = prog>=75?"var(--green)":prog>=40?"var(--orange)":"var(--red)";
+    const etuIni = (e.prenom[0]||"")+(e.nom[0]||"");
+    return `
+      <div class="etu-card" style="animation-delay:${i*0.06}s">
+        <div class="etu-header">
+          <div class="etu-avatar">${etuIni}</div>
+          <div>
+            <div class="etu-name">${e.prenom} ${e.nom}</div>
+            <div class="etu-info">${e.filiere||"—"} · <span class="badge blue" style="font-size:.62rem;padding:1px 6px">${typeLabel[e.type_stage]||e.type_stage||"—"}</span></div>
+          </div>
+        </div>
+        <div class="etu-stage"><i class="fa fa-briefcase" style="color:var(--accent);margin-right:5px;font-size:.75rem"></i>${e.titre||"—"}<br><span style="color:var(--muted);font-size:.72rem">${e.entreprise||"—"}</span></div>
+        <div class="progress-bar"><div class="progress-fill" style="width:${prog}%;background:${progColor}"></div></div>
+        <div class="prog-label"><span>${prog}%</span><span class="badge ${statutCls(e.statut)}">${statutLabel(e.statut)}</span></div>
+        <div class="etu-footer">
+          <div class="etu-actions">
+            <button class="btn-sm primary" onclick="openFeedback(${e.id},'${e.prenom} ${e.nom}')"><i class="fa fa-comment-dots"></i> Feedback</button>
+            <button class="btn-sm outline" onclick="window.location.href='messagerie.html'"><i class="fa fa-comments"></i></button>
+            ${e.statut==="rapport_depose"?`<button class="btn-sm green" onclick="validerStage(${e.id},'${e.prenom} ${e.nom}')"><i class="fa fa-check"></i> Valider</button>`:""}
+          </div>
+          ${e.statut==="valide"?`<button class="btn-sm green" onclick="genererCertificat(${e.id})"><i class="fa fa-certificate"></i> Certificat</button>`:""}
+        </div>
+      </div>`;
+  }).join("");
+}
+
+/* ══ STAGES ══ */
+async function loadStages() {
+  const demo = demoEtudiants();
+  const typeLabel = {initiation:"Initiation",perfectionnement:"Perfectionnement",fin_etude:"Fin d'études"};
+  document.getElementById("stagesBody").innerHTML = demo.map(e => {
+    const prog = e.progression||0;
+    const progColor = prog>=75?"var(--green)":prog>=40?"var(--orange)":"var(--red)";
+    return `<tr>
+      <td style="font-weight:600">${e.prenom} ${e.nom}</td>
+      <td>${e.titre||"—"}</td>
+      <td>${e.entreprise||"—"}</td>
+      <td><span class="badge blue">${typeLabel[e.type_stage]||"—"}</span></td>
+      <td><span class="badge ${statutCls(e.statut)}">${statutLabel(e.statut)}</span></td>
+      <td style="min-width:120px">
+        <div style="font-size:.72rem;color:var(--muted);margin-bottom:3px">${prog}%</div>
+        <div class="progress-bar"><div class="progress-fill" style="width:${prog}%;background:${progColor}"></div></div>
+      </td>
+      <td>
+        <div style="display:flex;gap:5px;flex-wrap:wrap">
+          ${e.statut==="rapport_depose"?`<button class="btn-sm green" onclick="validerStage(${e.id},'${e.prenom} ${e.nom}')"><i class="fa fa-check"></i> Valider</button><button class="btn-sm red" onclick="refuserStage(${e.id})"><i class="fa fa-xmark"></i> Refuser</button>`:""}
+          <button class="btn-sm outline" onclick="openFeedback(${e.id},'${e.prenom} ${e.nom}')"><i class="fa fa-comment-dots"></i></button>
+        </div>
+      </td>
+    </tr>`;
+  }).join("");
+}
+
+/* ══ RAPPORTS ══ */
+async function loadRapports() {
+  document.getElementById("rapportsBody").innerHTML = `
+    <tr>
+      <td style="font-weight:600">Ahmed Saidi</td>
+      <td>Dashboard BI analyse données</td>
+      <td><a href="#" style="color:var(--accent);font-size:.8rem"><i class="fa fa-file-pdf"></i> rapport_ahmed.pdf</a></td>
+      <td style="color:var(--muted);font-size:.78rem">28/03/2026</td>
+      <td><span class="badge orange">En attente</span></td>
+      <td><div style="display:flex;gap:5px">
+        <button class="btn-sm green" onclick="validerRapport(1)"><i class="fa fa-check"></i> Valider</button>
+        <button class="btn-sm red" onclick="refuserRapport(1)"><i class="fa fa-xmark"></i> Refuser</button>
+        <button class="btn-sm outline"><i class="fa fa-eye"></i> Voir</button>
+      </div></td>
+    </tr>
+    <tr>
+      <td style="font-weight:600">Sara Ben Ahmed</td>
+      <td>Application web gestion notes</td>
+      <td><a href="#" style="color:var(--accent);font-size:.8rem"><i class="fa fa-file-pdf"></i> rapport_sara.pdf</a></td>
+      <td style="color:var(--muted);font-size:.78rem">25/03/2026</td>
+      <td><span class="badge orange">En attente</span></td>
+      <td><div style="display:flex;gap:5px">
+        <button class="btn-sm green" onclick="validerRapport(2)"><i class="fa fa-check"></i> Valider</button>
+        <button class="btn-sm red" onclick="refuserRapport(2)"><i class="fa fa-xmark"></i> Refuser</button>
+        <button class="btn-sm outline"><i class="fa fa-eye"></i> Voir</button>
+      </div></td>
+    </tr>`;
+}
+
+/* ══ SUGGESTIONS ══ */
+async function loadSuggestions() {
+  try {
+    const r = await fetch(`http://localhost:3000/mes-suggestions/${currentUser.id}`);
+    const d = await r.json();
+    if (d.success && d.suggestions.length) { renderSuggestions(d.suggestions); return; }
+  } catch(e) {}
+  renderSuggestions([
+    {id:1,titre:"Application web gestion notes",technologies:"React, Node.js",type_stage:"fin_etude",est_disponible:1},
+    {id:2,titre:"Dashboard analytique",technologies:"Python, D3.js",type_stage:"perfectionnement",est_disponible:1},
+  ]);
+}
+
+function renderSuggestions(list) {
+  const typeLabel = {initiation:"Initiation",perfectionnement:"Perfectionnement",fin_etude:"PFE"};
+  document.getElementById("suggestionsList").innerHTML = list.length ? list.map(s => `
+    <div style="padding:12px;background:var(--bg);border:1px solid var(--border);border-radius:10px;margin-bottom:8px">
+      <div style="font-weight:600;font-size:.85rem;margin-bottom:4px">${s.titre}</div>
+      <div style="font-size:.72rem;color:var(--muted);margin-bottom:6px">${s.technologies||"—"}</div>
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <span class="badge blue">${typeLabel[s.type_stage]||s.type_stage}</span>
+        <span class="badge ${s.est_disponible?"green":"red"}">${s.est_disponible?"Disponible":"Clôturée"}</span>
+      </div>
+    </div>`).join("") : `<div class="empty"><i class="fa fa-lightbulb"></i><p>Aucune suggestion</p></div>`;
+}
+
+async function publierSuggestion() {
+  const titre = document.getElementById("sugTitre").value.trim();
+  const desc  = document.getElementById("sugDesc").value.trim();
+  const tech  = document.getElementById("sugTech").value.trim();
+  const type  = document.getElementById("sugType").value;
+  if (!titre) return showToast("Le titre est obligatoire", "error");
+  try {
+    await fetch("http://localhost:3000/suggestions", {
+      method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({titre,description:desc,technologies:tech,type_stage:type,publie_par:currentUser.id})
+    });
+    showToast("✅ Suggestion publiée !", "success");
+    document.getElementById("sugTitre").value = "";
+    document.getElementById("sugDesc").value  = "";
+    document.getElementById("sugTech").value  = "";
+    loadSuggestions();
+  } catch(e) {
+    showToast("✅ Publiée (mode démo)", "success");
+  }
+}
+
+/* ══ RDV ══ */
+async function loadRdv() {
+  // Mes dispos
+  try {
+    const r = await fetch(`http://localhost:3000/rdv/disponibles/${currentUser.id}`);
+    const d = await r.json();
+    renderDispos(d.success ? d.rdvs : demoDispo());
+  } catch(e) { renderDispos(demoDispo()); }
+
+  // Demandes
+  try {
+    const r = await fetch(`http://localhost:3000/rdv/mes/${currentUser.id}`);
+    const d = await r.json();
+    renderDemandes(d.success ? d.rdvs.filter(r=>r.statut==="reserve") : demoDemandes());
+  } catch(e) { renderDemandes(demoDemandes()); }
+}
+
+function demoDispo() {
+  const d1 = new Date(); d1.setDate(d1.getDate()+2);
+  const d2 = new Date(); d2.setDate(d2.getDate()+4);
+  return [
+    {id:1,date_rdv:d1.toISOString().split("T")[0],heure_debut:"09:00:00",heure_fin:"09:30:00",statut:"disponible"},
+    {id:2,date_rdv:d2.toISOString().split("T")[0],heure_debut:"14:00:00",heure_fin:"14:30:00",statut:"reserve",etudiant_id:1},
+  ];
+}
+
+function renderDispos(dispos) {
+  if (!dispos.length) {
+    document.getElementById("dispoGrid").innerHTML = `<div class="empty" style="grid-column:1/-1"><i class="fa fa-calendar-xmark"></i><p>Aucun créneau</p></div>`;
+    return;
+  }
+  document.getElementById("dispoGrid").innerHTML = dispos.map(d => {
+    const date = new Date(d.date_rdv).toLocaleDateString("fr-FR",{day:"numeric",month:"short"});
+    const debut = d.heure_debut?.substring(0,5);
+    const fin   = d.heure_fin?.substring(0,5);
+    return `
+      <div class="dispo-slot ${d.statut!=="disponible"?"reserve":""}">
+        <button class="dispo-remove" onclick="supprimerDispo(${d.id})">×</button>
+        <div class="dispo-date">${date}</div>
+        <div class="dispo-heure">${debut} – ${fin}</div>
+        <div style="margin-top:4px"><span class="badge ${d.statut==="disponible"?"green":"orange"}" style="font-size:.58rem">${d.statut==="disponible"?"Libre":"Réservé"}</span></div>
+      </div>`;
+  }).join("");
+}
+
+function demoDemandes() {
+  return [{id:10,etudiant_id:1,date_rdv:"2026-04-05",heure_debut:"10:00:00",heure_fin:"10:30:00",sujet:"Questions rapport final",note_etudiant:"J'ai besoin d'aide pour la conclusion",etu_prenom:"Sara",etu_nom:"Ben Ahmed",statut:"reserve"}];
+}
+
+function renderDemandes(demandes) {
+  document.getElementById("rdvDemandes").innerHTML = demandes.length ? demandes.map(d => `
+    <div class="rdv-slot" style="flex-direction:column;align-items:flex-start;gap:8px">
+      <div style="display:flex;align-items:center;width:100%;gap:10px">
+        <div class="avatar-circle" style="width:32px;height:32px;font-size:.72rem">${(d.etu_prenom[0]||"")}${(d.etu_nom[0]||"")}</div>
+        <div style="flex:1">
+          <div class="rdv-etu">${d.etu_prenom} ${d.etu_nom}</div>
+          <div class="rdv-sujet">${new Date(d.date_rdv).toLocaleDateString("fr-FR")} · ${d.heure_debut?.substring(0,5)}</div>
+        </div>
+      </div>
+      <div style="font-size:.75rem;color:var(--text);background:var(--bg);padding:8px;border-radius:7px;width:100%">
+        <strong>Sujet:</strong> ${d.sujet||"—"}<br>
+        ${d.note_etudiant?`<span style="color:var(--muted)">${d.note_etudiant}</span>`:""}
+      </div>
+      <div style="display:flex;gap:6px;width:100%">
+        <button class="btn-sm green" style="flex:1" onclick="confirmerRdv(${d.id})"><i class="fa fa-check"></i> Confirmer</button>
+        <button class="btn-sm red" style="flex:1" onclick="refuserRdv(${d.id})"><i class="fa fa-xmark"></i> Refuser</button>
+      </div>
+    </div>`).join("") :
+    `<div class="empty"><i class="fa fa-calendar-check"></i><p>Aucune demande en attente</p></div>`;
+}
+
+async function ajouterDispo() {
+  const date  = document.getElementById("rdvDate").value;
+  const debut = document.getElementById("rdvDebut").value;
+  const fin   = document.getElementById("rdvFin").value;
+  if (!date||!debut||!fin) return showToast("Remplissez tous les champs", "error");
+  try {
+    await fetch("http://localhost:3000/rdv",{method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({encadrant_id:currentUser.id,date_rdv:date,heure_debut:debut,heure_fin:fin})});
+    showToast("✅ Créneau ajouté !","success");
+    loadRdv();
+  } catch(e) { showToast("✅ Ajouté (mode démo)","success"); }
+}
+
+async function confirmerRdv(id) {
+  try {
+    await fetch(`http://localhost:3000/rdv/statut/${id}`,{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify({statut:"confirme"})});
+    showToast("✅ RDV confirmé !","success"); loadRdv();
+  } catch(e) { showToast("✅ Confirmé (mode démo)","success"); }
+}
+
+async function refuserRdv(id) {
+  try {
+    await fetch(`http://localhost:3000/rdv/statut/${id}`,{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify({statut:"refuse"})});
+    showToast("RDV refusé",""); loadRdv();
+  } catch(e) { showToast("Refusé (mode démo)",""); }
+}
+
+async function supprimerDispo(id) {
+  if (!confirm("Supprimer ce créneau ?")) return;
+  try {
+    await fetch(`http://localhost:3000/rdv/annuler/${id}`,{method:"PUT"});
+    showToast("Créneau supprimé",""); loadRdv();
+  } catch(e) { showToast("Supprimé (mode démo)",""); }
+}
+
+/* ══ RESSOURCES ══ */
+async function loadRessources() {
+  document.getElementById("ressourcesList").innerHTML = `
+    <div style="padding:12px;background:var(--bg);border:1px solid var(--border);border-radius:10px;margin-bottom:8px;display:flex;align-items:center;gap:10px">
+      <i class="fa fa-file-pdf" style="color:var(--red);font-size:1.1rem"></i>
+      <div style="flex:1"><div style="font-size:.82rem;font-weight:600">Guide rédaction rapport stage</div><div style="font-size:.7rem;color:var(--muted)">Guide · 850 KB</div></div>
+      <button class="btn-sm red" onclick="supprimerRessource(1)"><i class="fa fa-trash"></i></button>
+    </div>
+    <div style="padding:12px;background:var(--bg);border:1px solid var(--border);border-radius:10px;margin-bottom:8px;display:flex;align-items:center;gap:10px">
+      <i class="fa fa-file-word" style="color:var(--accent);font-size:1.1rem"></i>
+      <div style="flex:1"><div style="font-size:.82rem;font-weight:600">Template rapport PFE Word</div><div style="font-size:.7rem;color:var(--muted)">Template · 320 KB</div></div>
+      <button class="btn-sm red" onclick="supprimerRessource(2)"><i class="fa fa-trash"></i></button>
+    </div>`;
+}
+
+function updateUploadLabel(input) {
+  document.getElementById("uploadLabel").innerText = input.files[0]?.name || "Cliquez pour choisir un fichier";
+}
+
+async function uploadRessource() {
+  const titre = document.getElementById("resTitre").value.trim();
+  const file  = document.getElementById("resFile").files[0];
+  if (!titre) return showToast("Le titre est obligatoire","error");
+  if (!file)  return showToast("Choisissez un fichier","error");
+  showToast("✅ Ressource publiée !","success");
+  document.getElementById("resTitre").value = "";
+  document.getElementById("resDesc").value  = "";
+  document.getElementById("resFile").value  = "";
+  document.getElementById("uploadLabel").innerText = "Cliquez pour choisir un fichier";
+  loadRessources();
+}
+
+function supprimerRessource(id) {
+  if (confirm("Supprimer cette ressource ?")) { showToast("Ressource supprimée",""); loadRessources(); }
+}
+
+/* ══ MODAL: FEEDBACK ══ */
+function openFeedback(etuId, etuNom) {
+  document.getElementById("modalTitle").innerText = "Feedback — " + etuNom;
+  document.getElementById("modalBody").innerHTML = `
+    <div class="form-group">
+      <label class="form-label">Votre feedback</label>
+      <textarea class="form-textarea" id="feedbackText" placeholder="Commentaires, encouragements, points à améliorer..." style="min-height:120px"></textarea>
+    </div>
+    <button class="btn-save" onclick="envoyerFeedback(${etuId})">
+      <i class="fa fa-paper-plane"></i> Envoyer le feedback
+    </button>`;
+  document.getElementById("modalOverlay").classList.add("show");
+}
+
+async function envoyerFeedback(etuId) {
+  const text = document.getElementById("feedbackText").value.trim();
+  if (!text) return showToast("Écrivez un feedback","error");
+  try {
+    await fetch("http://localhost:3000/feedbacks",{method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({commentaire:text,encadrant_id:currentUser.id,etudiant_id:etuId})});
+    showToast("✅ Feedback envoyé !","success"); closeModalDirect();
+  } catch(e) { showToast("✅ Envoyé (mode démo)","success"); closeModalDirect(); }
+}
+
+/* ══ VALIDER / REFUSER STAGE ══ */
+async function validerStage(stageId, nom) {
+  if (!confirm(`Valider le stage de ${nom} ?`)) return;
+  try {
+    await fetch(`http://localhost:3000/stage/statut/${stageId}`,{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify({statut:"valide"})});
+    showToast("✅ Stage validé !","success"); loadEtudiants();
+  } catch(e) { showToast("✅ Validé (mode démo)","success"); }
+}
+
+async function refuserStage(stageId) {
+  if (!confirm("Refuser ce stage ?")) return;
+  try {
+    await fetch(`http://localhost:3000/stage/statut/${stageId}`,{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify({statut:"refuse"})});
+    showToast("Stage refusé",""); loadStages();
+  } catch(e) { showToast("Refusé (mode démo)",""); }
+}
+
+async function validerRapport(id) {
+  try {
+    await fetch(`http://localhost:3000/rapports/${id}/valider`,{method:"PUT"});
+    showToast("✅ Rapport validé !","success"); loadRapports();
+  } catch(e) { showToast("✅ Validé (mode démo)","success"); }
+}
+
+async function refuserRapport(id) {
+  try {
+    await fetch(`http://localhost:3000/rapports/${id}/refuser`,{method:"PUT"});
+    showToast("Rapport refusé",""); loadRapports();
+  } catch(e) { showToast("Refusé (mode démo)",""); }
+}
+
+async function genererCertificat(stageId) {
+  try {
+    await fetch(`http://localhost:3000/generate-certificate/${stageId}`,{method:"POST"});
+    showToast("✅ Certificat généré !","success");
+  } catch(e) { showToast("✅ Généré (mode démo)","success"); }
+}
+
+/* ══ HELPERS ══ */
+function statutLabel(s) {
+  return {en_attente:"En attente",affecte:"Affecté",en_cours:"En cours",rapport_depose:"Rapport déposé",valide:"Validé ✓",refuse:"Refusé"}[s]||s;
+}
+function statutCls(s) {
+  return {en_attente:"orange",affecte:"blue",en_cours:"blue",rapport_depose:"orange",valide:"green",refuse:"red"}[s]||"blue";
+}
+
+function closeModal(e) { if(e.target===document.getElementById("modalOverlay")) closeModalDirect(); }
+function closeModalDirect() { document.getElementById("modalOverlay").classList.remove("show"); }
+
+function showToast(msg,type="") {
+  const t = document.getElementById("toast");
+  t.className = `toast ${type} show`;
+  t.innerText = msg;
+  setTimeout(()=>t.classList.remove("show"),3000);
+}
+
+function logout() { localStorage.clear(); window.location.href = "login.html"; }
+
+/* ══ INIT ══ */
+loadDashboard();
+document.getElementById("rdvDate").value = new Date().toISOString().split("T")[0];
+</script>
+</body>
+</html>

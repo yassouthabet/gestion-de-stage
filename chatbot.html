@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Assistant IA | StageFlow</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:        #f4f6fb;
+  --white:     #ffffff;
+  --border:    #e5e9f2;
+  --accent:    #4f7cff;
+  --accent2:   #7c5cfc;
+  --green:     #10b981;
+  --orange:    #f59e0b;
+  --red:       #ef4444;
+  --text:      #1a1d2e;
+  --muted:     #8892a4;
+  --sidebar-w: 240px;
+}
+
+body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); display: flex; height: 100vh; overflow: hidden; }
+
+/* ══ SIDEBAR ══ */
+.sidebar { width: var(--sidebar-w); background: var(--white); border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 24px 14px; flex-shrink: 0; }
+.logo { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.35rem; color: var(--text); padding: 0 8px 22px; border-bottom: 1px solid var(--border); margin-bottom: 18px; }
+.logo span { color: var(--accent); }
+.nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 10px; color: var(--muted); text-decoration: none; font-size: 0.875rem; font-weight: 500; transition: all 0.18s; margin-bottom: 2px; cursor: pointer; border: none; background: none; width: 100%; text-align: left; }
+.nav-item:hover  { background: var(--bg); color: var(--text); }
+.nav-item.active { background: rgba(79,124,255,0.1); color: var(--accent); font-weight: 600; }
+.nav-item i { width: 16px; text-align: center; font-size: 0.85rem; }
+.sidebar-bottom { margin-top: auto; border-top: 1px solid var(--border); padding-top: 14px; }
+.user-chip { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: var(--bg); border-radius: 10px; margin-bottom: 6px; }
+.avatar-circle { width: 34px; height: 34px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), var(--accent2)); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.8rem; color: #fff; flex-shrink: 0; overflow: hidden; }
+.user-chip-name { font-size: 0.82rem; font-weight: 600; color: var(--text); }
+.user-chip-role { font-size: 0.7rem; color: var(--muted); }
+
+/* ══ MAIN ══ */
+.main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+/* ══ TOPBAR ══ */
+.topbar { background: var(--white); border-bottom: 1px solid var(--border); padding: 0 24px; height: 60px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+.topbar-left { display: flex; align-items: center; gap: 12px; }
+.bot-avatar { width: 38px; height: 38px; border-radius: 12px; background: linear-gradient(135deg, var(--accent), var(--accent2)); display: flex; align-items: center; justify-content: center; font-size: 1.1rem; color: #fff; }
+.bot-name { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.95rem; color: var(--text); }
+.bot-status { font-size: 0.72rem; color: var(--green); display: flex; align-items: center; gap: 4px; }
+.bot-status::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--green); }
+.user-pill { display: flex; align-items: center; gap: 8px; padding: 5px 12px 5px 6px; background: var(--bg); border: 1px solid var(--border); border-radius: 20px; font-size: 0.82rem; font-weight: 500; color: var(--text); }
+.user-pill .avatar-circle { width: 26px; height: 26px; font-size: 0.7rem; }
+
+/* ══ CHAT AREA ══ */
+.chat-area { flex: 1; overflow-y: auto; padding: 24px; display: flex; flex-direction: column; gap: 16px; background: var(--bg); }
+.chat-area::-webkit-scrollbar { width: 4px; }
+.chat-area::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+
+/* ══ MESSAGES ══ */
+.msg-row { display: flex; gap: 10px; animation: fadeUp 0.25s ease both; max-width: 75%; }
+.msg-row.user { align-self: flex-end; flex-direction: row-reverse; }
+.msg-row.bot  { align-self: flex-start; }
+
+@keyframes fadeUp { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+
+.msg-avatar-sm {
+  width: 32px; height: 32px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.9rem; flex-shrink: 0; margin-top: 2px;
+}
+.msg-row.bot  .msg-avatar-sm { background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #fff; }
+.msg-row.user .msg-avatar-sm { background: var(--border); color: var(--muted); font-size: 0.75rem; font-weight: 700; }
+
+.msg-bubble {
+  padding: 12px 16px;
+  border-radius: 16px;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  word-break: break-word;
+}
+.msg-row.bot  .msg-bubble { background: var(--white); color: var(--text); border-bottom-left-radius: 4px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+.msg-row.user .msg-bubble { background: var(--accent); color: #fff; border-bottom-right-radius: 4px; }
+
+.msg-time { font-size: 0.68rem; opacity: 0.5; margin-top: 4px; text-align: right; }
+
+/* typing indicator */
+.typing-bubble { background: var(--white); border-radius: 16px; border-bottom-left-radius: 4px; padding: 14px 18px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); display: flex; gap: 4px; align-items: center; }
+.typing-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--muted); animation: bounce 1.2s infinite ease-in-out; }
+.typing-dot:nth-child(2) { animation-delay: 0.2s; }
+.typing-dot:nth-child(3) { animation-delay: 0.4s; }
+@keyframes bounce { 0%,60%,100%{transform:translateY(0);opacity:0.4} 30%{transform:translateY(-6px);opacity:1} }
+
+/* ══ SUGGESTIONS RAPIDES ══ */
+.quick-suggestions { display: flex; flex-wrap: wrap; gap: 8px; padding: 0 24px 12px; }
+.quick-btn { padding: 7px 14px; border-radius: 20px; border: 1px solid var(--border); background: var(--white); color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 0.78rem; font-weight: 500; cursor: pointer; transition: all 0.18s; }
+.quick-btn:hover { border-color: var(--accent); color: var(--accent); background: rgba(79,124,255,0.05); }
+
+/* ══ INPUT ══ */
+.input-bar { background: var(--white); border-top: 1px solid var(--border); padding: 14px 20px; display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+.chat-input { flex: 1; border: 1px solid var(--border); border-radius: 24px; padding: 10px 18px; font-family: 'DM Sans', sans-serif; font-size: 0.875rem; color: var(--text); background: var(--bg); outline: none; transition: border-color 0.15s; resize: none; max-height: 120px; }
+.chat-input:focus { border-color: var(--accent); background: var(--white); }
+.chat-input::placeholder { color: var(--muted); }
+.send-btn { width: 40px; height: 40px; border-radius: 12px; background: var(--accent); color: #fff; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 0.9rem; transition: opacity 0.18s, transform 0.18s; flex-shrink: 0; }
+.send-btn:hover { opacity: 0.85; transform: translateY(-1px); }
+.send-btn:disabled { background: var(--border); cursor: not-allowed; transform: none; }
+
+/* ══ WELCOME ══ */
+.welcome-msg { text-align: center; padding: 20px; }
+.welcome-icon { font-size: 2.5rem; margin-bottom: 10px; }
+.welcome-title { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.2rem; color: var(--text); margin-bottom: 6px; }
+.welcome-sub { font-size: 0.82rem; color: var(--muted); line-height: 1.6; max-width: 380px; margin: 0 auto; }
+</style>
+</head>
+
+<body>
+
+<!-- ══ SIDEBAR ══ -->
+<aside class="sidebar">
+  <div class="logo">Stage<span>Flow</span></div>
+ <nav>
+    <a class="nav-item active" href="etudiant.html"><i class="fa fa-house"></i> Dashboard</a>
+    <a class="nav-item" href="profil.html"><i class="fa fa-user"></i> Profil</a>
+    <a class="nav-item" href="stage.html"><i class="fa fa-briefcase"></i> Mon stage</a>
+    <a class="nav-item" href="journal.html"><i class="fa fa-book-open"></i> Journal de bord</a>
+    <a class="nav-item" href="messagerie.html"><i class="fa fa-comments"></i> Messagerie</a>
+    <a class="nav-item" href="suggestion.html"><i class="fa fa-lightbulb"></i> Suggestions</a>
+    <a class="nav-item" href="notifications.html"><i class="fa fa-bell"></i> Notifications</a>
+    <a class="nav-item" href="cv.html">
+  <i class="fa fa-file-user"></i> CV Generator
+</a>
+<a class="nav-item" href="soutenance.html">
+  <i class="fa fa-graduation-cap"></i> Soutenance en ligne
+</a>
+<a class="nav-item" href="document.html">
+  <i class="fa fa-file-contract"></i> Documents officiels
+</a>
+  <a class="nav-item" href="chatbot.html">
+  <i class="fa fa-robot"></i> Assistant IA
+</a>
+<a class="nav-item" href="carte-etudiant.html">
+  <i class="fa fa-id-card"></i> Ma carte étudiant
+</a>
+<a class="nav-item" href="planning.html">
+  <i class="fa fa-calendar-days"></i> Planning de stage
+</a>
+<a class="nav-item" href="ressource.html">
+  <i class="fa fa-book-bookmark"></i> Ressources
+</a>
+<a class="nav-item" href="carte-stagiaires.html">
+  <i class="fa fa-map-location-dot"></i> Carte des stagiaires
+</a>
+<a class="nav-item" href="rendez-vous.html">
+  <i class="fa fa-calendar-check"></i> Rendez-vous
+</a>
+  </nav>
+  <div class="sidebar-bottom">
+    <div class="user-chip">
+      <div class="avatar-circle" id="sidebarAvatar">?</div>
+      <div>
+        <div class="user-chip-name" id="sidebarNom">...</div>
+        <div class="user-chip-role">Étudiant</div>
+      </div>
+    </div>
+    <button class="nav-item" onclick="logout()" style="color:var(--red)">
+      <i class="fa fa-right-from-bracket"></i> Déconnexion
+    </button>
+  </div>
+</aside>
+
+<!-- ══ MAIN ══ -->
+<div class="main">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="bot-avatar">🤖</div>
+      <div>
+        <div class="bot-name">Assistant StageFlow</div>
+        <div class="bot-status">En ligne</div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px">
+      <button onclick="clearChat()" style="padding:6px 14px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--muted);font-family:'DM Sans',sans-serif;font-size:0.78rem;cursor:pointer">
+        <i class="fa fa-trash"></i> Effacer
+      </button>
+      <div class="user-pill">
+        <div class="avatar-circle" id="topAvatar">?</div>
+        <span id="topNom">...</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- CHAT -->
+  <div class="chat-area" id="chatArea">
+    <div class="welcome-msg">
+      <div class="welcome-icon">🤖</div>
+      <div class="welcome-title">Bonjour ! Je suis votre assistant StageFlow</div>
+      <div class="welcome-sub">Je peux vous aider avec vos questions sur votre stage, les démarches à suivre, les deadlines, et tout ce qui concerne votre parcours académique.</div>
+    </div>
+  </div>
+
+  <!-- QUICK SUGGESTIONS -->
+  <div class="quick-suggestions" id="quickSuggestions">
+    <button class="quick-btn" onclick="sendQuick('Comment déposer mon rapport ?')">📄 Déposer mon rapport</button>
+    <button class="quick-btn" onclick="sendQuick('Quelles sont les étapes du stage ?')">📋 Étapes du stage</button>
+    <button class="quick-btn" onclick="sendQuick('Comment contacter mon encadrant ?')">👨‍🏫 Contacter encadrant</button>
+    <button class="quick-btn" onclick="sendQuick('Quelle est la deadline de mon rapport ?')">⏰ Ma deadline</button>
+    <button class="quick-btn" onclick="sendQuick('Comment postuler à une suggestion de stage ?')">💡 Postuler suggestion</button>
+  </div>
+
+  <!-- INPUT -->
+  <div class="input-bar">
+    <textarea class="chat-input" id="chatInput"
+      placeholder="Posez votre question..."
+      rows="1"
+      onkeydown="handleKey(event)"
+      oninput="autoResize(this)"></textarea>
+    <button class="send-btn" id="sendBtn" onclick="sendMessage()">
+      <i class="fa fa-paper-plane"></i>
+    </button>
+  </div>
+
+</div>
+
+<script>
+
+/* ══ LOGIN ══ */
+const currentUser = {
+  id:     parseInt(localStorage.getItem("user_id")),
+  nom:    localStorage.getItem("user_nom")    || "",
+  prenom: localStorage.getItem("user_prenom") || "",
+  role:   localStorage.getItem("user_role")   || "",
+  photo:  localStorage.getItem("user_photo")  || "",
+};
+if (!currentUser.id) window.location.href = "login.html";
+
+const ini = (currentUser.prenom[0]||"") + (currentUser.nom[0]||"");
+document.getElementById("sidebarNom").innerText = currentUser.prenom + " " + currentUser.nom;
+document.getElementById("topNom").innerText     = currentUser.prenom + " " + currentUser.nom;
+
+if (currentUser.photo) {
+  const url = "http://localhost:3000/uploads/" + currentUser.photo;
+  document.getElementById("sidebarAvatar").innerHTML = `<img src="${url}" style="width:34px;height:34px;border-radius:50%;object-fit:cover">`;
+  document.getElementById("topAvatar").innerHTML     = `<img src="${url}" style="width:26px;height:26px;border-radius:50%;object-fit:cover">`;
+} else {
+  document.getElementById("sidebarAvatar").innerText = ini;
+  document.getElementById("topAvatar").innerText     = ini;
+}
+
+/* ══ CONVERSATION HISTORY ══ */
+let messages = [];
+let isLoading = false;
+
+/* ══ SYSTEM PROMPT ══ */
+const SYSTEM_PROMPT = `Tu es l'assistant IA de StageFlow, une plateforme de gestion des stages universitaires en Tunisie.
+
+Tu aides les étudiants avec :
+- Les démarches pour déposer une demande de stage
+- Le suivi de leur stage (statut, progression, rapport)
+- Les deadlines et dates importantes
+- La communication avec leur encadrant
+- Le parcours académique (initiation → perfectionnement → fin d'études)
+- Les suggestions de sujets de stage proposées par les encadrants
+- Les notifications et messages
+
+Règles importantes :
+- Réponds toujours en français
+- Sois concis, clair et professionnel
+- Si l'étudiant demande quelque chose que tu ne peux pas faire, redirige-le vers la bonne page
+- Utilise des emojis pour rendre les réponses plus agréables
+- L'étudiant connecté s'appelle : ${currentUser.prenom} ${currentUser.nom}
+
+Pages disponibles dans StageFlow :
+- Dashboard (etudiant.html) : vue d'ensemble
+- Suggestions (suggestion.html) : sujets de stage proposés
+- Mon Stage (stage.html) : détails du stage + dépôt rapport
+- Messagerie (messagerie.html) : chat avec encadrant
+- Notifications (notifications.html) : alertes et messages
+- Profil (profil.html) : informations personnelles`;
+
+/* ══ SEND MESSAGE ══ */
+async function sendMessage() {
+  const input = document.getElementById("chatInput");
+  const text  = input.value.trim();
+  if (!text || isLoading) return;
+
+  // hide quick suggestions
+  document.getElementById("quickSuggestions").style.display = "none";
+
+  // add user message
+  addMessage("user", text);
+  input.value = "";
+  input.style.height = "auto";
+  messages.push({ role: "user", content: text });
+
+  // show typing
+  showTyping();
+  isLoading = true;
+  document.getElementById("sendBtn").disabled = true;
+
+  try {
+ const response = await fetch("http://localhost:3000/chatbot", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    system: SYSTEM_PROMPT,
+    messages: messages
+  })
+});
+
+const data = await response.json();
+const reply = data.content?.[0]?.text || "Désolé, réessayez.";
+    removeTyping();
+    addMessage("bot", reply);
+    messages.push({ role: "assistant", content: reply });
+
+  } catch (err) {
+    removeTyping();
+    addMessage("bot", "❌ Erreur de connexion. Vérifiez votre connexion internet.");
+  }
+
+  isLoading = false;
+  document.getElementById("sendBtn").disabled = false;
+}
+
+/* ══ QUICK SEND ══ */
+function sendQuick(text) {
+  document.getElementById("chatInput").value = text;
+  sendMessage();
+}
+
+/* ══ ADD MESSAGE ══ */
+function addMessage(role, text) {
+  const area = document.getElementById("chatArea");
+  const time = new Date().toLocaleTimeString("fr-FR", { hour:"2-digit", minute:"2-digit" });
+
+  const row = document.createElement("div");
+  row.className = `msg-row ${role}`;
+
+  const avatarContent = role === "bot"
+    ? "🤖"
+    : ini;
+
+  // convert markdown-like formatting
+  const formatted = text
+    .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+    .replace(/\*(.*?)\*/g, "<em>$1</em>")
+    .replace(/\n/g, "<br>");
+
+  row.innerHTML = `
+    <div class="msg-avatar-sm">${avatarContent}</div>
+    <div>
+      <div class="msg-bubble">${formatted}</div>
+      <div class="msg-time">${time}</div>
+    </div>`;
+
+  area.appendChild(row);
+  area.scrollTop = area.scrollHeight;
+}
+
+/* ══ TYPING ══ */
+function showTyping() {
+  const area = document.getElementById("chatArea");
+  const row  = document.createElement("div");
+  row.className = "msg-row bot";
+  row.id = "typingRow";
+  row.innerHTML = `
+    <div class="msg-avatar-sm">🤖</div>
+    <div class="typing-bubble">
+      <div class="typing-dot"></div>
+      <div class="typing-dot"></div>
+      <div class="typing-dot"></div>
+    </div>`;
+  area.appendChild(row);
+  area.scrollTop = area.scrollHeight;
+}
+
+function removeTyping() {
+  const el = document.getElementById("typingRow");
+  if (el) el.remove();
+}
+
+/* ══ CLEAR ══ */
+function clearChat() {
+  messages = [];
+  document.getElementById("chatArea").innerHTML = `
+    <div class="welcome-msg">
+      <div class="welcome-icon">🤖</div>
+      <div class="welcome-title">Conversation effacée</div>
+      <div class="welcome-sub">Posez votre nouvelle question !</div>
+    </div>`;
+  document.getElementById("quickSuggestions").style.display = "flex";
+}
+
+/* ══ KEY HANDLER ══ */
+function handleKey(e) {
+  if (e.key === "Enter" && !e.shiftKey) {
+    e.preventDefault();
+    sendMessage();
+  }
+}
+
+/* ══ AUTO RESIZE ══ */
+function autoResize(el) {
+  el.style.height = "auto";
+  el.style.height = Math.min(el.scrollHeight, 120) + "px";
+}
+
+/* ══ LOGOUT ══ */
+function logout() { localStorage.clear(); window.location.href = "login.html"; }
+
+</script>
+</body>
+</html>

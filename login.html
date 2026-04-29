@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Connexion | StageFlow</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+<style>
+body {
+  background: linear-gradient(135deg,#c3dafe,#e0e7ff);
+  font-family: 'Arial', sans-serif;
+}
+
+.fade{ animation:fadeIn 1s ease forwards; opacity:0; }
+@keyframes fadeIn{
+  from{opacity:0; transform:translateY(20px);}
+  to{opacity:1; transform:translateY(0);}
+}
+
+input, button {
+  transition: all 0.3s ease;
+}
+
+button:hover {
+  transform: translateY(-2px);
+}
+
+.form-group {
+  position: relative;
+  margin-bottom: 1.5rem;
+}
+
+.form-input {
+  width: 100%;
+  padding: 1rem 1rem 1rem 3rem;
+  border: 1px solid #d1d5db;
+  border-radius: 1rem;
+  background: #f9fafb;
+  outline: none;
+}
+
+.form-input:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+}
+
+.form-label {
+  position: absolute;
+  left: 3rem;
+  top: 1rem;
+  color: #9ca3af;
+  pointer-events: none;
+  transition: all 0.2s ease;
+}
+
+.form-input:focus + .form-label,
+.form-input:not(:placeholder-shown) + .form-label {
+  top: -0.5rem;
+  left: 1rem;
+  font-size: 0.75rem;
+  color: #3b82f6;
+  background: #fff;
+  padding: 0 0.25rem;
+}
+</style>
+</head>
+
+<body class="flex items-center justify-center min-h-screen">
+
+<div class="bg-white rounded-3xl shadow-2xl grid md:grid-cols-2 max-w-4xl overflow-hidden fade">
+
+  <!-- IMAGE -->
+  <div class="hidden md:block">
+    <img src="https://thfvnext.bing.com/th/id/OIP.cS_vkhvfLy-orhxLCG1pVwAAAA?w=159&h=180&c=7&r=0&o=7&cb=thfvnext&pid=1.7&rm=3" class="h-full w-full object-cover rounded-l-3xl">
+  </div>
+
+  <!-- LOGIN -->
+  <div class="p-10 flex flex-col justify-center">
+
+    <h2 class="text-3xl font-bold text-center text-gray-800 mb-2">Connexion</h2>
+    <p class="text-center text-gray-500 mb-8">Accédez à votre espace StageFlow</p>
+
+    <form id="loginForm">
+
+      <!-- EMAIL -->
+      <div class="form-group">
+  <input id="email" type="email" placeholder=" " class="form-input peer" 
+    required oninput="checkEmail(this.value)">
+  <label class="form-label">Email</label>
+  <i class="fa-solid fa-envelope absolute left-3 top-4 text-gray-400"></i>
+  <!-- مؤشر التحقق -->
+  <span id="emailCheck" style="position:absolute;right:12px;top:14px;font-size:.8rem"></span>
+</div>
+
+<!-- بطاقة المستخدم -->
+<div id="userCard" style="display:none;background:#f0f9ff;border:1px solid #bfdbfe;border-radius:12px;padding:12px 16px;margin-bottom:16px;display:none;align-items:center;gap:10px">
+  <div id="userCardAvatar" style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#3b82f6,#6366f1);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.85rem;color:#fff;flex-shrink:0"></div>
+  <div>
+    <div id="userCardNom" style="font-weight:600;font-size:.88rem;color:#1e40af"></div>
+    <div id="userCardRole" style="font-size:.72rem;color:#64748b"></div>
+  </div>
+  <i class="fa fa-circle-check" style="margin-left:auto;color:#10b981;font-size:1rem"></i>
+</div>
+
+      <!-- PASSWORD -->
+      <div class="form-group relative">
+        <input id="password" type="password" placeholder=" " class="form-input peer" required>
+        <label class="form-label">Mot de passe</label>
+        <i class="fa-solid fa-lock absolute left-3 top-4 text-gray-400"></i>
+        <i onclick="togglePassword()"
+           class="fa-solid fa-eye absolute right-3 top-4 text-gray-400 cursor-pointer"></i>
+      </div>
+
+      <div class="text-right mb-4">
+        <a href="forgot.html" class="text-blue-500 text-sm hover:underline">Mot de passe oublié ?</a>
+      </div>
+
+      <button type="submit"
+        class="w-full bg-blue-400 text-white p-3 rounded-xl font-semibold hover:bg-blue-500 transition transform hover:-translate-y-1">
+        Se connecter
+      </button>
+
+      <p id="error" class="text-red-500 mt-2 text-center"></p>
+      <p id="success" class="text-green-500 mt-2 text-center"></p>
+    </form>
+
+  </div>
+
+</div>
+
+<script>
+function togglePassword(){
+  let password = document.getElementById("password");
+  password.type = password.type === "password" ? "text" : "password";
+}
+
+document.getElementById("loginForm").addEventListener("submit", async function(e){
+  e.preventDefault();
+
+  const email    = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+
+  try {
+    const response = await fetch("http://localhost:3000/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password })
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
+
+      document.getElementById("error").innerText   = "";
+      document.getElementById("success").innerText = "Connexion réussie !";
+
+      /* ============================
+         Sauvegarder user dans localStorage
+         ============================ */
+      localStorage.setItem("user_id",     data.user.id);
+      localStorage.setItem("user_nom",    data.user.nom);
+      localStorage.setItem("user_prenom", data.user.prenom);
+      localStorage.setItem("user_email",  data.user.email);
+      localStorage.setItem("user_role",   data.user.role);
+      localStorage.setItem("user_photo",  data.user.photo || "");
+
+      /* ============================
+         Redirection selon le rôle
+         ============================ */
+      setTimeout(() => {
+
+        const role = data.user.role;
+
+        if      (role === "etudiant")          window.location.href = "etudiant.html";
+      if (role === "encadrant") window.location.href = "/encadrant/encadrant.html";
+        else if (role === "chef_departement")  window.location.href = "chef.html";
+        else if (role === "administrateur")    window.location.href = "admin.html";
+        else                                   window.location.href = "etudiant.html";
+
+      }, 1000);
+
+    } else {
+      document.getElementById("success").innerText = "";
+      document.getElementById("error").innerText   = data.message || "Email ou mot de passe incorrect";
+    }
+
+  } catch (error) {
+    document.getElementById("success").innerText = "";
+    document.getElementById("error").innerText   = "Erreur de connexion au serveur";
+  }
+});
+let checkTimeout = null;
+
+function checkEmail(email) {
+  const check = document.getElementById("emailCheck");
+  const card  = document.getElementById("userCard");
+
+  // reset
+  check.innerText = "";
+  card.style.display = "none";
+
+  // validation basique
+  if (!email.includes("@") || !email.includes(".")) return;
+
+  // debounce 600ms
+  clearTimeout(checkTimeout);
+  check.innerText = "⏳";
+
+  checkTimeout = setTimeout(async () => {
+    try {
+      const r = await fetch("http://localhost:3000/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password: "__CHECK_ONLY__" })
+      });
+      const d = await r.json();
+
+      if (d.email_exists) {
+        // email موجود — بين بطاقة المستخدم
+        check.innerText = "✅";
+        const ini = (d.prenom?.[0]||"") + (d.nom?.[0]||"");
+        const roleLabel = {
+          etudiant:         "Étudiant",
+          encadrant:        "Encadrant",
+          chef_departement: "Chef de département",
+          administrateur:   "Administrateur"
+        }[d.role] || d.role;
+
+        document.getElementById("userCardAvatar").innerText = ini;
+        document.getElementById("userCardNom").innerText    = d.prenom + " " + d.nom;
+        document.getElementById("userCardRole").innerText   = roleLabel;
+        card.style.display = "flex";
+      } else {
+        check.innerText = "❌";
+        card.style.display = "none";
+      }
+    } catch(e) {
+      check.innerText = "";
+    }
+  }, 600);
+}
+</script>
+
+</body>
+</html>

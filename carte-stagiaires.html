@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Carte des stagiaires | StageFlow</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<!-- Leaflet.js -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f4f6fb;--white:#fff;--border:#e5e9f2;
+  --accent:#4f7cff;--accent2:#7c5cfc;--green:#10b981;
+  --orange:#f59e0b;--red:#ef4444;--text:#1a1d2e;--muted:#8892a4;
+  --sidebar-w:240px;
+}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);display:flex;min-height:100vh}
+
+/* SIDEBAR */
+.sidebar{width:var(--sidebar-w);background:var(--white);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:24px 14px;position:fixed;top:0;left:0;bottom:0;z-index:100}
+.logo{font-family:'Syne',sans-serif;font-weight:800;font-size:1.35rem;color:var(--text);padding:0 8px 22px;border-bottom:1px solid var(--border);margin-bottom:18px}
+.logo span{color:var(--accent)}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:10px;color:var(--muted);text-decoration:none;font-size:.875rem;font-weight:500;transition:all .18s;margin-bottom:2px;cursor:pointer;border:none;background:none;width:100%;text-align:left}
+.nav-item:hover{background:var(--bg);color:var(--text)}
+.nav-item.active{background:rgba(79,124,255,.1);color:var(--accent);font-weight:600}
+.nav-item i{width:16px;text-align:center;font-size:.85rem}
+.sidebar-bottom{margin-top:auto;border-top:1px solid var(--border);padding-top:14px}
+.user-chip{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg);border-radius:10px;margin-bottom:6px}
+.avatar-circle{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.8rem;color:#fff;flex-shrink:0;overflow:hidden}
+.user-chip-name{font-size:.82rem;font-weight:600;color:var(--text)}
+.user-chip-role{font-size:.7rem;color:var(--muted)}
+
+/* MAIN */
+.main{margin-left:var(--sidebar-w);flex:1;display:flex;flex-direction:column;height:100vh;overflow:hidden}
+
+/* TOPBAR */
+.topbar{background:var(--white);border-bottom:1px solid var(--border);padding:0 24px;height:60px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;z-index:50}
+.topbar-title{font-family:'Syne',sans-serif;font-weight:700;font-size:1.05rem;color:var(--text)}
+.topbar-title span{color:var(--accent)}
+.topbar-right{display:flex;align-items:center;gap:10px}
+.user-pill{display:flex;align-items:center;gap:8px;padding:5px 12px 5px 6px;background:var(--bg);border:1px solid var(--border);border-radius:20px;font-size:.82rem;font-weight:500;color:var(--text)}
+.user-pill .avatar-circle{width:26px;height:26px;font-size:.7rem}
+
+/* FILTERS BAR */
+.filters-bar{background:var(--white);border-bottom:1px solid var(--border);padding:10px 24px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;flex-shrink:0}
+.filter-btn{padding:6px 14px;border-radius:20px;border:1px solid var(--border);background:var(--bg);color:var(--muted);font-family:'DM Sans',sans-serif;font-size:.75rem;font-weight:500;cursor:pointer;transition:all .18s;display:flex;align-items:center;gap:5px}
+.filter-btn:hover{border-color:var(--accent);color:var(--accent)}
+.filter-btn.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.filters-label{font-size:.75rem;color:var(--muted);font-weight:600;margin-right:4px}
+
+/* WORKSPACE */
+.workspace{flex:1;display:grid;grid-template-columns:1fr 340px;overflow:hidden}
+
+/* MAP */
+#map{width:100%;height:100%;z-index:1}
+
+/* SIDE PANEL */
+.side-panel{border-left:1px solid var(--border);background:var(--white);display:flex;flex-direction:column;overflow:hidden}
+.panel-header{padding:18px 18px 14px;border-bottom:1px solid var(--border);flex-shrink:0}
+.panel-title{font-family:'Syne',sans-serif;font-weight:700;font-size:.9rem;color:var(--text);margin-bottom:4px}
+.panel-sub{font-size:.72rem;color:var(--muted)}
+
+/* STATS */
+.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:12px 18px;border-bottom:1px solid var(--border);flex-shrink:0}
+.stat-box{background:var(--bg);border-radius:10px;padding:10px 12px;text-align:center}
+.stat-box-num{font-family:'Syne',sans-serif;font-weight:800;font-size:1.2rem;color:var(--accent)}
+.stat-box-lbl{font-size:.6rem;color:var(--muted);margin-top:2px}
+
+/* ENTREPRISE LIST */
+.ent-list{flex:1;overflow-y:auto;padding:12px}
+.ent-list::-webkit-scrollbar{width:3px}
+.ent-list::-webkit-scrollbar-thumb{background:var(--border);border-radius:10px}
+
+.ent-card{background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:10px;cursor:pointer;transition:all .2s}
+.ent-card:hover{border-color:var(--accent);box-shadow:0 4px 14px rgba(79,124,255,.1);background:var(--white)}
+.ent-card.selected{border-color:var(--accent);background:rgba(79,124,255,.04)}
+
+.ent-header{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:8px}
+.ent-name{font-family:'Syne',sans-serif;font-weight:700;font-size:.85rem;color:var(--text)}
+.ent-ville{font-size:.7rem;color:var(--muted);display:flex;align-items:center;gap:3px;margin-top:2px}
+.ent-count{background:var(--accent);color:#fff;font-size:.62rem;font-weight:700;padding:2px 7px;border-radius:10px;flex-shrink:0}
+
+.ent-stages{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px}
+.ent-badge{font-size:.62rem;font-weight:600;padding:2px 8px;border-radius:10px}
+.ent-badge.init{background:rgba(79,124,255,.1);color:var(--accent)}
+.ent-badge.perf{background:rgba(245,158,11,.1);color:var(--orange)}
+.ent-badge.pfe{background:rgba(16,185,129,.1);color:var(--green)}
+
+/* STARS */
+.stars{display:flex;gap:2px;align-items:center}
+.star{font-size:.75rem;color:#e5e9f2}
+.star.on{color:#f59e0b}
+
+/* EXPERIENCES */
+.exp-item{padding:10px 12px;background:var(--white);border:1px solid var(--border);border-radius:9px;margin-top:8px}
+.exp-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:5px}
+.exp-etu{font-size:.72rem;font-weight:600;color:var(--text)}
+.exp-date{font-size:.65rem;color:var(--muted)}
+.exp-text{font-size:.75rem;color:var(--text);line-height:1.55}
+.exp-type{font-size:.62rem;font-weight:600;padding:2px 7px;border-radius:8px;margin-top:5px;display:inline-block}
+
+/* SEARCH */
+.search-wrap{padding:10px 18px;border-bottom:1px solid var(--border);flex-shrink:0}
+.search-input{width:100%;padding:8px 12px 8px 32px;border:1px solid var(--border);border-radius:9px;font-family:'DM Sans',sans-serif;font-size:.8rem;color:var(--text);background:var(--bg);outline:none;transition:border-color .15s}
+.search-input:focus{border-color:var(--accent);background:var(--white)}
+.search-icon-wrap{position:relative}
+.search-icon-wrap i{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:.75rem;pointer-events:none}
+
+/* EMPTY */
+.empty-panel{text-align:center;padding:40px 20px;color:var(--muted)}
+.empty-panel i{font-size:2rem;opacity:.2;display:block;margin-bottom:10px}
+
+/* LEAFLET CUSTOM */
+.leaflet-popup-content-wrapper{border-radius:12px!important;box-shadow:0 8px 32px rgba(0,0,0,.15)!important;border:1px solid var(--border)!important;padding:0!important}
+.leaflet-popup-content{margin:0!important;padding:0!important;min-width:220px}
+.leaflet-popup-tip-container{display:none}
+
+.popup-box{padding:16px}
+.popup-title{font-family:'Syne',sans-serif;font-weight:700;font-size:.9rem;color:var(--text);margin-bottom:3px}
+.popup-ville{font-size:.72rem;color:var(--muted);margin-bottom:8px;display:flex;align-items:center;gap:4px}
+.popup-stages{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px}
+.popup-btn{width:100%;padding:8px;border:none;border-radius:8px;background:var(--accent);color:#fff;font-family:'DM Sans',sans-serif;font-size:.78rem;font-weight:600;cursor:pointer}
+.popup-btn:hover{opacity:.85}
+
+/* CUSTOM MARKER */
+.custom-marker{
+  background:var(--accent);
+  border:3px solid #fff;
+  border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  color:#fff;font-weight:700;font-family:'Syne',sans-serif;
+  box-shadow:0 4px 14px rgba(79,124,255,.4);
+  transition:transform .2s;
+  cursor:pointer;
+}
+.custom-marker:hover{transform:scale(1.15)}
+.custom-marker.type-pfe{background:var(--green)}
+.custom-marker.type-perf{background:var(--orange)}
+.custom-marker.type-multi{background:var(--accent2)}
+
+/* LEGEND */
+.legend{background:var(--white);border:1px solid var(--border);border-radius:10px;padding:12px 14px;position:absolute;bottom:20px;left:20px;z-index:500;min-width:160px;box-shadow:0 4px 16px rgba(0,0,0,.08)}
+.legend-title{font-family:'Syne',sans-serif;font-weight:700;font-size:.72rem;color:var(--text);margin-bottom:8px}
+.legend-item{display:flex;align-items:center;gap:7px;font-size:.7rem;color:var(--muted);margin-bottom:5px}
+.legend-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;right:24px;background:var(--text);color:#fff;padding:12px 20px;border-radius:10px;font-size:.85rem;font-weight:500;box-shadow:0 4px 20px rgba(0,0,0,.15);transform:translateY(80px);opacity:0;transition:all .3s ease;z-index:9999}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.success{background:var(--green)}
+</style>
+</head>
+
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="logo">Stage<span>Flow</span></div>
+ <nav>
+    <a class="nav-item active" href="etudiant.html"><i class="fa fa-house"></i> Dashboard</a>
+    <a class="nav-item" href="profil.html"><i class="fa fa-user"></i> Profil</a>
+    <a class="nav-item" href="stage.html"><i class="fa fa-briefcase"></i> Mon stage</a>
+    <a class="nav-item" href="journal.html"><i class="fa fa-book-open"></i> Journal de bord</a>
+    <a class="nav-item" href="messagerie.html"><i class="fa fa-comments"></i> Messagerie</a>
+    <a class="nav-item" href="suggestion.html"><i class="fa fa-lightbulb"></i> Suggestions</a>
+    <a class="nav-item" href="notifications.html"><i class="fa fa-bell"></i> Notifications</a>
+    <a class="nav-item" href="cv.html">
+  <i class="fa fa-file-user"></i> CV Generator
+</a>
+<a class="nav-item" href="soutenance.html">
+  <i class="fa fa-graduation-cap"></i> Soutenance en ligne
+</a>
+<a class="nav-item" href="document.html">
+  <i class="fa fa-file-contract"></i> Documents officiels
+</a>
+  <a class="nav-item" href="chatbot.html">
+  <i class="fa fa-robot"></i> Assistant IA
+</a>
+<a class="nav-item" href="carte-etudiant.html">
+  <i class="fa fa-id-card"></i> Ma carte étudiant
+</a>
+<a class="nav-item" href="planning.html">
+  <i class="fa fa-calendar-days"></i> Planning de stage
+</a>
+<a class="nav-item" href="ressource.html">
+  <i class="fa fa-book-bookmark"></i> Ressources
+</a>
+<a class="nav-item" href="carte-stagiaires.html">
+  <i class="fa fa-map-location-dot"></i> Carte des stagiaires
+</a>
+<a class="nav-item" href="rendez-vous.html">
+  <i class="fa fa-calendar-check"></i> Rendez-vous
+</a>
+  </nav>
+  <div class="sidebar-bottom">
+    <div class="user-chip">
+      <div class="avatar-circle" id="sidebarAvatar">?</div>
+      <div>
+        <div class="user-chip-name" id="sidebarNom">...</div>
+        <div class="user-chip-role">Étudiant</div>
+      </div>
+    </div>
+    <button class="nav-item" onclick="logout()" style="color:var(--red)">
+      <i class="fa fa-right-from-bracket"></i> Déconnexion
+    </button>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="topbar-title">🗺️ Carte des <span>anciens stagiaires</span></div>
+    <div class="topbar-right">
+      <div class="user-pill">
+        <div class="avatar-circle" id="topAvatar">?</div>
+        <span id="topNom">...</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- FILTERS -->
+  <div class="filters-bar">
+    <span class="filters-label">Filtrer :</span>
+    <button class="filter-btn active" data-filter="tous" onclick="setFilter('tous',this)">
+      <i class="fa fa-border-all"></i> Tous les stages
+    </button>
+    <button class="filter-btn" data-filter="initiation" onclick="setFilter('initiation',this)">
+      <i class="fa fa-circle" style="color:var(--accent)"></i> Initiation
+    </button>
+    <button class="filter-btn" data-filter="perfectionnement" onclick="setFilter('perfectionnement',this)">
+      <i class="fa fa-circle" style="color:var(--orange)"></i> Perfectionnement
+    </button>
+    <button class="filter-btn" data-filter="fin_etude" onclick="setFilter('fin_etude',this)">
+      <i class="fa fa-circle" style="color:var(--green)"></i> Fin d'études (PFE)
+    </button>
+  </div>
+
+  <!-- WORKSPACE -->
+  <div class="workspace">
+
+    <!-- MAP -->
+    <div style="position:relative">
+      <div id="map"></div>
+      <!-- LEGEND -->
+      <div class="legend">
+        <div class="legend-title">Légende</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--accent)"></div> Initiation</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--orange)"></div> Perfectionnement</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div> Fin d'études</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--accent2)"></div> Plusieurs types</div>
+      </div>
+    </div>
+
+    <!-- SIDE PANEL -->
+    <div class="side-panel">
+      <div class="panel-header">
+        <div class="panel-title">📍 Entreprises partenaires</div>
+        <div class="panel-sub">Cliquez sur un marqueur ou une entreprise</div>
+      </div>
+
+      <!-- STATS -->
+      <div class="stats-row">
+        <div class="stat-box">
+          <div class="stat-box-num" id="statEnts">0</div>
+          <div class="stat-box-lbl">Entreprises</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-box-num" id="statStages">0</div>
+          <div class="stat-box-lbl">Stages validés</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-box-num" id="statVilles">0</div>
+          <div class="stat-box-lbl">Villes</div>
+        </div>
+      </div>
+
+      <!-- SEARCH -->
+      <div class="search-wrap">
+        <div class="search-icon-wrap">
+          <i class="fa fa-search search-icon"></i>
+          <input class="search-input" id="searchEnt" placeholder="Rechercher une entreprise..." oninput="filterPanel()">
+        </div>
+      </div>
+
+      <!-- LIST -->
+      <div class="ent-list" id="entList">
+        <div class="empty-panel"><i class="fa fa-spinner fa-spin"></i><p>Chargement...</p></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+
+/* ══ LOGIN ══ */
+const currentUser = {
+  id:     parseInt(localStorage.getItem("user_id")),
+  nom:    localStorage.getItem("user_nom")    || "",
+  prenom: localStorage.getItem("user_prenom") || "",
+  photo:  localStorage.getItem("user_photo")  || "",
+};
+if (!currentUser.id) window.location.href = "login.html";
+
+const ini = (currentUser.prenom[0]||"") + (currentUser.nom[0]||"");
+document.getElementById("sidebarNom").innerText = currentUser.prenom + " " + currentUser.nom;
+document.getElementById("topNom").innerText     = currentUser.prenom + " " + currentUser.nom;
+if (currentUser.photo) {
+  const url = "http://localhost:3000/uploads/" + currentUser.photo;
+  document.getElementById("sidebarAvatar").innerHTML = `<img src="${url}" style="width:34px;height:34px;border-radius:50%;object-fit:cover">`;
+  document.getElementById("topAvatar").innerHTML     = `<img src="${url}" style="width:26px;height:26px;border-radius:50%;object-fit:cover">`;
+} else {
+  document.getElementById("sidebarAvatar").innerText = ini;
+  document.getElementById("topAvatar").innerText     = ini;
+}
+
+/* ══ MAP INIT ══ */
+const map = L.map("map", {
+  center: [33.8869, 9.5375], // تونس المركز
+  zoom: 7,
+  zoomControl: true,
+  attributionControl: false
+});
+
+// Tile layer OpenStreetMap
+L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+  maxZoom: 18,
+}).addTo(map);
+
+// Attribution discrète
+L.control.attribution({ prefix: "© OpenStreetMap" }).addTo(map);
+
+/* ══ COORDONNÉES VILLES TUNISIE ══ */
+const VILLES_COORDS = {
+  "tunis":          [36.8065, 10.1815],
+  "sfax":           [34.7406, 10.7603],
+  "sousse":         [35.8256, 10.6369],
+  "nabeul":         [36.4510, 10.7357],
+  "bizerte":        [37.2744, 9.8739],
+  "gabès":          [33.8881, 10.0975],
+  "gafsa":          [34.4311, 8.7757],
+  "kairouan":       [35.6712, 10.1005],
+  "monastir":       [35.7643, 10.8113],
+  "mahdia":         [35.5047, 11.0622],
+  "ariana":         [36.8665, 10.1647],
+  "la marsa":       [36.8785, 10.3238],
+  "ben arous":      [36.7533, 10.2233],
+  "manouba":        [36.8100, 10.0970],
+  "hammamet":       [36.4000, 10.6167],
+  "djerba":         [33.8075, 10.8451],
+  "tozeur":         [33.9197, 8.1335],
+  "tataouine":      [32.9211, 10.4519],
+  "médenine":       [33.3549, 10.4960],
+  "jendouba":       [36.5011, 8.7803],
+  "le kef":         [36.1826, 8.7149],
+  "siliana":        [36.0844, 9.3708],
+  "zaghouan":       [36.4029, 10.1429],
+  "béja":           [36.7256, 9.1817],
+  "sidi bouzid":    [35.0382, 9.4849],
+  "kasserine":      [35.1676, 8.8365],
+};
+
+function getCoords(ville) {
+  if (!ville) return null;
+  const v = ville.toLowerCase().trim();
+  for (const [key, coords] of Object.entries(VILLES_COORDS)) {
+    if (v.includes(key) || key.includes(v)) return coords;
+  }
+  return null;
+}
+
+/* ══ DATA ══ */
+let allData     = [];
+let filteredData = [];
+let markers     = {};
+let currentFilter = "tous";
+let selectedEnt = null;
+
+/* ══ LOAD DATA ══ */
+async function loadData() {
+  try {
+    const r = await fetch("http://localhost:3000/stages-valides");
+    const d = await r.json();
+    if (d.success && d.stages.length) {
+      processData(d.stages);
+      return;
+    }
+  } catch(e) {}
+  // demo data
+  loadDemoData();
+}
+
+/* ══ DEMO DATA ══ */
+function loadDemoData() {
+  const demo = [
+    { id:1,  titre:"App gestion notes",     entreprise:"TechSoft Solutions",  ville:"Tunis",    type_stage:"fin_etude",        etu_prenom:"Sara",    etu_nom:"Ben Ahmed",  exp:"Excellente expérience, équipe très professionnelle. J'ai appris beaucoup sur Node.js et React.",        note:5 },
+    { id:2,  titre:"Site vitrine",           entreprise:"WebAgency Tunis",     ville:"Tunis",    type_stage:"initiation",       etu_prenom:"Ahmed",   etu_nom:"Saidi",      exp:"Bonne ambiance, missions claires. Recommandé pour les stages d'initiation.",                           note:4 },
+    { id:3,  titre:"Dashboard BI",           entreprise:"DataVision",          ville:"Sfax",     type_stage:"perfectionnement", etu_prenom:"Ines",    etu_nom:"Chabbi",     exp:"Projet intéressant avec des données réelles. Encadrant disponible et pédagogue.",                       note:5 },
+    { id:4,  titre:"App mobile gestion",     entreprise:"MobileTech",          ville:"Sousse",   type_stage:"fin_etude",        etu_prenom:"Yasmine", etu_nom:"Thabete",    exp:"Stage très enrichissant, j'ai travaillé sur Flutter et Firebase. Bonne expérience professionnelle.", note:4 },
+    { id:5,  titre:"Système maintenance",    entreprise:"IndustriaPlus",       ville:"Sfax",     type_stage:"fin_etude",        etu_prenom:"Sami",    etu_nom:"Bouaziz",    exp:"Entreprise industrielle sérieuse. Stage technique avec de vraies responsabilités.",                    note:4 },
+    { id:6,  titre:"Conception robotique",   entreprise:"RoboTech Nabeul",     ville:"Nabeul",   type_stage:"perfectionnement", etu_prenom:"Rim",     etu_nom:"Gharbi",     exp:"Projet passionnant sur la conception mécanique. Matériel de pointe disponible.",                        note:5 },
+    { id:7,  titre:"Supervision électrique", entreprise:"ElecControl",         ville:"Bizerte",  type_stage:"fin_etude",        etu_prenom:"Karim",   etu_nom:"Maatoug",    exp:"Domaine de l'automatisation industrielle. Très bon encadrement technique.",                           note:3 },
+    { id:8,  titre:"App de comptabilité",    entreprise:"FinanceSoft",         ville:"Monastir", type_stage:"initiation",       etu_prenom:"Amal",    etu_nom:"Ferchichi",  exp:"Premier stage, accueil chaleureux. Bonne introduction au monde professionnel.",                       note:4 },
+    { id:9,  titre:"Plateforme e-learning",  entreprise:"EduTech Sousse",      ville:"Sousse",   type_stage:"perfectionnement", etu_prenom:"Omar",    etu_nom:"Karray",     exp:"Startup innovante dans l'éducation. Environnement dynamique et projets ambitieux.",                   note:5 },
+    { id:10, titre:"ERP gestion stock",      entreprise:"LogiSoft",            ville:"Tunis",    type_stage:"fin_etude",        etu_prenom:"Fatma",   etu_nom:"Mejri",      exp:"Travail sur un ERP complet. Très formateur pour comprendre les processus métier.",                    note:4 },
+    { id:11, titre:"API REST services",      entreprise:"CloudServices TN",    ville:"Ariana",   type_stage:"perfectionnement", etu_prenom:"Nour",    etu_nom:"Slama",      exp:"Architecture microservices moderne. Équipe de dev compétente et sympathique.",                         note:5 },
+    { id:12, titre:"Analyse vibrations",     entreprise:"MécaIndustrie",       ville:"Gabès",    type_stage:"initiation",       etu_prenom:"Mehdi",   etu_nom:"Hamdi",      exp:"Stage dans une vraie usine. Expérience très concrète du terrain industriel.",                         note:3 },
+  ];
+  processData(demo);
+}
+
+/* ══ PROCESS DATA ══ */
+function processData(stages) {
+  allData = stages;
+
+  // grouper par entreprise
+  const entMap = {};
+  stages.forEach(s => {
+    const key = s.entreprise || "Inconnu";
+    if (!entMap[key]) {
+      entMap[key] = {
+        nom: key,
+        ville: s.ville || "",
+        stages: [],
+        types: new Set(),
+        notes: [],
+      };
+    }
+    entMap[key].stages.push(s);
+    entMap[key].types.add(s.type_stage);
+    if (s.note) entMap[key].notes.push(s.note);
+  });
+
+  filteredData = Object.values(entMap);
+
+  updateStats(filteredData, stages);
+  renderMarkers(filteredData);
+  renderPanel(filteredData);
+}
+
+/* ══ UPDATE STATS ══ */
+function updateStats(ents, stages) {
+  document.getElementById("statEnts").innerText   = ents.length;
+  document.getElementById("statStages").innerText = stages.length;
+  const villes = new Set(ents.map(e => e.ville).filter(Boolean));
+  document.getElementById("statVilles").innerText = villes.size;
+}
+
+/* ══ RENDER MARKERS ══ */
+function renderMarkers(ents) {
+  // supprimer anciens markers
+  Object.values(markers).forEach(m => map.removeLayer(m));
+  markers = {};
+
+  ents.forEach(ent => {
+    const coords = getCoords(ent.ville);
+    if (!coords) return;
+
+    const types = [...ent.types];
+    let color = "#4f7cff"; // initiation
+    if (types.length > 1) color = "#7c5cfc";
+    else if (types[0] === "perfectionnement") color = "#f59e0b";
+    else if (types[0] === "fin_etude") color = "#10b981";
+
+    const avgNote = ent.notes.length ? (ent.notes.reduce((a,b)=>a+b,0)/ent.notes.length).toFixed(1) : "—";
+
+    // custom icon
+    const icon = L.divIcon({
+      className: "",
+      html: `<div style="
+        width:36px;height:36px;background:${color};
+        border:3px solid #fff;border-radius:50%;
+        display:flex;align-items:center;justify-content:center;
+        color:#fff;font-weight:700;font-family:'Syne',sans-serif;font-size:.75rem;
+        box-shadow:0 4px 14px ${color}66;cursor:pointer;
+        transition:transform .2s;
+      ">${ent.stages.length}</div>`,
+      iconSize: [36, 36],
+      iconAnchor: [18, 18],
+    });
+
+    const typeLabels = types.map(t => ({
+      initiation:"Initiation", perfectionnement:"Perfectionnement", fin_etude:"PFE"
+    }[t]||t)).join(", ");
+
+    const marker = L.marker(coords, { icon })
+      .addTo(map)
+      .bindPopup(`
+        <div class="popup-box">
+          <div class="popup-title">${ent.nom}</div>
+          <div class="popup-ville"><i class="fa fa-location-dot" style="color:#4f7cff"></i>${ent.ville}</div>
+          <div class="popup-stages">
+            ${types.map(t => `<span class="ent-badge ${t==='initiation'?'init':t==='perfectionnement'?'perf':'pfe'}">${{initiation:"Initiation",perfectionnement:"Perfectionnement",fin_etude:"PFE"}[t]||t}</span>`).join("")}
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+            <span style="font-size:.72rem;color:#8892a4">${ent.stages.length} stage${ent.stages.length>1?"s":""} · ⭐ ${avgNote}/5</span>
+          </div>
+          <button class="popup-btn" onclick="selectEntreprise('${ent.nom.replace(/'/g,"\\'")}')">
+            <i class="fa fa-eye"></i> Voir les témoignages
+          </button>
+        </div>
+      `, { maxWidth: 260, minWidth: 220 });
+
+    markers[ent.nom] = marker;
+  });
+}
+
+/* ══ RENDER PANEL ══ */
+function renderPanel(ents) {
+  const list = document.getElementById("entList");
+
+  if (!ents.length) {
+    list.innerHTML = `<div class="empty-panel"><i class="fa fa-map-location-dot"></i><p>Aucune entreprise trouvée</p></div>`;
+    return;
+  }
+
+  list.innerHTML = ents.map(ent => {
+    const types   = [...ent.types];
+    const avgNote = ent.notes.length ? Math.round(ent.notes.reduce((a,b)=>a+b,0)/ent.notes.length) : 0;
+    const stars   = Array.from({length:5},(_,i)=>`<span class="star ${i<avgNote?'on':''}">★</span>`).join("");
+
+    return `
+      <div class="ent-card" id="entcard_${ent.nom.replace(/[^a-z0-9]/gi,'_')}"
+           onclick="selectEntreprise('${ent.nom.replace(/'/g,"\\'")}')">
+        <div class="ent-header">
+          <div>
+            <div class="ent-name">${ent.nom}</div>
+            <div class="ent-ville"><i class="fa fa-location-dot"></i>${ent.ville}</div>
+          </div>
+          <span class="ent-count">${ent.stages.length}</span>
+        </div>
+        <div class="ent-stages">
+          ${types.map(t=>`<span class="ent-badge ${t==='initiation'?'init':t==='perfectionnement'?'perf':'pfe'}">${{initiation:"Init.",perfectionnement:"Perf.",fin_etude:"PFE"}[t]||t}</span>`).join("")}
+        </div>
+        <div class="stars">${stars} <span style="font-size:.65rem;color:var(--muted);margin-left:4px">${avgNote}/5</span></div>
+      </div>`;
+  }).join("");
+}
+
+/* ══ SELECT ENTREPRISE ══ */
+function selectEntreprise(nom) {
+  selectedEnt = nom;
+  map.closePopup();
+
+  // find entreprise
+  const ent = filteredData.find(e => e.nom === nom);
+  if (!ent) return;
+
+  // highlight card
+  document.querySelectorAll(".ent-card").forEach(c => c.classList.remove("selected"));
+  const cardId = "entcard_" + nom.replace(/[^a-z0-9]/gi,'_');
+  const card   = document.getElementById(cardId);
+  if (card) { card.classList.add("selected"); card.scrollIntoView({ behavior:"smooth", block:"nearest" }); }
+
+  // fly to marker
+  const coords = getCoords(ent.ville);
+  if (coords) { map.flyTo(coords, 12, { duration: 1 }); markers[nom]?.openPopup(); }
+
+  // show experiences in panel
+  showExperiences(ent);
+}
+
+/* ══ SHOW EXPERIENCES ══ */
+function showExperiences(ent) {
+  const types   = [...ent.types];
+  const avgNote = ent.notes.length ? Math.round(ent.notes.reduce((a,b)=>a+b,0)/ent.notes.length) : 0;
+  const stars   = Array.from({length:5},(_,i)=>`<span class="star ${i<avgNote?'on':''}" style="font-size:.9rem">★</span>`).join("");
+
+  const list = document.getElementById("entList");
+  list.innerHTML = `
+    <div style="padding:4px 0 14px">
+      <!-- back btn -->
+      <button onclick="backToList()" style="display:flex;align-items:center;gap:6px;padding:7px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--muted);font-family:'DM Sans',sans-serif;font-size:.75rem;cursor:pointer;margin-bottom:14px">
+        <i class="fa fa-arrow-left"></i> Retour à la liste
+      </button>
+
+      <!-- ent header -->
+      <div style="background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:14px">
+        <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:.95rem;color:var(--text);margin-bottom:4px">${ent.nom}</div>
+        <div style="font-size:.72rem;color:var(--muted);display:flex;align-items:center;gap:4px;margin-bottom:8px"><i class="fa fa-location-dot" style="color:var(--accent)"></i>${ent.ville}</div>
+        <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px">
+          ${types.map(t=>`<span class="ent-badge ${t==='initiation'?'init':t==='perfectionnement'?'perf':'pfe'}">${{initiation:"Initiation",perfectionnement:"Perfectionnement",fin_etude:"Fin d'études"}[t]||t}</span>`).join("")}
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div class="stars">${stars}</div>
+          <span style="font-size:.72rem;color:var(--muted)">${avgNote}/5 · ${ent.stages.length} témoignage${ent.stages.length>1?"s":""}</span>
+        </div>
+      </div>
+
+      <!-- témoignages -->
+      <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:.8rem;color:var(--text);margin-bottom:10px">
+        <i class="fa fa-comment-dots" style="color:var(--accent);margin-right:5px"></i>Témoignages des anciens stagiaires
+      </div>
+
+      ${ent.stages.map(s => {
+        const note  = s.note || 0;
+        const stars2 = Array.from({length:5},(_,i)=>`<span class="star ${i<note?'on':''}" style="font-size:.7rem">★</span>`).join("");
+        const typeLabel = {initiation:"Initiation",perfectionnement:"Perfectionnement",fin_etude:"PFE"}[s.type_stage]||s.type_stage;
+        const typeColor = s.type_stage==="fin_etude"?"var(--green)":s.type_stage==="perfectionnement"?"var(--orange)":"var(--accent)";
+        return `
+          <div class="exp-item" style="animation:fadeUp .3s ease both">
+            <div class="exp-header">
+              <div class="exp-etu">
+                <i class="fa fa-user-graduate" style="color:var(--accent);margin-right:4px"></i>
+                ${s.etu_prenom} ${s.etu_nom?.[0]||""}. <!-- anonyme -->
+              </div>
+              <div class="exp-date">${stars2}</div>
+            </div>
+            <div style="font-size:.7rem;color:var(--muted);margin-bottom:6px;font-style:italic">"${s.titre}"</div>
+            <div class="exp-text">${s.exp || "Aucun témoignage disponible."}</div>
+            <span class="exp-type" style="background:${typeColor}18;color:${typeColor}">${typeLabel}</span>
+          </div>`;
+      }).join("")}
+    </div>`;
+}
+
+/* ══ BACK TO LIST ══ */
+function backToList() {
+  selectedEnt = null;
+  applyFilter();
+}
+
+/* ══ FILTER ══ */
+function setFilter(filter, btn) {
+  currentFilter = filter;
+  document.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
+  btn.classList.add("active");
+  applyFilter();
+}
+
+function filterPanel() { applyFilter(); }
+
+function applyFilter() {
+  const search = document.getElementById("searchEnt").value.toLowerCase();
+
+  let data = Object.values(
+    allData.reduce((acc, s) => {
+      const key = s.entreprise || "Inconnu";
+      if (!acc[key]) acc[key] = { nom:key, ville:s.ville||"", stages:[], types:new Set(), notes:[] };
+      acc[key].stages.push(s);
+      acc[key].types.add(s.type_stage);
+      if (s.note) acc[key].notes.push(s.note);
+      return acc;
+    }, {})
+  );
+
+  // filter by type
+  if (currentFilter !== "tous") {
+    data = data.filter(e => e.types.has(currentFilter));
+  }
+
+  // filter by search
+  if (search) {
+    data = data.filter(e =>
+      e.nom.toLowerCase().includes(search) ||
+      (e.ville||"").toLowerCase().includes(search)
+    );
+  }
+
+  filteredData = data;
+  updateStats(filteredData, filteredData.flatMap(e => e.stages));
+  renderMarkers(filteredData);
+  renderPanel(filteredData);
+}
+
+/* ══ SERVER ROUTE (à ajouter dans server.js) ══ */
+// app.get("/stages-valides", (req, res) => {
+//   const sql = `
+//     SELECT s.id, s.titre, s.type_stage, s.entreprise, s.ville,
+//            u.nom AS etu_nom, u.prenom AS etu_prenom
+//     FROM stage s
+//     JOIN utilisateur u ON s.etudiant_id = u.id
+//     WHERE s.statut = 'valide' AND s.entreprise IS NOT NULL
+//     ORDER BY s.created_at DESC
+//   `;
+//   db.query(sql, (err, result) => {
+//     if (err) return res.json({ success: false });
+//     res.json({ success: true, stages: result });
+//   });
+// });
+
+/* ══ TOAST ══ */
+function showToast(msg, type="") {
+  const t = document.getElementById("toast");
+  t.className = `toast ${type} show`;
+  t.innerText = msg;
+  setTimeout(() => t.classList.remove("show"), 3000);
+}
+
+function logout() { localStorage.clear(); window.location.href = "login.html"; }
+
+/* ══ INIT ══ */
+loadData();
+</script>
+</body>
+</html>
